@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
+import { useSettings } from '../../context/SettingsContext';
 import { apiClient } from '../../services/apiClient';
 import { 
   User, 
@@ -15,6 +16,7 @@ import {
   AuditLogItem, 
   SiteSettings 
 } from '../../types';
+import { LogoManagerSettings } from '../../components/admin/LogoManagerSettings';
 import { 
   LayoutDashboard, 
   Users, 
@@ -43,6 +45,7 @@ interface AdminDashboardProps {
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab }) => {
   const { t, language } = useLanguage();
   const { user, isStaff, isAdmin } = useAuth();
+  const { updateSettings: updateGlobalSettings } = useSettings();
 
   const [activeAdminTab, setActiveAdminTab] = useState<
     'overview' | 'users' | 'news' | 'rules' | 'jobs' | 'store' | 'tickets' | 'audit' | 'settings'
@@ -190,8 +193,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!settings) return;
-    await apiClient.updateSettings(settings);
-    showToast('تم حفظ إعدادات المنصة بنجاح');
+    try {
+      const updated = await updateGlobalSettings(settings);
+      setSettings(updated);
+      showToast('تم حفظ إعدادات وشعارات المنصة بنجاح!');
+    } catch (err) {
+      console.error('Failed to save settings:', err);
+      showToast('حدث خطأ أثناء حفظ الإعدادات');
+    }
   };
 
   if (!isStaff) {
@@ -252,9 +261,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
             { id: 'rules', label: t('admin.rules'), icon: BookOpen },
             { id: 'jobs', label: t('admin.jobs'), icon: Briefcase },
             { id: 'store', label: t('admin.store'), icon: ShoppingBag },
-            { id: 'tickets', label: t('admin.tickets'), icon: Ticket },
+            { id: 'tickets', label: t('admin.ticketsCMS') || t('admin.tickets'), icon: Ticket },
             { id: 'audit', label: t('admin.auditLogs'), icon: FileText },
-            { id: 'settings', label: t('admin.settings'), icon: Settings }
+            { id: 'settings', label: t('admin.siteSettings') || t('admin.settings'), icon: Settings }
           ].map((item) => {
             const Icon = item.icon;
             const active = activeAdminTab === item.id;
@@ -565,64 +574,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
           </div>
         )}
 
-        {/* TAB 9: SETTINGS */}
+        {/* TAB 9: SETTINGS & LOGOS */}
         {activeAdminTab === 'settings' && settings && (
-          <div className="bg-[#0B0B0B] border border-[#1C1C1C] rounded-3xl p-6 sm:p-8 max-w-2xl mx-auto">
-            <h3 className="text-xl font-black text-white mb-6">إعدادات المنصة والسيرفر</h3>
-            <form onSubmit={handleSaveSettings} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-[#AAA] mb-1">اسم السيرفر</label>
-                <input
-                  type="text"
-                  value={settings.serverName}
-                  onChange={(e) => setSettings({ ...settings, serverName: e.target.value })}
-                  className="w-full bg-[#111] border border-[#2B2B2B] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#C8874B]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#AAA] mb-1">رابط FiveM Connect</label>
-                <input
-                  type="text"
-                  value={settings.fiveMConnectUrl}
-                  onChange={(e) => setSettings({ ...settings, fiveMConnectUrl: e.target.value })}
-                  className="w-full bg-[#111] border border-[#2B2B2B] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#C8874B]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-[#AAA] mb-1">رابط دعوة سيرفر الديسكورد</label>
-                <input
-                  type="text"
-                  value={settings.discordInviteUrl}
-                  onChange={(e) => setSettings({ ...settings, discordInviteUrl: e.target.value })}
-                  className="w-full bg-[#111] border border-[#2B2B2B] rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#C8874B]"
-                />
-              </div>
-
-              <div className="flex items-center gap-3 pt-2">
-                <input
-                  type="checkbox"
-                  id="maintMode"
-                  checked={settings.maintenanceMode}
-                  onChange={(e) => setSettings({ ...settings, maintenanceMode: e.target.checked })}
-                  className="w-4 h-4 rounded text-[#C8874B] focus:ring-[#C8874B]"
-                />
-                <label htmlFor="maintMode" className="text-xs font-bold text-white cursor-pointer">
-                  تفعيل وضع الصيانة (Maintenance Mode)
-                </label>
-              </div>
-
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-xl bg-[#C8874B] text-black font-extrabold text-xs hover:brightness-110"
-                >
-                  حفظ التغييرات
-                </button>
-              </div>
-            </form>
-          </div>
+          <LogoManagerSettings
+            settings={settings}
+            setSettings={setSettings}
+            onSave={handleSaveSettings}
+            showToast={showToast}
+          />
         )}
 
         {/* MODAL: ADD NEWS */}

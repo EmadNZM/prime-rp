@@ -9,7 +9,15 @@ export const initialSiteSettings: SiteSettings = {
   maintenanceMode: false,
   activePlayersCount: 184,
   maxPlayersCount: 250,
-  serverStatus: 'ONLINE'
+  serverStatus: 'ONLINE',
+  logos: {
+    main: '/assets/prime-logo.png',
+    navbar: '/assets/prime-logo.png',
+    hero: '/assets/prime-logo.png',
+    footer: '/assets/prime-logo.png',
+    login: '/assets/prime-logo.png',
+    favicon: '/assets/prime-logo.png'
+  }
 };
 
 export const initialUsers = [

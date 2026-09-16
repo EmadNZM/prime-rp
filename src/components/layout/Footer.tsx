@@ -29,7 +29,7 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
           {/* BRAND COLUMN */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <PrimeLogo size="md" showText={true} withGlow={false} />
+              <PrimeLogo size="md" variant="footer" showText={true} withGlow={false} />
             </div>
             <p className="text-sm leading-relaxed text-[#A0A0A0] max-w-sm">
               {t('footer.aboutText')}

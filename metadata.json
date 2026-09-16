@@ -2,5 +2,7 @@
   "name": "PRIME RP",
   "description": "Official Web Platform & Community Portal for PRIME RP FiveM Server.",
   "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

@@ -82,7 +82,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
           {/* PRIME RP LOGO */}
           <div className="mb-6 transform hover:scale-[1.02] transition-transform duration-500">
-            <PrimeLogo size="hero" showText={false} withGlow={true} />
+            <PrimeLogo size="hero" variant="hero" showText={false} withGlow={true} />
           </div>
 
           {/* HERO TITLE */}

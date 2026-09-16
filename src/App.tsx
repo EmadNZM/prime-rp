@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SettingsProvider } from './context/SettingsContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { HomePage } from './pages/public/HomePage';
@@ -77,7 +78,9 @@ export default function App() {
   return (
     <LanguageProvider>
       <AuthProvider>
-        <MainApp />
+        <SettingsProvider>
+          <MainApp />
+        </SettingsProvider>
       </AuthProvider>
     </LanguageProvider>
   );

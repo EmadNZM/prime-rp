@@ -188,6 +188,14 @@ export interface SiteSettings {
   activePlayersCount: number;
   maxPlayersCount: number;
   serverStatus: 'ONLINE' | 'MAINTENANCE' | 'OFFLINE';
+  logos?: {
+    main?: string;       // Primary website logo
+    navbar?: string;     // Top navigation bar logo
+    hero?: string;       // Big Hero showcase logo
+    footer?: string;     // Bottom footer logo
+    login?: string;      // Login card logo
+    favicon?: string;    // Browser favicon
+  };
 }
 
 export interface FAQItem {

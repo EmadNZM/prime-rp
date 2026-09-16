@@ -74,7 +74,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
             onClick={() => handleNavClick('home')}
             className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8874B] rounded-lg"
           >
-            <PrimeLogo size="md" showText={true} withGlow={true} />
+            <PrimeLogo size="md" variant="navbar" showText={true} withGlow={true} />
           </button>
 
           {/* DESKTOP NAVIGATION LINKS */}

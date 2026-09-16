@@ -1,7 +1,10 @@
 import React from 'react';
+import { useSettings } from '../../context/SettingsContext';
 
 interface PrimeLogoProps {
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'hero';
+  variant?: 'main' | 'navbar' | 'hero' | 'footer' | 'login' | 'favicon';
+  customSrc?: string;
   showText?: boolean;
   withGlow?: boolean;
   className?: string;
@@ -9,16 +12,21 @@ interface PrimeLogoProps {
 
 export const PrimeLogo: React.FC<PrimeLogoProps> = ({
   size = 'md',
+  variant = 'main',
+  customSrc,
   showText = false,
   withGlow = true,
   className = ''
 }) => {
+  const { getLogo } = useSettings();
+  const logoSrc = customSrc || getLogo(variant);
+
   const sizeClasses = {
-    sm: 'h-10 w-auto',
-    md: 'h-14 w-auto',
-    lg: 'h-20 w-auto',
-    xl: 'h-32 w-auto',
-    hero: 'h-48 md:h-64 lg:h-72 w-auto'
+    sm: 'h-10 w-auto max-w-[130px]',
+    md: 'h-14 w-auto max-w-[180px]',
+    lg: 'h-20 w-auto max-w-[240px]',
+    xl: 'h-32 w-auto max-w-[320px]',
+    hero: 'h-48 md:h-64 lg:h-72 w-auto max-w-full'
   };
 
   return (
@@ -30,8 +38,15 @@ export const PrimeLogo: React.FC<PrimeLogoProps> = ({
         />
       )}
       <img
-        src="/assets/prime-logo.svg"
-        alt="Prime RP Official Logo"
+        src={logoSrc}
+        alt="Prime RP Logo"
+        onError={(e) => {
+          // Fallback to primary png if custom source fails
+          const target = e.target as HTMLImageElement;
+          if (target.src !== window.location.origin + '/assets/prime-logo.png') {
+            target.src = '/assets/prime-logo.png';
+          }
+        }}
         className={`${sizeClasses[size]} object-contain drop-shadow-[0_8px_16px_rgba(0,0,0,0.8)] filter transition-all duration-300 group-hover:brightness-110`}
         loading="eager"
       />

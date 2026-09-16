@@ -32,7 +32,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
 
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <PrimeLogo size="md" showText={false} withGlow={true} />
+            <PrimeLogo size="md" variant="login" showText={false} withGlow={true} />
           </div>
           <h1 className="text-2xl font-black text-white mb-2">{t('nav.loginDiscord')}</h1>
           <p className="text-xs text-[#888]">

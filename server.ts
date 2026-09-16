@@ -10,9 +10,9 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // Basic Middlewares
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  // Basic Middlewares with expanded limit for logo uploads
+  app.use(express.json({ limit: '25mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '25mb' }));
   app.use(cookieParser());
 
   // Mount API routes FIRST
