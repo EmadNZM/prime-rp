@@ -1,156 +1,241 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="100%" height="100%" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 750" width="100%" height="100%" fill="none">
   <defs>
-    <!-- Copper Gradients -->
-    <linearGradient id="copperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#EAA86C"/>
-      <stop offset="25%" stop-color="#C8874B"/>
-      <stop offset="50%" stop-color="#8E5224"/>
-      <stop offset="75%" stop-color="#DF9F64"/>
-      <stop offset="100%" stop-color="#643612"/>
+    <!-- Copper Metallic Gradient -->
+    <linearGradient id="primeCopper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD6A5"/>
+      <stop offset="20%" stop-color="#F39C48"/>
+      <stop offset="40%" stop-color="#D97A26"/>
+      <stop offset="60%" stop-color="#B35B10"/>
+      <stop offset="85%" stop-color="#DE8C3B"/>
+      <stop offset="100%" stop-color="#5A2805"/>
     </linearGradient>
 
-    <!-- Silver Metallic Gradients -->
-    <linearGradient id="silverGrad" x1="0%" y1="0%" x2="100%" y2="80%">
+    <!-- Deep Bevel Copper Shadow -->
+    <linearGradient id="primeCopperDark" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#572808"/>
+      <stop offset="50%" stop-color="#2D1302"/>
+      <stop offset="100%" stop-color="#0F0601"/>
+    </linearGradient>
+
+    <!-- Bright Gold / Amber Crown Gradient -->
+    <linearGradient id="crownGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFF1D6"/>
+      <stop offset="25%" stop-color="#F6B864"/>
+      <stop offset="50%" stop-color="#C8822A"/>
+      <stop offset="75%" stop-color="#8E530F"/>
+      <stop offset="100%" stop-color="#462402"/>
+    </linearGradient>
+
+    <!-- Steel / Silver Chiseled Gradient -->
+    <linearGradient id="brushedSteel" x1="0%" y1="0%" x2="100%" y2="70%">
       <stop offset="0%" stop-color="#FFFFFF"/>
-      <stop offset="20%" stop-color="#DCDCDC"/>
-      <stop offset="45%" stop-color="#9E9E9E"/>
-      <stop offset="65%" stop-color="#E5E5E5"/>
-      <stop offset="85%" stop-color="#7B7B7B"/>
-      <stop offset="100%" stop-color="#CCCCCC"/>
+      <stop offset="15%" stop-color="#EAEAEA"/>
+      <stop offset="35%" stop-color="#B0B0B0"/>
+      <stop offset="50%" stop-color="#707070"/>
+      <stop offset="65%" stop-color="#D5D5D5"/>
+      <stop offset="85%" stop-color="#555555"/>
+      <stop offset="100%" stop-color="#9C9C9C"/>
     </linearGradient>
 
-    <linearGradient id="darkBevel" x1="0%" y1="0%" x2="0%" y2="100%">
-      <stop offset="0%" stop-color="#3A2010"/>
-      <stop offset="100%" stop-color="#140B05"/>
+    <!-- Steel Bevel Extrusion -->
+    <linearGradient id="steelExtrude" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#2F2F2F"/>
+      <stop offset="50%" stop-color="#1A1A1A"/>
+      <stop offset="100%" stop-color="#0A0A0A"/>
     </linearGradient>
 
-    <!-- Carbon Fiber Pattern -->
-    <pattern id="carbonMesh" width="8" height="8" patternUnits="userSpaceOnUse">
-      <rect width="8" height="8" fill="#121212"/>
-      <path d="M0 0h4v4H0zm4 4h4v4H4z" fill="#1c1c1c"/>
-      <path d="M4 0h4v4H4zm-4 4h4v4H0z" fill="#0c0c0c"/>
+    <!-- Carbon Fiber Honeycomb Pattern -->
+    <pattern id="carbonHoneycomb" width="12" height="12" patternUnits="userSpaceOnUse">
+      <rect width="12" height="12" fill="#141414"/>
+      <polygon points="6,1 11,4 11,8 6,11 1,8 1,4" fill="#202020" stroke="#0D0D0D" stroke-width="0.8"/>
+      <polygon points="6,3 9,5 9,7 6,9 3,7 3,5" fill="#181818"/>
     </pattern>
 
-    <!-- Drop Shadow Filter -->
-    <filter id="glowFilter" x="-20%" y="-20%" width="140%" height="140%">
-      <feGaussianBlur stdDeviation="8" result="blur"/>
+    <!-- Glowing Highlights Filter -->
+    <filter id="esportsGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
       <feComposite in="SourceGraphic" in2="blur" operator="over"/>
     </filter>
   </defs>
 
-  <!-- BACKGROUND GLOW -->
-  <circle cx="400" cy="300" r="220" fill="#C8874B" opacity="0.12" filter="url(#glowFilter)"/>
+  <!-- BACKGROUND RADIAL ORANGE AMBIENT GLOW -->
+  <circle cx="550" cy="380" r="320" fill="#F39C48" opacity="0.14" filter="url(#esportsGlow)"/>
 
-  <!-- ==================== CROWN ON TOP ==================== -->
-  <g transform="translate(320, 50)">
-    <!-- Crown Base Arch -->
-    <path d="M 20 120 Q 80 135 140 120 L 135 145 Q 80 155 25 145 Z" fill="url(#copperGrad)" stroke="#643612" stroke-width="2"/>
-    
-    <!-- Crown Base Jewels -->
-    <circle cx="40" cy="133" r="4" fill="#FFFFFF" opacity="0.8"/>
-    <circle cx="65" cy="136" r="4" fill="#C8874B"/>
-    <circle cx="80" cy="137" r="5" fill="#FFFFFF"/>
-    <circle cx="95" cy="136" r="4" fill="#C8874B"/>
-    <circle cx="120" cy="133" r="4" fill="#FFFFFF" opacity="0.8"/>
+  <!-- ======================================================== -->
+  <!-- 1. LEFT 3D MULTI-TIERED GEOMETRIC 'P' EMBLEM            -->
+  <!-- ======================================================== -->
+  <g id="shield-emblem-P">
+    <!-- Drop Shadow -->
+    <path d="M 120 180 L 460 300 L 460 350 L 320 400 L 320 540 L 230 490 L 230 260 L 120 220 Z" 
+          fill="#000000" opacity="0.8" transform="translate(15, 20)"/>
 
-    <!-- Crown Peaks -->
-    <!-- Center Peak -->
-    <polygon points="80,40 100,100 80,120 60,100" fill="url(#copperGrad)" stroke="#4A260C" stroke-width="2"/>
-    <circle cx="80" cy="38" r="8" fill="#FFFFFF" stroke="url(#copperGrad)" stroke-width="3"/>
+    <!-- Outer Deep Extrusion -->
+    <path d="M 120 180 L 460 300 L 460 370 L 320 420 L 320 560 L 210 500 L 210 240 L 120 200 Z" 
+          fill="url(#primeCopperDark)" stroke="#0D0602" stroke-width="4"/>
 
-    <!-- Left Peak -->
-    <polygon points="30,70 50,110 30,125 15,100" fill="url(#copperGrad)" stroke="#4A260C" stroke-width="2"/>
-    <circle cx="30" cy="68" r="6" fill="#DF9F64"/>
+    <!-- Main Outer Copper Bevel Rim -->
+    <path d="M 130 190 L 450 305 L 450 360 L 330 405 L 330 540 L 225 490 L 225 245 L 130 205 Z" 
+          fill="url(#primeCopper)" stroke="#FFE2BF" stroke-width="2"/>
 
-    <!-- Right Peak -->
-    <polygon points="130,70 145,100 130,125 110,110" fill="url(#copperGrad)" stroke="#4A260C" stroke-width="2"/>
-    <circle cx="130" cy="68" r="6" fill="#DF9F64"/>
+    <!-- Internal Recessed Bevel -->
+    <path d="M 155 210 L 420 310 L 420 345 L 340 375 L 340 480 L 245 440 L 245 255 L 155 220 Z" 
+          fill="url(#primeCopperDark)"/>
 
-    <!-- Far Left Spike -->
-    <polygon points="5,85 20,115 5,128 -5,110" fill="url(#copperGrad)" stroke="#4A260C" stroke-width="1.5"/>
-    <circle cx="5" cy="85" r="4" fill="#FFFFFF"/>
+    <!-- Carbon Fiber Inset Plate -->
+    <path d="M 170 225 L 395 315 L 395 335 L 350 355 L 350 450 L 260 415 L 260 270 L 170 235 Z" 
+          fill="url(#carbonHoneycomb)" stroke="#B35B10" stroke-width="1.5"/>
 
-    <!-- Far Right Spike -->
-    <polygon points="155,85 165,110 155,128 140,115" fill="url(#copperGrad)" stroke="#4A260C" stroke-width="1.5"/>
-    <circle cx="155" cy="85" r="4" fill="#FFFFFF"/>
+    <!-- Layer 2 Chevron Inner Inset (Arrow Segment) -->
+    <path d="M 180 300 L 270 340 L 270 370 L 180 330 Z" fill="url(#primeCopper)" stroke="#FFEDB8" stroke-width="1.5"/>
+    <path d="M 200 370 L 290 410 L 290 440 L 200 400 Z" fill="url(#primeCopper)" stroke="#FFEDB8" stroke-width="1.5"/>
+
+    <!-- Top Highlight Ridge Lines on P -->
+    <line x1="130" y1="190" x2="450" y2="305" stroke="#FFFFFF" stroke-width="3" opacity="0.9"/>
+    <line x1="130" y1="205" x2="225" y2="245" stroke="#FFD6A5" stroke-width="2"/>
   </g>
 
-  <!-- ==================== LEFT "P" EMBLEM SHIELD ==================== -->
-  <g id="shield-P" transform="translate(60, 40)">
-    <!-- Outer Copper Bevel 1 -->
-    <path d="M 120 100 L 260 170 L 260 210 L 160 260 L 160 380 L 90 340 L 90 120 Z" 
-          fill="url(#copperGrad)" stroke="#3A2010" stroke-width="4"/>
-    
-    <!-- Outer Copper Bevel 2 - Arrow Segments -->
-    <path d="M 140 130 L 230 180 L 230 200 L 150 240 L 150 330 L 115 310 L 115 145 Z" 
-          fill="url(#darkBevel)"/>
-    
-    <!-- Carbon Mesh Inner -->
-    <path d="M 155 150 L 210 185 L 210 195 L 140 225 L 140 290 L 125 280 L 125 160 Z" 
-          fill="url(#carbonMesh)"/>
+  <!-- ======================================================== -->
+  <!-- 2. ROYAL KING CROWN (Sitting above the letter I and M)   -->
+  <!-- ======================================================== -->
+  <g id="royal-crown" transform="translate(420, 20)">
+    <!-- Crown Drop Shadow -->
+    <path d="M 40 180 Q 150 200 260 180 L 290 100 L 210 130 L 150 20 L 90 130 L 10 100 Z" 
+          fill="#000000" opacity="0.75" transform="translate(10, 15)"/>
 
-    <!-- Stepped Arrow Facets -->
-    <polygon points="150,110 190,130 160,145 125,125" fill="#DF9F64"/>
-    <polygon points="170,120 210,140 180,155 145,135" fill="#8E5224"/>
-    <polygon points="190,130 230,150 200,165 165,145" fill="#DF9F64"/>
+    <!-- Main Golden Crown Body -->
+    <path d="M 40 180 Q 150 205 260 180 L 305 85 L 215 125 L 150 15 L 85 125 -5 85 Z" 
+          fill="url(#crownGold)" stroke="#3A1C02" stroke-width="4"/>
+
+    <!-- Crown Base Arch Band -->
+    <path d="M 30 180 Q 150 215 270 180 L 265 205 Q 150 240 35 205 Z" 
+          fill="url(#primeCopper)" stroke="#FFE8BD" stroke-width="2.5"/>
+
+    <!-- Crown Base Jewels & Rivets -->
+    <circle cx="65" cy="198" r="6" fill="#1A1A1A" stroke="#FFD6A5" stroke-width="2"/>
+    <circle cx="105" cy="206" r="6.5" fill="#FFEAA7" stroke="#8E530F" stroke-width="2"/>
+    <circle cx="150" cy="210" r="8" fill="#140600" stroke="#FFD6A5" stroke-width="2.5"/>
+    <circle cx="195" cy="206" r="6.5" fill="#FFEAA7" stroke="#8E530F" stroke-width="2"/>
+    <circle cx="235" cy="198" r="6" fill="#1A1A1A" stroke="#FFD6A5" stroke-width="2"/>
+
+    <!-- Crown Diamond Jewels inside arch -->
+    <polygon points="150,150 162,165 150,180 138,165" fill="#120600" stroke="#FFD6A5" stroke-width="1.5"/>
+    <polygon points="100,155 110,168 100,178 90,168" fill="#120600" stroke="#FFD6A5" stroke-width="1.5"/>
+    <polygon points="200,155 210,168 200,178 190,168" fill="#120600" stroke="#FFD6A5" stroke-width="1.5"/>
+
+    <!-- Crown Spire Orbs -->
+    <circle cx="150" cy="15" r="9" fill="#FFFFFF" stroke="#F6B864" stroke-width="3"/>
+    <circle cx="85" cy="125" r="6" fill="#FFEDB8" stroke="#8E530F" stroke-width="2"/>
+    <circle cx="215" cy="125" r="6" fill="#FFEDB8" stroke="#8E530F" stroke-width="2"/>
+    <circle cx="-5" cy="85" r="5" fill="#FFFFFF" stroke="#8E530F" stroke-width="2"/>
+    <circle cx="305" cy="85" r="5" fill="#FFFFFF" stroke="#8E530F" stroke-width="2"/>
+
+    <!-- Crown Light Glint Highlights -->
+    <polygon points="150,2 153,10 162,15 153,20 150,28 147,20 138,15 147,10" fill="#FFFFFF"/>
   </g>
 
-  <!-- ==================== TEXT "PRIME" (BRUSHED CHROME SILVER) ==================== -->
-  <g id="text-prime" transform="translate(200, 240)">
-    <!-- Background Shadow Extrusion -->
-    <text x="5" y="5" font-family="'Montserrat', 'Rajdhani', Impact, sans-serif" font-size="124" font-weight="900" font-style="italic" fill="#0A0A0A" letter-spacing="2">
+  <!-- ======================================================== -->
+  <!-- 3. BOLD CHISELED STEEL TEXT: "PRIME"                     -->
+  <!-- ======================================================== -->
+  <g id="text-PRIME" transform="translate(250, 420)">
+    <!-- 3D Extrusion Shadow Behind -->
+    <text x="10" y="10" font-family="'Montserrat', 'Rajdhani', Impact, sans-serif" font-size="160" font-weight="900" font-style="italic" fill="#000000" letter-spacing="1">
       PRIME
     </text>
-    <text x="3" y="3" font-family="'Montserrat', 'Rajdhani', Impact, sans-serif" font-size="124" font-weight="900" font-style="italic" fill="#3D3D3D" letter-spacing="2">
-      PRIME
-    </text>
-    <!-- Main Silver Metallic Layer -->
-    <text x="0" y="0" font-family="'Montserrat', 'Rajdhani', Impact, sans-serif" font-size="124" font-weight="900" font-style="italic" fill="url(#silverGrad)" stroke="#1F1F1F" stroke-width="2" letter-spacing="2">
+    <text x="6" y="6" font-family="'Montserrat', 'Rajdhani', Impact, sans-serif" font-size="160" font-weight="900" font-style="italic" fill="url(#steelExtrude)" letter-spacing="1">
       PRIME
     </text>
 
-    <!-- Jagged Speed Cuts Overlay -->
-    <path d="M 30 -50 L 50 -10 L 40 -15 L 20 -55 Z" fill="#FFFFFF" opacity="0.6"/>
-    <path d="M 160 -60 L 180 -20 L 170 -25 L 150 -65 Z" fill="#FFFFFF" opacity="0.6"/>
-    <path d="M 280 -70 L 305 -30 L 295 -35 L 270 -75 Z" fill="#FFFFFF" opacity="0.6"/>
-    <path d="M 400 -60 L 420 -15 L 410 -20 L 390 -65 Z" fill="#FFFFFF" opacity="0.6"/>
+    <!-- Main Chiseled Brushed Steel Front Surface -->
+    <text x="0" y="0" font-family="'Montserrat', 'Rajdhani', Impact, sans-serif" font-size="160" font-weight="900" font-style="italic" fill="url(#brushedSteel)" stroke="#111111" stroke-width="3.5" letter-spacing="1">
+      PRIME
+    </text>
 
-    <!-- Sharp Right Splinter Lightning -->
-    <polygon points="480,-40 540,-20 490,-10 560,10 470,0" fill="url(#silverGrad)" stroke="#3A3A3A"/>
+    <!-- Sharp Brushed Metal Slash Accents & Shards Across Letters -->
+    <polygon points="50,-80 85,-20 70,-20 40,-80" fill="#FFFFFF" opacity="0.6"/>
+    <polygon points="170,-110 205,-30 190,-30 160,-110" fill="#FFFFFF" opacity="0.6"/>
+    <polygon points="320,-120 360,-40 340,-40 305,-120" fill="#FFFFFF" opacity="0.7"/>
+    <polygon points="460,-100 495,-20 480,-20 445,-100" fill="#FFFFFF" opacity="0.6"/>
+    <polygon points="580,-90 615,-10 600,-10 565,-90" fill="#FFFFFF" opacity="0.7"/>
+
+    <!-- Sharp Sharded Serrated Cutouts on Right Edge of 'E' -->
+    <polygon points="630,-120 730,-90 650,-70 750,-40 640,-20 730,10 620,0" fill="url(#brushedSteel)" stroke="#1C1C1C" stroke-width="2"/>
+    <polygon points="630,-120 730,-90 650,-70 750,-40" fill="#FFFFFF" opacity="0.5"/>
   </g>
 
-  <!-- ==================== TEXT "RP" (GLOWING METALLIC COPPER) ==================== -->
-  <g id="text-rp" transform="translate(270, 390)">
-    <!-- Shadow Extrusions -->
-    <text x="6" y="6" font-family="'Montserrat', 'Rajdhani', Impact, sans-serif" font-size="140" font-weight="900" font-style="italic" fill="#140800" letter-spacing="4">
+  <!-- ======================================================== -->
+  <!-- 4. FIERY COPPER SHARDED TEXT: "RP"                       -->
+  <!-- ======================================================== -->
+  <g id="text-RP" transform="translate(340, 620)">
+    <!-- 3D Shadow -->
+    <text x="12" y="12" font-family="'Montserrat', 'Rajdhani', Impact, sans-serif" font-size="200" font-weight="900" font-style="italic" fill="#0D0400" letter-spacing="4">
       RP
     </text>
-    <text x="3" y="3" font-family="'Montserrat', 'Rajdhani', Impact, sans-serif" font-size="140" font-weight="900" font-style="italic" fill="#4E230B" letter-spacing="4">
-      RP
-    </text>
-
-    <!-- Main Copper Gradient -->
-    <text x="0" y="0" font-family="'Montserrat', 'Rajdhani', Impact, sans-serif" font-size="140" font-weight="900" font-style="italic" fill="url(#copperGrad)" stroke="#3A1C07" stroke-width="3" letter-spacing="4" filter="url(#glowFilter)">
+    <text x="7" y="7" font-family="'Montserrat', 'Rajdhani', Impact, sans-serif" font-size="200" font-weight="900" font-style="italic" fill="url(#primeCopperDark)" letter-spacing="4">
       RP
     </text>
 
-    <!-- Speed Jagged Spikes for RP -->
-    <!-- Left Spikes on R -->
-    <polygon points="-50,-30 10,-40 -20,-20 30,-15 -40,10" fill="url(#copperGrad)"/>
-    <!-- Bottom Sharp Spikes on R leg -->
-    <polygon points="80,10 90,60 110,15 130,70 125,5" fill="url(#copperGrad)"/>
-    <!-- Right Spikes on P -->
-    <polygon points="260,-40 330,-20 280,-10 350,15 270,10" fill="url(#copperGrad)"/>
-    <polygon points="250,10 310,40 260,35 320,60 240,40" fill="url(#copperGrad)"/>
+    <!-- Main Front Glowing Copper Surface -->
+    <text x="0" y="0" font-family="'Montserrat', 'Rajdhani', Impact, sans-serif" font-size="200" font-weight="900" font-style="italic" fill="url(#primeCopper)" stroke="#4A1E04" stroke-width="5" letter-spacing="4" filter="url(#esportsGlow)">
+      RP
+    </text>
+
+    <!-- Aggressive Sharded Lightning Spikes Emanating from 'R' (Left) -->
+    <polygon points="-120,-40 -20,-60 -70,-30 0,-10 -90,20 -10,30 -80,60" fill="url(#primeCopper)" stroke="#FFDFB3" stroke-width="2"/>
+    <polygon points="-70,50 -10,70 -90,110 20,80 -60,130" fill="url(#primeCopper)" stroke="#3A1C02" stroke-width="1.5"/>
+
+    <!-- Spikes along Bottom of 'R' and 'P' -->
+    <polygon points="120,30 140,110 165,40 190,125 180,25" fill="url(#primeCopper)" stroke="#FFDFB3" stroke-width="2"/>
+    <polygon points="280,30 305,115 325,45 350,130 340,25" fill="url(#primeCopper)" stroke="#FFDFB3" stroke-width="2"/>
+
+    <!-- Extreme Sharp Right Spikes Emanating from 'P' (Right Wing) -->
+    <polygon points="380,-60 480,-30 400,-15 510,20 410,35 480,75 370,50" fill="url(#primeCopper)" stroke="#FFDFB3" stroke-width="2"/>
+    <polygon points="360,60 440,110 370,105 450,150 330,110" fill="url(#primeCopper)" stroke="#3A1C02" stroke-width="2"/>
   </g>
 
-  <!-- Light Sparkles / Flares -->
-  <g id="sparkles">
-    <polygon points="320,70 325,85 340,90 325,95 320,110 315,95 300,90 315,85" fill="#FFF" opacity="0.8"/>
-    <circle cx="320" cy="90" r="3" fill="#FFE2C2"/>
+  <!-- ======================================================== -->
+  <!-- 5. OPTICAL LENS FLARES & SPARKLES                        -->
+  <!-- ======================================================== -->
+  <g id="sparkle-flares">
+    <!-- Star Glint 1: On P emblem crest -->
+    <g transform="translate(130, 190)">
+      <polygon points="0,-25 6,-7 25,0 6,7 0,25 -6,7 -25,0 -6,-7" fill="#FFFFFF"/>
+      <circle cx="0" cy="0" r="5" fill="#FFE5C4"/>
+    </g>
 
-    <polygon points="240,180 243,190 255,193 243,196 240,206 237,196 225,193 237,190" fill="#FFF" opacity="0.7"/>
+    <!-- Star Glint 2: On Letter 'P' Top Ridge -->
+    <g transform="translate(240, 245)">
+      <polygon points="0,-18 4,-5 18,0 4,5 0,18 -4,5 -18,0 -4,-5" fill="#FFFFFF"/>
+      <circle cx="0" cy="0" r="4" fill="#FFE5C4"/>
+    </g>
 
-    <polygon points="560,280 563,290 575,293 563,296 560,306 557,296 545,293 557,290" fill="#FFE2C2" opacity="0.9"/>
+    <!-- Star Glint 3: On Crown Center Spire -->
+    <g transform="translate(570, 35)">
+      <polygon points="0,-24 5,-6 24,0 5,6 0,24 -5,6 -24,0 -5,-6" fill="#FFFFFF"/>
+      <circle cx="0" cy="0" r="5" fill="#FFF4E0"/>
+    </g>
+
+    <!-- Star Glint 4: On 'PRIME' text first corner -->
+    <g transform="translate(270, 310)">
+      <polygon points="0,-16 4,-4 16,0 4,4 0,16 -4,4 -16,0 -4,-4" fill="#FFFFFF"/>
+      <circle cx="0" cy="0" r="3" fill="#FFFFFF"/>
+    </g>
+
+    <!-- Star Glint 5: On 'RP' center intersection -->
+    <g transform="translate(480, 500)">
+      <polygon points="0,-22 5,-5 22,0 5,5 0,22 -5,5 -22,0 -5,-5" fill="#FFFFFF"/>
+      <circle cx="0" cy="0" r="5" fill="#FFE5C4"/>
+    </g>
+
+    <!-- Star Glint 6: On 'RP' bottom spike -->
+    <g transform="translate(490, 720)">
+      <polygon points="0,-18 4,-5 18,0 4,5 0,18 -4,5 -18,0 -4,-5" fill="#FFFFFF"/>
+      <circle cx="0" cy="0" r="4" fill="#FFC98A"/>
+    </g>
+
+    <!-- Star Glint 7: Far Right Shard Flare -->
+    <g transform="translate(850, 640)">
+      <polygon points="0,-20 5,-5 20,0 5,5 0,20 -5,5 -20,0 -5,-5" fill="#FFFFFF"/>
+      <circle cx="0" cy="0" r="4" fill="#FFE5C4"/>
+    </g>
   </g>
 </svg>
