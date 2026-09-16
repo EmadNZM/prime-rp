@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@theme {
+  --color-copper: #C8874B;
+  --color-copper-light: #DF9F64;
+  --color-copper-dark: #9E6533;
+  --color-dark-bg: #070707;
+  --color-dark-card: #0B0B0B;
+  --color-dark-surface: #121212;
+  --color-dark-border: #1E1E1E;
+  --color-silver: #C7C7C7;
+  --color-silver-light: #E5E5E5;
+  --font-cairo: "Cairo", sans-serif;
+  --font-montserrat: "Montserrat", sans-serif;
+  --font-rajdhani: "Rajdhani", sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  font-family: var(--font-cairo), var(--font-montserrat), system-ui, sans-serif;
+  background-color: #070707;
+  color: #E5E5E5;
+  overflow-x: hidden;
+}
+
+[dir="ltr"] body {
+  font-family: var(--font-montserrat), var(--font-cairo), system-ui, sans-serif;
+}
+
+/* Custom prime scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #070707;
+}
+::-webkit-scrollbar-thumb {
+  background: #242424;
+  border-radius: 4px;
+  border: 1px solid #161616;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C8874B;
+}
+
+/* Copper Glow & Metallic Gradients */
+.copper-glow {
+  box-shadow: 0 0 25px -5px rgba(200, 135, 75, 0.35);
+}
+
+.copper-glow-sm {
+  box-shadow: 0 0 12px -2px rgba(200, 135, 75, 0.25);
+}
+
+.copper-border-gradient {
+  border-image: linear-gradient(to bottom, #C8874B, rgba(200, 135, 75, 0.1), transparent) 1;
+}
+
+.bg-radial-mesh {
+  background-image: radial-gradient(circle at 50% -20%, rgba(200, 135, 75, 0.15), transparent 70%),
+                    radial-gradient(circle at 100% 100%, rgba(200, 135, 75, 0.05), transparent 40%);
+}
