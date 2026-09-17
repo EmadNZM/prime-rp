@@ -1,4 +1,4 @@
-import { query, isPostgresConnected } from '../postgres';
+import { query, isPostgresConnected, withTransaction } from '../postgres';
 import { RuleCategory, RuleItem } from '../../../src/types';
 import { db } from '../store';
 
@@ -71,53 +71,57 @@ export class RulesRepository {
     const slug = cat.slug || `rule-${Date.now()}`;
     const order = cat.order ?? 0;
 
-    await query(
-      `INSERT INTO rules (id, slug, sort_order, created_at, updated_at)
-       VALUES ($1, $2, $3, NOW(), NOW())
-       ON CONFLICT (id) DO UPDATE 
-       SET slug = EXCLUDED.slug, sort_order = EXCLUDED.sort_order, updated_at = NOW()`,
-      [id, slug, order]
-    );
+    return withTransaction(async (client) => {
+      await client.query(
+        `INSERT INTO rules (id, slug, sort_order, created_at, updated_at)
+         VALUES ($1, $2, $3, NOW(), NOW())
+         ON CONFLICT (id) DO UPDATE 
+         SET slug = EXCLUDED.slug, sort_order = EXCLUDED.sort_order, updated_at = NOW()`,
+        [id, slug, order]
+      );
 
-    if (cat.translations) {
-      for (const lang of ['ar', 'en']) {
-        const t = (cat.translations as any)[lang];
-        if (t) {
-          await query(
-            `INSERT INTO rule_translations (rule_id, language, title, description, penalty_info)
-             VALUES ($1, $2, $3, $4, $5)
-             ON CONFLICT (rule_id, language) DO UPDATE
-             SET title = EXCLUDED.title, description = EXCLUDED.description, penalty_info = EXCLUDED.penalty_info`,
-            [id, lang, t.title || '', t.description || '', t.penaltyInfo || '']
+      if (cat.translations) {
+        for (const lang of ['ar', 'en']) {
+          const t = (cat.translations as any)[lang];
+          if (t) {
+            await client.query(
+              `INSERT INTO rule_translations (rule_id, language, title, description, penalty_info)
+               VALUES ($1, $2, $3, $4, $5)
+               ON CONFLICT (rule_id, language) DO UPDATE
+               SET title = EXCLUDED.title, description = EXCLUDED.description, penalty_info = EXCLUDED.penalty_info`,
+              [id, lang, t.title || '', t.description || '', t.penaltyInfo || '']
+            );
+          }
+        }
+      }
+
+      if (Array.isArray(cat.rules)) {
+        for (const item of cat.rules) {
+          await client.query(
+            `INSERT INTO rule_items (id, rule_category_id, number, translations, created_at)
+             VALUES ($1, $2, $3, $4, NOW())
+             ON CONFLICT (id) DO UPDATE
+             SET number = EXCLUDED.number, translations = EXCLUDED.translations`,
+            [item.id || `r_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`, id, item.number, JSON.stringify(item.translations)]
           );
         }
       }
-    }
 
-    if (Array.isArray(cat.rules)) {
-      for (const item of cat.rules) {
-        await query(
-          `INSERT INTO rule_items (id, rule_category_id, number, translations, created_at)
-           VALUES ($1, $2, $3, $4, NOW())
-           ON CONFLICT (id) DO UPDATE
-           SET number = EXCLUDED.number, translations = EXCLUDED.translations`,
-          [item.id || `r_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`, id, item.number, JSON.stringify(item.translations)]
-        );
-      }
-    }
-
-    const row = (await query('SELECT * FROM rules WHERE id = $1', [id])).rows[0];
-    return RulesRepository.attachCategoryDetails(row);
+      const row = (await client.query('SELECT * FROM rules WHERE id = $1', [id])).rows[0];
+      return RulesRepository.attachCategoryDetails(row);
+    });
   }
 
   async deleteCategory(id: string): Promise<boolean> {
     if (!isPostgresConnected()) {
       return db.deleteRuleCategory(id);
     }
-    await query('DELETE FROM rule_items WHERE rule_category_id = $1', [id]);
-    await query('DELETE FROM rule_translations WHERE rule_id = $1', [id]);
-    const res = await query('DELETE FROM rules WHERE id = $1', [id]);
-    return (res.rowCount || 0) > 0;
+    return withTransaction(async (client) => {
+      await client.query('DELETE FROM rule_items WHERE rule_category_id = $1', [id]);
+      await client.query('DELETE FROM rule_translations WHERE rule_id = $1', [id]);
+      const res = await client.query('DELETE FROM rules WHERE id = $1', [id]);
+      return (res.rowCount || 0) > 0;
+    });
   }
 }
 

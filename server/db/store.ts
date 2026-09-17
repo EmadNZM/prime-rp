@@ -713,8 +713,8 @@ class DatabaseStore {
     return notif;
   }
 
-  markNotificationAsRead(id: string): boolean {
-    const notif = this.data.notifications.find((n) => n.id === id);
+  markNotificationAsRead(id: string, userId?: string): boolean {
+    const notif = this.data.notifications.find((n) => n.id === id && (!userId || n.userId === userId));
     if (notif) {
       notif.read = true;
       this.save();
@@ -979,6 +979,16 @@ class DatabaseStore {
 
   // --- JOB APPLICATIONS ---
   createJobApplication(app: JobApplication): JobApplication {
+    const existing = this.data.jobApplications.find(
+      a => a.jobId === app.jobId && a.userId === app.userId && (a.status === 'PENDING' || a.status === 'UNDER_REVIEW')
+    );
+    if (existing) {
+      const err: any = new Error('لديك طلب توظيف معلّق مسبقاً لهذه الوظيفة قيد المراجعة والدراسة.');
+      err.code = 'DUPLICATE_APPLICATION';
+      err.statusCode = 409;
+      throw err;
+    }
+
     const job = this.data.jobs.find(j => j.id === app.jobId);
     const user = this.data.users.find(u => u.id === app.userId);
     const enriched: JobApplication = {

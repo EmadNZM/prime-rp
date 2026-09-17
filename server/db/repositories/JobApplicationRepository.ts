@@ -51,6 +51,15 @@ export class JobApplicationRepository {
       });
     }
 
+    // Check for existing pending/under-review application before insert
+    const existing = await this.getByJobAndUser(data.jobId, data.userId);
+    if (existing && (existing.status === 'PENDING' || existing.status === 'UNDER_REVIEW')) {
+      const err: any = new Error('لديك طلب توظيف معلّق مسبقاً لهذه الوظيفة قيد المراجعة والدراسة.');
+      err.code = 'DUPLICATE_APPLICATION';
+      err.statusCode = 409;
+      throw err;
+    }
+
     const sql = `
       INSERT INTO job_applications (
         id, job_id, user_id, status, character_name, character_age,
@@ -59,18 +68,33 @@ export class JobApplicationRepository {
       RETURNING *
     `;
 
-    const res = await query(sql, [
-      id,
-      data.jobId,
-      data.userId,
-      data.characterName,
-      data.characterAge,
-      data.experience,
-      data.dailyAvailability,
-      JSON.stringify(answers)
-    ]);
+    try {
+      const res = await query(sql, [
+        id,
+        data.jobId,
+        data.userId,
+        data.characterName,
+        data.characterAge,
+        data.experience,
+        data.dailyAvailability,
+        JSON.stringify(answers)
+      ]);
 
-    return JobApplicationRepository.mapRowToApplication(res.rows[0]);
+      if (!res.rows || res.rows.length === 0) {
+        throw new Error('Failed to create job application record');
+      }
+
+      return JobApplicationRepository.mapRowToApplication(res.rows[0]);
+    } catch (err: any) {
+      // Postgres error code 23505 = unique_violation (uq_active_job_application)
+      if (err.code === '23505') {
+        const customErr: any = new Error('لديك طلب توظيف معلّق مسبقاً لهذه الوظيفة قيد المراجعة والدراسة.');
+        customErr.code = 'DUPLICATE_APPLICATION';
+        customErr.statusCode = 409;
+        throw customErr;
+      }
+      throw err;
+    }
   }
 
   async getById(id: string): Promise<JobApplication | null> {

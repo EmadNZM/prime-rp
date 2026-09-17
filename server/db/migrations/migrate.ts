@@ -47,6 +47,7 @@ export async function runMigrations(): Promise<void> {
     CREATE INDEX IF NOT EXISTS idx_job_applications_job_id ON job_applications(job_id);
     CREATE INDEX IF NOT EXISTS idx_job_applications_status ON job_applications(status);
     CREATE INDEX IF NOT EXISTS idx_job_applications_created ON job_applications(created_at DESC);
+    CREATE UNIQUE INDEX IF NOT EXISTS uq_active_job_application ON job_applications(user_id, job_id) WHERE status IN ('PENDING', 'UNDER_REVIEW');
   `);
 
   console.log('[Migration] PostgreSQL schema DDL successfully applied.');

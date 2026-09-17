@@ -54,11 +54,15 @@ export class NotificationRepository {
     return NotificationRepository.mapRowToNotification(res.rows[0]);
   }
 
-  async markAsRead(id: string): Promise<boolean> {
+  async markAsRead(id: string, userId?: string): Promise<boolean> {
     if (!isPostgresConnected()) {
-      return db.markNotificationAsRead(id);
+      return db.markNotificationAsRead(id, userId);
     }
-    const res = await query('UPDATE notifications SET is_read = TRUE WHERE id = $1', [id]);
+    const sql = userId
+      ? 'UPDATE notifications SET is_read = TRUE WHERE id = $1 AND user_id = $2'
+      : 'UPDATE notifications SET is_read = TRUE WHERE id = $1';
+    const params = userId ? [id, userId] : [id];
+    const res = await query(sql, params);
     return (res.rowCount ?? 0) > 0;
   }
 }

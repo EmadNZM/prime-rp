@@ -1,4 +1,4 @@
-import { Pool, PoolConfig, QueryResult, QueryResultRow } from 'pg';
+import { Pool, PoolClient, PoolConfig, QueryResult, QueryResultRow } from 'pg';
 
 let pool: Pool | null = null;
 let isConnected = false;
@@ -73,22 +73,8 @@ export async function query<T extends QueryResultRow = any>(
       fields: []
     } as any;
   }
-  try {
-    const p = getPool();
-    if (!p) {
-      return {
-        rows: [],
-        rowCount: 0,
-        command: '',
-        oid: 0,
-        fields: []
-      } as any;
-    }
-    return await p.query<T>(text, params);
-  } catch (err: any) {
-    console.warn('[PostgreSQL] Query failed, returning empty result:', err.message);
-    isConnected = false;
-    lastError = err.message;
+  const p = getPool();
+  if (!p) {
     return {
       rows: [],
       rowCount: 0,
@@ -96,6 +82,37 @@ export async function query<T extends QueryResultRow = any>(
       oid: 0,
       fields: []
     } as any;
+  }
+  try {
+    return await p.query<T>(text, params);
+  } catch (err: any) {
+    console.error('[PostgreSQL] Query error:', err.message);
+    throw err;
+  }
+}
+
+/**
+ * Executes a callback within a managed PostgreSQL transaction.
+ * Ensures BEGIN -> queries -> COMMIT, with automatic ROLLBACK on error.
+ */
+export async function withTransaction<T>(
+  callback: (client: PoolClient) => Promise<T>
+): Promise<T> {
+  const p = getPool();
+  if (!p) {
+    throw new Error('PostgreSQL pool not available');
+  }
+  const client = await p.connect();
+  try {
+    await client.query('BEGIN');
+    const result = await callback(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err: any) {
+    await client.query('ROLLBACK').catch(() => {});
+    throw err;
+  } finally {
+    client.release();
   }
 }
 

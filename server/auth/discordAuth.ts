@@ -299,11 +299,30 @@ export async function handleLogout(req: Request, res: Response) {
 
 /**
  * Demo login for developer preview and testing when Discord OAuth is pending configuration.
+ * STRICT SECURITY:
+ * 1. Disabled completely in production unless explicit ENABLE_DEMO_LOGIN is set.
+ * 2. NEVER permits creating or assuming the OWNER role via a public endpoint.
  */
 export async function handleDemoLogin(req: Request, res: Response) {
+  // 1. Strictly closed in Production
+  if (process.env.NODE_ENV === 'production' && process.env.ENABLE_DEMO_LOGIN !== 'true') {
+    return res.status(403).json({
+      error: 'Demo login is strictly disabled in production. Authentication must proceed exclusively via Discord OAuth.'
+    });
+  }
+
   try {
-    const roleType = req.body?.role || req.query?.role || 'admin';
-    const targetId = roleType === 'citizen' ? 'usr_citizen' : 'usr_superadmin';
+    const rawRole = String(req.body?.role || req.query?.role || 'citizen').toLowerCase();
+
+    // 2. Prohibit OWNER role creation or assumption via public demo endpoint
+    if (rawRole === 'owner' || rawRole === 'userrole.owner') {
+      return res.status(403).json({
+        error: 'Forbidden: Creating or logging into the OWNER account via demo-login is strictly prohibited.'
+      });
+    }
+
+    const roleType = rawRole === 'citizen' ? 'citizen' : 'admin';
+    const targetId = roleType === 'citizen' ? 'usr_citizen' : 'usr_admin_demo';
 
     let targetUser = await userRepository.findById(targetId);
     if (!targetUser) {
@@ -319,13 +338,13 @@ export async function handleDemoLogin(req: Request, res: Response) {
         });
       } else {
         targetUser = await userRepository.upsert({
-          discordId: process.env.OWNER_DISCORD_ID || '1195214213187129495',
-          username: 'PrimeCommander',
-          globalName: 'Prime Owner',
+          discordId: '998877665544332211',
+          username: 'PrimeAdmin',
+          globalName: 'Prime Staff Admin',
           avatar: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&auto=format&fit=crop&q=80',
-          role: UserRole.OWNER,
+          role: UserRole.ADMIN, // STRICT: ADMIN role only, NEVER OWNER!
           status: UserStatus.ACTIVE,
-          permissions: ['*']
+          permissions: ['tickets.*', 'reports.*', 'news.*', 'jobs.*']
         });
       }
     }

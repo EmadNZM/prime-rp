@@ -276,6 +276,9 @@ router.post('/jobs/:jobId/applications', requireAuth, async (req: Request, res: 
 
     return res.status(201).json(application);
   } catch (err: any) {
+    if (err.statusCode === 409 || err.code === 'DUPLICATE_APPLICATION') {
+      return res.status(409).json({ error: err.message });
+    }
     console.error('[API] /jobs/:jobId/applications error:', err.message);
     return res.status(500).json({ error: err.message || 'فشل في إرسال طلب التوظيف' });
   }
@@ -641,7 +644,7 @@ router.get('/notifications', requireAuth, async (req: Request, res: Response) =>
 
 router.patch('/notifications/:id/read', requireAuth, async (req: Request, res: Response) => {
   try {
-    const success = await notificationRepository.markAsRead(req.params.id);
+    const success = await notificationRepository.markAsRead(req.params.id, req.user!.id);
     return res.json({ success });
   } catch (err: any) {
     console.error('[API] /notifications/:id/read error:', err.message);

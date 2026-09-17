@@ -1,4 +1,4 @@
-import { query, isPostgresConnected } from '../postgres';
+import { query, isPostgresConnected, withTransaction } from '../postgres';
 import { ProductItem } from '../../../src/types';
 import { db } from '../store';
 
@@ -88,42 +88,48 @@ export class ProductRepository {
     const status = product.status || 'ACTIVE';
     const featured = Boolean(product.featured);
 
-    await query(
-      `INSERT INTO products (id, slug, category, price, currency, image, stock, status, featured, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
-       ON CONFLICT (id) DO UPDATE
-       SET slug = EXCLUDED.slug, category = EXCLUDED.category, price = EXCLUDED.price,
-           currency = EXCLUDED.currency, image = EXCLUDED.image, stock = EXCLUDED.stock,
-           status = EXCLUDED.status, featured = EXCLUDED.featured, updated_at = NOW()`,
-      [id, slug, category, price, currency, image, stock, status, featured]
-    );
+    return withTransaction(async (client) => {
+      await client.query(
+        `INSERT INTO products (id, slug, category, price, currency, image, stock, status, featured, created_at, updated_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+         ON CONFLICT (id) DO UPDATE
+         SET slug = EXCLUDED.slug, category = EXCLUDED.category, price = EXCLUDED.price,
+             currency = EXCLUDED.currency, image = EXCLUDED.image, stock = EXCLUDED.stock,
+             status = EXCLUDED.status, featured = EXCLUDED.featured, updated_at = NOW()`,
+        [id, slug, category, price, currency, image, stock, status, featured]
+      );
 
-    if (product.translations) {
-      for (const lang of ['ar', 'en']) {
-        const t = (product.translations as any)[lang];
-        if (t) {
-          await query(
-            `INSERT INTO product_translations (product_id, language, name, description, perks)
-             VALUES ($1, $2, $3, $4, $5)
-             ON CONFLICT (product_id, language) DO UPDATE
-             SET name = EXCLUDED.name, description = EXCLUDED.description, perks = EXCLUDED.perks`,
-            [id, lang, t.name || '', t.description || '', t.perks || []]
-          );
+      if (product.translations) {
+        for (const lang of ['ar', 'en']) {
+          const t = (product.translations as any)[lang];
+          if (t) {
+            await client.query(
+              `INSERT INTO product_translations (product_id, language, name, description, perks)
+               VALUES ($1, $2, $3, $4, $5)
+               ON CONFLICT (product_id, language) DO UPDATE
+               SET name = EXCLUDED.name, description = EXCLUDED.description, perks = EXCLUDED.perks`,
+              [id, lang, t.name || '', t.description || '', t.perks || []]
+            );
+          }
         }
       }
-    }
 
-    const row = (await query('SELECT * FROM products WHERE id = $1', [id])).rows[0];
-    return ProductRepository.attachTranslations(row);
+      const row = (await client.query('SELECT * FROM products WHERE id = $1', [id])).rows[0];
+      return ProductRepository.attachTranslations(row);
+    });
   }
 
   async delete(id: string): Promise<boolean> {
     if (!isPostgresConnected()) {
       return db.deleteProduct(id);
     }
-    await query('DELETE FROM product_translations WHERE product_id = $1', [id]);
-    const res = await query('DELETE FROM products WHERE id = $1', [id]);
-    return (res.rowCount || 0) > 0;
+    return withTransaction(async (client) => {
+      // Disassociate referenced orders and cascade translations in an atomic transaction
+      await client.query('UPDATE orders SET product_id = NULL WHERE product_id = $1', [id]);
+      await client.query('DELETE FROM product_translations WHERE product_id = $1', [id]);
+      const res = await client.query('DELETE FROM products WHERE id = $1', [id]);
+      return (res.rowCount || 0) > 0;
+    });
   }
 }
 
