@@ -1,15 +1,35 @@
 // Client API Service for Prime RP Platform
 
+async function apiFetch(url: string, options: RequestInit = {}) {
+  const headers: Record<string, string> = {};
+  if (options.body && typeof options.body === 'string' && !options.headers) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  return fetch(url, {
+    credentials: 'include',
+    ...options,
+    headers: {
+      ...headers,
+      ...(options.headers as Record<string, string>)
+    }
+  });
+}
+
 export const apiClient = {
   async getCurrentUser() {
-    const res = await fetch('/api/auth/me');
-    if (!res.ok) return { authenticated: false, user: null };
-    return res.json();
+    try {
+      const res = await apiFetch('/api/auth/me');
+      if (!res.ok) return { authenticated: false, user: null };
+      return res.json();
+    } catch {
+      return { authenticated: false, user: null };
+    }
   },
 
   async getAuthConfig() {
     try {
-      const res = await fetch('/api/auth/config');
+      const res = await apiFetch('/api/auth/config');
       if (!res.ok) return { hasDiscordOauth: false };
       return res.json();
     } catch {
@@ -18,115 +38,111 @@ export const apiClient = {
   },
 
   async logout() {
-    const res = await fetch('/api/auth/logout', { method: 'POST' });
+    const res = await apiFetch('/api/auth/logout', { method: 'POST' });
     return res.json();
   },
 
   async getSiteSettings() {
-    const res = await fetch('/api/site-settings');
+    const res = await apiFetch('/api/site-settings');
     return res.json();
   },
 
   async getFiveMStatus() {
-    const res = await fetch('/api/fivem/status');
+    const res = await apiFetch('/api/fivem/status');
     return res.json();
   },
 
   async getPlayers() {
-    const res = await fetch('/api/players');
+    const res = await apiFetch('/api/players');
     if (!res.ok) return [];
     return res.json();
   },
 
   async getLeaderboard() {
-    const res = await fetch('/api/leaderboard');
+    const res = await apiFetch('/api/leaderboard');
     if (!res.ok) return [];
     return res.json();
   },
 
   async getNews() {
-    const res = await fetch('/api/news');
+    const res = await apiFetch('/api/news');
     return res.json();
   },
 
   async getNewsBySlug(slug: string) {
-    const res = await fetch(`/api/news/${slug}`);
+    const res = await apiFetch(`/api/news/${slug}`);
     if (!res.ok) return null;
     return res.json();
   },
 
   async getRules() {
-    const res = await fetch('/api/rules');
+    const res = await apiFetch('/api/rules');
     return res.json();
   },
 
   async getJobs() {
-    const res = await fetch('/api/jobs');
+    const res = await apiFetch('/api/jobs');
     return res.json();
   },
 
   async getProducts() {
-    const res = await fetch('/api/products');
+    const res = await apiFetch('/api/products');
     return res.json();
   },
 
   async getFAQ() {
-    const res = await fetch('/api/faq');
+    const res = await apiFetch('/api/faq');
     return res.json();
   },
 
   async getSocialLinks() {
-    const res = await fetch('/api/social-links');
+    const res = await apiFetch('/api/social-links');
     return res.json();
   },
 
   async getOrders() {
-    const res = await fetch('/api/orders');
+    const res = await apiFetch('/api/orders');
     return res.json();
   },
 
   async checkoutOrder(productId: string) {
-    const res = await fetch('/api/orders/checkout', {
+    const res = await apiFetch('/api/orders/checkout', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ productId })
     });
     return res.json();
   },
 
   async getTickets() {
-    const res = await fetch('/api/tickets');
+    const res = await apiFetch('/api/tickets');
     return res.json();
   },
 
   async getTicket(id: string) {
-    const res = await fetch(`/api/tickets/${id}`);
+    const res = await apiFetch(`/api/tickets/${id}`);
     if (!res.ok) return null;
     return res.json();
   },
 
   async createTicket(data: { subject: string; category: string; priority: string; message: string }) {
-    const res = await fetch('/api/tickets', {
+    const res = await apiFetch('/api/tickets', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return res.json();
   },
 
   async sendTicketMessage(ticketId: string, message: string) {
-    const res = await fetch(`/api/tickets/${ticketId}/messages`, {
+    const res = await apiFetch(`/api/tickets/${ticketId}/messages`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ message })
     });
     return res.json();
   },
 
   async updateTicketStatus(ticketId: string, status: string) {
-    const res = await fetch(`/api/tickets/${ticketId}/status`, {
+    const res = await apiFetch(`/api/tickets/${ticketId}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status })
     });
     return res.json();
@@ -134,166 +150,154 @@ export const apiClient = {
 
   // Reports
   async getReports() {
-    const res = await fetch('/api/reports');
+    const res = await apiFetch('/api/reports');
     if (!res.ok) return [];
     return res.json();
   },
 
   async getReport(id: string) {
-    const res = await fetch(`/api/reports/${id}`);
+    const res = await apiFetch(`/api/reports/${id}`);
     if (!res.ok) return null;
     return res.json();
   },
 
   async createReport(data: { category: string; reason: string; targetId?: string; targetName?: string }) {
-    const res = await fetch('/api/reports', {
+    const res = await apiFetch('/api/reports', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return res.json();
   },
 
   async updateReportStatus(id: string, status: string, notes?: string) {
-    const res = await fetch(`/api/reports/${id}/status`, {
+    const res = await apiFetch(`/api/reports/${id}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status, notes })
     });
     return res.json();
   },
 
   async getNotifications() {
-    const res = await fetch('/api/notifications');
+    const res = await apiFetch('/api/notifications');
     return res.json();
   },
 
   async markNotificationRead(id: string) {
-    const res = await fetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
+    const res = await apiFetch(`/api/notifications/${id}/read`, { method: 'PATCH' });
     return res.json();
   },
 
   // Admin APIs
   async getAdminOverview() {
-    const res = await fetch('/api/admin/overview');
+    const res = await apiFetch('/api/admin/overview');
     return res.json();
   },
 
   async getAdminUsers() {
-    const res = await fetch('/api/admin/users');
+    const res = await apiFetch('/api/admin/users');
     return res.json();
   },
 
   async updateUserRole(id: string, role: string, permissions?: string[]) {
-    const res = await fetch(`/api/admin/users/${id}/role`, {
+    const res = await apiFetch(`/api/admin/users/${id}/role`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ role, permissions })
     });
     return res.json();
   },
 
   async assignUserRole(identifier: string, role: string, permissions?: string[]) {
-    const res = await fetch('/api/admin/users/assign-role', {
+    const res = await apiFetch('/api/admin/users/assign-role', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier, role, permissions })
     });
     return res.json();
   },
 
   async updateUserStatus(id: string, status: string) {
-    const res = await fetch(`/api/admin/users/${id}/status`, {
+    const res = await apiFetch(`/api/admin/users/${id}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status })
     });
     return res.json();
   },
 
   async getAdminNews() {
-    const res = await fetch('/api/admin/news');
+    const res = await apiFetch('/api/admin/news');
     return res.json();
   },
 
   async saveNewsCMS(data: any) {
-    const res = await fetch('/api/admin/news', {
+    const res = await apiFetch('/api/admin/news', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return res.json();
   },
 
   async deleteNewsCMS(id: string) {
-    const res = await fetch(`/api/admin/news/${id}`, { method: 'DELETE' });
+    const res = await apiFetch(`/api/admin/news/${id}`, { method: 'DELETE' });
     return res.json();
   },
 
   async saveRuleCMS(data: any) {
-    const res = await fetch('/api/admin/rules', {
+    const res = await apiFetch('/api/admin/rules', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return res.json();
   },
 
   async saveJobCMS(data: any) {
-    const res = await fetch('/api/admin/jobs', {
+    const res = await apiFetch('/api/admin/jobs', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return res.json();
   },
 
   async saveProductCMS(data: any) {
-    const res = await fetch('/api/admin/products', {
+    const res = await apiFetch('/api/admin/products', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return res.json();
   },
 
   async saveFAQ(data: any) {
-    const res = await fetch('/api/admin/faq', {
+    const res = await apiFetch('/api/admin/faq', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return res.json();
   },
 
   async deleteFAQ(id: string) {
-    const res = await fetch(`/api/admin/faq/${id}`, { method: 'DELETE' });
+    const res = await apiFetch(`/api/admin/faq/${id}`, { method: 'DELETE' });
     return res.json();
   },
 
   async saveSocialLink(data: any) {
-    const res = await fetch('/api/admin/social-links', {
+    const res = await apiFetch('/api/admin/social-links', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return res.json();
   },
 
   async deleteSocialLink(id: string) {
-    const res = await fetch(`/api/admin/social-links/${id}`, { method: 'DELETE' });
+    const res = await apiFetch(`/api/admin/social-links/${id}`, { method: 'DELETE' });
     return res.json();
   },
 
   async getAuditLogs() {
-    const res = await fetch('/api/admin/audit-logs');
+    const res = await apiFetch('/api/admin/audit-logs');
     return res.json();
   },
 
   async updateSettings(data: any) {
-    const res = await fetch('/api/admin/settings', {
+    const res = await apiFetch('/api/admin/settings', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
     return res.json();

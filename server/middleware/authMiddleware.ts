@@ -24,8 +24,9 @@ export async function attachUser(req: Request, res: Response, next: NextFunction
     if (user) {
       if (user.status === UserStatus.BANNED) {
         const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
-        res.clearCookie('prime_session_token', { path: '/', secure: isHttps });
-        res.clearCookie('prime_session_userId', { path: '/', secure: isHttps });
+        const clearOpts = { path: '/', secure: isHttps, httpOnly: true, sameSite: 'lax' as const };
+        res.clearCookie('prime_session_token', clearOpts);
+        res.clearCookie('prime_session_userId', clearOpts);
         return res.status(403).json({ error: 'Your account has been banned from Prime RP.' });
       }
       req.user = user;

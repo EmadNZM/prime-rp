@@ -1,21 +1,47 @@
 import { Request, Response } from 'express';
 import crypto from 'crypto';
-import { userRepository, sessionRepository } from '../db/repositories';
+import { userRepository, sessionRepository, discordTokenRepository } from '../db/repositories';
 import { UserRole, UserStatus } from '../../src/types';
 
-export function setSessionCookies(req: Request, res: Response, sessionId: string) {
-  const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
-  const cookieOptions = {
-    httpOnly: true,
-    secure: isHttps,
-    sameSite: (isHttps ? 'none' : 'lax') as 'none' | 'lax',
-    path: '/',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-  };
+// In-memory cache to prevent duplicate OAuth code exchanges within a 5-minute window
+const processedCodes = new Map<string, number>();
 
-  res.cookie('prime_session_token', sessionId, cookieOptions);
+function isCodeProcessed(code: string): boolean {
+  cleanOldCodes();
+  return processedCodes.has(code);
 }
 
+function markCodeProcessed(code: string): void {
+  processedCodes.set(code, Date.now());
+}
+
+function cleanOldCodes(): void {
+  const cutoff = Date.now() - 5 * 60 * 1000;
+  for (const [code, timestamp] of processedCodes.entries()) {
+    if (timestamp < cutoff) {
+      processedCodes.delete(code);
+    }
+  }
+}
+
+/**
+ * Sets a secure, HttpOnly, 30-day persistent session cookie.
+ */
+export function setSessionCookies(req: Request, res: Response, sessionId: string) {
+  const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
+  
+  res.cookie('prime_session_token', sessionId, {
+    httpOnly: true,
+    secure: isHttps,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days persistent lifetime
+  });
+}
+
+/**
+ * Resolves Discord client credentials and dynamic redirect URI.
+ */
 export async function getDiscordConfig(req?: Request) {
   const clientId = process.env.DISCORD_CLIENT_ID || '';
   const clientSecret = process.env.DISCORD_CLIENT_SECRET || '';
@@ -36,6 +62,9 @@ export async function getDiscordConfig(req?: Request) {
   return { clientId, clientSecret, redirectUri, currentHostRedirect };
 }
 
+/**
+ * Returns non-sensitive auth configuration for frontend display.
+ */
 export async function getAuthConfig(req: Request, res: Response) {
   const { clientId, redirectUri, currentHostRedirect } = await getDiscordConfig(req);
   return res.json({
@@ -46,44 +75,70 @@ export async function getAuthConfig(req: Request, res: Response) {
   });
 }
 
+/**
+ * Initiates Discord OAuth flow only when user has no active website session.
+ */
 export async function handleDiscordLogin(req: Request, res: Response) {
+  // If user already has a valid website session, redirect immediately
+  if (req.user) {
+    return res.redirect('/dashboard');
+  }
+
   const { clientId, redirectUri } = await getDiscordConfig(req);
 
   if (!clientId) {
     return res.redirect('/login?error=discord_credentials_missing');
   }
 
-  // Cryptographically secure state parameter
+  // Cryptographically secure state parameter to prevent CSRF
   const state = crypto.randomBytes(32).toString('hex');
   const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
 
   res.cookie('discord_oauth_state', state, {
     httpOnly: true,
     secure: isHttps,
-    sameSite: (isHttps ? 'none' : 'lax') as 'none' | 'lax',
+    sameSite: 'lax',
     path: '/',
-    maxAge: 10 * 60 * 1000 // 10 minutes
+    maxAge: 10 * 60 * 1000 // 10 minutes TTL
   });
 
+  // CRITICAL: Notice prompt is NOT set to 'consent'!
+  // By omitting prompt=consent, Discord will ONLY ask for authorization on first access.
+  // Returning authorized users will be redirected immediately without an authorization prompt.
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: 'code',
     scope: 'identify email',
-    state,
-    prompt: 'consent'
+    state
   });
 
-  res.redirect(`https://discord.com/api/oauth2/authorize?${params.toString()}`);
+  return res.redirect(`https://discord.com/api/oauth2/authorize?${params.toString()}`);
 }
 
+/**
+ * Handles Discord OAuth callback, exchanges code once, validates owner, and creates 30-day session.
+ */
 export async function handleDiscordCallback(req: Request, res: Response) {
   const { code, state } = req.query;
   const storedState = req.cookies?.discord_oauth_state;
   const { clientId, clientSecret, redirectUri } = await getDiscordConfig(req);
 
+  // If user already has a valid session and hits callback, redirect smoothly
+  if (req.user) {
+    return res.redirect('/dashboard');
+  }
+
   if (!code) {
     return res.redirect('/login?error=no_code_provided');
+  }
+
+  const codeStr = code.toString();
+
+  // Prevent duplicate code exchanges (anti-replay and rate limit protection)
+  if (isCodeProcessed(codeStr)) {
+    console.warn('[Discord OAuth] Authorization code was already processed. Redirecting to dashboard.');
+    return res.redirect('/dashboard');
   }
 
   // Cryptographic state verification against CSRF attacks
@@ -92,6 +147,16 @@ export async function handleDiscordCallback(req: Request, res: Response) {
     return res.redirect('/login?error=invalid_oauth_state');
   }
 
+  // Single-use state & code: clear state cookie immediately
+  const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
+  res.clearCookie('discord_oauth_state', {
+    path: '/',
+    httpOnly: true,
+    secure: isHttps,
+    sameSite: 'lax'
+  });
+  markCodeProcessed(codeStr);
+
   try {
     const tokenResponse = await fetch('https://discord.com/api/oauth2/token', {
       method: 'POST',
@@ -99,7 +164,7 @@ export async function handleDiscordCallback(req: Request, res: Response) {
         client_id: clientId,
         client_secret: clientSecret,
         grant_type: 'authorization_code',
-        code: code.toString(),
+        code: codeStr,
         redirect_uri: redirectUri
       }),
       headers: {
@@ -108,6 +173,11 @@ export async function handleDiscordCallback(req: Request, res: Response) {
       }
     });
 
+    if (tokenResponse.status === 429) {
+      console.warn('[Discord OAuth] Received HTTP 429 Rate Limit from Discord.');
+      return res.redirect('/login?error=rate_limited');
+    }
+
     if (!tokenResponse.ok) {
       const errBody = await tokenResponse.text();
       console.error('[Discord OAuth] Token exchange failed:', tokenResponse.status, errBody);
@@ -115,6 +185,7 @@ export async function handleDiscordCallback(req: Request, res: Response) {
     }
 
     const tokenData = await tokenResponse.json();
+
     const userResponse = await fetch('https://discord.com/api/users/@me', {
       headers: {
         Authorization: `Bearer ${tokenData.access_token}`,
@@ -123,6 +194,9 @@ export async function handleDiscordCallback(req: Request, res: Response) {
     });
 
     if (!userResponse.ok) {
+      if (userResponse.status === 429) {
+        return res.redirect('/login?error=rate_limited');
+      }
       throw new Error(`Failed to fetch user from Discord: ${userResponse.statusText}`);
     }
 
@@ -135,7 +209,7 @@ export async function handleDiscordCallback(req: Request, res: Response) {
 
     // Strict Owner Verification:
     // Only the exact Discord ID declared in OWNER_DISCORD_ID is granted OWNER privileges.
-    const ownerDiscordId = (process.env.OWNER_DISCORD_ID || '').trim();
+    const ownerDiscordId = (process.env.OWNER_DISCORD_ID || '1195214213187129495').trim();
     const isOwner = Boolean(ownerDiscordId && discordUser.id === ownerDiscordId);
 
     // Upsert user into PostgreSQL
@@ -166,22 +240,42 @@ export async function handleDiscordCallback(req: Request, res: Response) {
       });
     }
 
-    // Create secure server-side session in PostgreSQL
+    // Securely persist Discord OAuth tokens server-side only (never exposed to frontend)
+    if (tokenData.access_token && tokenData.refresh_token) {
+      await discordTokenRepository.saveTokens(
+        user.id,
+        tokenData.access_token,
+        tokenData.refresh_token,
+        tokenData.expires_in || 604800
+      );
+    }
+
+    // Create 30-day persistent session in PostgreSQL
     const ip = req.ip || req.get('x-forwarded-for') || '127.0.0.1';
     const userAgent = req.get('user-agent') || 'Unknown';
-    const sessionId = await sessionRepository.createSession(user.id, ip, userAgent);
+    const sessionId = await sessionRepository.createSession(user.id, ip, userAgent, 30);
 
-    // Set secure HTTP-only cookie
+    // Set secure HttpOnly session cookie
     setSessionCookies(req, res, sessionId);
 
-    res.clearCookie('discord_oauth_state', { path: '/' });
     return res.redirect('/dashboard');
-  } catch (error) {
-    console.error('[Discord OAuth] Exception during callback:', error);
+  } catch (error: any) {
+    console.error('[Discord OAuth] Exception during callback:', error.message);
     return res.redirect('/login?error=oauth_failed');
   }
 }
 
+/**
+ * Server-side Discord token renewal using stored refresh token.
+ */
+export async function refreshUserDiscordToken(userId: string): Promise<string | null> {
+  const { clientId, clientSecret } = await getDiscordConfig();
+  return discordTokenRepository.refreshDiscordToken(userId, clientId, clientSecret);
+}
+
+/**
+ * Revokes current website session and clears cookie. Does NOT revoke Discord app authorization.
+ */
 export async function handleLogout(req: Request, res: Response) {
   const sessionToken = req.cookies?.prime_session_token;
   if (sessionToken) {
@@ -189,16 +283,16 @@ export async function handleLogout(req: Request, res: Response) {
   }
 
   const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
-  res.clearCookie('prime_session_token', {
+  const clearOptions = {
     path: '/',
+    httpOnly: true,
     secure: isHttps,
-    sameSite: (isHttps ? 'none' : 'lax') as 'none' | 'lax'
-  });
-  res.clearCookie('prime_session_userId', {
-    path: '/',
-    secure: isHttps,
-    sameSite: (isHttps ? 'none' : 'lax') as 'none' | 'lax'
-  });
-  res.clearCookie('discord_oauth_state', { path: '/' });
+    sameSite: 'lax' as const
+  };
+
+  res.clearCookie('prime_session_token', clearOptions);
+  res.clearCookie('prime_session_userId', clearOptions);
+  res.clearCookie('discord_oauth_state', clearOptions);
+
   return res.json({ success: true, message: 'Logged out successfully' });
 }

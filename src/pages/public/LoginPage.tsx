@@ -57,6 +57,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
           ? 'انتهت صلاحية جلسة التحقق من الأمان، يرجى إعادة المحاولة مجددًا.'
           : 'OAuth state validation expired. Please try again.'
       );
+    } else if (err === 'rate_limited') {
+      setErrorMsg(
+        language === 'ar'
+          ? 'تم تجاوز حد الطلبات المؤقت لدى Discord (Rate Limit). يرجى الانتظار دقيقة واحدة ثم إعادة المحاولة.'
+          : 'Discord temporarily rate-limited requests. Please wait a minute and try again.'
+      );
     } else if (err === 'no_code_provided') {
       setErrorMsg(
         language === 'ar'

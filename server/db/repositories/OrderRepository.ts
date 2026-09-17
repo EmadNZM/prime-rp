@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { query } from '../postgres';
 import { OrderItem } from '../../../src/types';
 import { productRepository } from './ProductRepository';
@@ -40,8 +41,8 @@ export class OrderRepository {
     const product = await productRepository.getById(productId);
     if (!product) return null;
 
-    const id = `ord_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
-    const orderNumber = `PRIME-${Math.floor(100000 + Math.random() * 900000)}`;
+    const id = `ord_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const orderNumber = `PRIME-${crypto.randomInt(100000, 999999)}`;
     const productName = product.translations.ar?.name || product.translations.en?.name || 'منتج Prime RP';
 
     const res = await query(

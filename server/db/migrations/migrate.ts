@@ -10,6 +10,22 @@ export async function runMigrations(): Promise<void> {
 
   // Run schema DDL
   await query(schemaSql);
+
+  // Ensure sessions has last_used_at column
+  await query('ALTER TABLE sessions ADD COLUMN IF NOT EXISTS last_used_at TIMESTAMPTZ DEFAULT NOW();');
+
+  // Ensure discord_oauth_tokens table exists for secure server-side tokens
+  await query(`
+    CREATE TABLE IF NOT EXISTS discord_oauth_tokens (
+      user_id VARCHAR(100) PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+      access_token TEXT NOT NULL,
+      refresh_token TEXT NOT NULL,
+      expires_at TIMESTAMPTZ NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+  `);
+
   console.log('[Migration] PostgreSQL schema DDL successfully applied.');
 
   // Seed default roles if not present

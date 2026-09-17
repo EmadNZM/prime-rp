@@ -42,9 +42,25 @@ router.get('/auth/config', getAuthConfig);
 
 router.get('/auth/me', (req: Request, res: Response) => {
   if (!req.user) {
-    return res.json({ authenticated: false, user: null });
+    return res.status(401).json({ authenticated: false });
   }
-  return res.json({ authenticated: true, user: req.user });
+  return res.status(200).json({
+    authenticated: true,
+    user: {
+      id: req.user.id,
+      discordId: req.user.discordId,
+      username: req.user.username,
+      displayName: req.user.displayName || req.user.globalName || req.user.username,
+      globalName: req.user.globalName || req.user.displayName || req.user.username,
+      avatar: req.user.avatar,
+      email: req.user.email,
+      role: req.user.role,
+      status: req.user.status,
+      permissions: req.user.permissions,
+      isOwner: Boolean(req.user.isOwner),
+      isAdmin: Boolean(req.user.isAdmin)
+    }
+  });
 });
 
 router.get('/auth/discord', handleDiscordLogin);

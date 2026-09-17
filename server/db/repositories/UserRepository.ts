@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { query } from '../postgres';
 import { User, UserRole, UserStatus } from '../../../src/types';
 
@@ -100,7 +101,7 @@ export class UserRepository {
     }
 
     // New user: STRICT DEFAULT IS CITIZEN unless Discord ID matches OWNER_DISCORD_ID
-    const id = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const id = `usr_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const role = isOwner ? UserRole.OWNER : UserRole.CITIZEN;
     const permissions = isOwner ? ['*'] : ['tickets.create', 'orders.create'];
     const status = data.status || UserStatus.ACTIVE;
@@ -223,7 +224,7 @@ export class UserRepository {
     }
 
     // Placeholder reservation
-    const newId = `usr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const newId = `usr_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const isDiscordId = /^\d{17,20}$/.test(clean);
     const created = await query(
       `INSERT INTO users (id, discord_id, username, global_name, role, status, permissions, is_admin, is_owner, created_at, updated_at, last_login)

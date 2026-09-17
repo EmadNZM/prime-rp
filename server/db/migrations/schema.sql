@@ -48,11 +48,22 @@ CREATE TABLE IF NOT EXISTS sessions (
   ip_address VARCHAR(100),
   user_agent TEXT,
   expires_at TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW()
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  last_used_at TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_sessions_user_id ON sessions(user_id);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires_at ON sessions(expires_at);
+
+-- 2.1 DISCORD OAUTH TOKENS (Secure Server-Side Persistence)
+CREATE TABLE IF NOT EXISTS discord_oauth_tokens (
+  user_id VARCHAR(100) PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  access_token TEXT NOT NULL,
+  refresh_token TEXT NOT NULL,
+  expires_at TIMESTAMPTZ NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
 
 -- 3. NEWS & TRANSLATIONS
 CREATE TABLE IF NOT EXISTS news (

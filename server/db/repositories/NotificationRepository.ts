@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { query } from '../postgres';
 import { NotificationItem } from '../../../src/types';
 
@@ -30,7 +31,7 @@ export class NotificationRepository {
     message: string;
     link?: string;
   }): Promise<NotificationItem> {
-    const id = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const id = `notif_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const res = await query(
       `INSERT INTO notifications (id, user_id, type, title, message, link, is_read, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, FALSE, NOW())

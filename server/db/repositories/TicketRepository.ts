@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { query } from '../postgres';
 import { TicketItem, TicketMessage, TicketPriority, TicketStatus } from '../../../src/types';
 
@@ -69,8 +70,8 @@ export class TicketRepository {
     priority?: TicketPriority;
     initialMessage: string;
   }): Promise<TicketItem> {
-    const id = `tkt_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
-    const ticketNumber = `TICK-${Math.floor(1000 + Math.random() * 9000)}`;
+    const id = `tkt_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+    const ticketNumber = `TICK-${crypto.randomInt(1000, 9999)}`;
     const priority = data.priority || TicketPriority.MEDIUM;
     const status = TicketStatus.OPEN;
 
@@ -86,7 +87,7 @@ export class TicketRepository {
       `INSERT INTO ticket_messages (id, ticket_id, sender_id, sender_name, sender_avatar, sender_role, is_staff, message, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
       [
-        `msg_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+        `msg_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`,
         id,
         data.userId,
         data.userName,
@@ -112,7 +113,7 @@ export class TicketRepository {
     const ticket = await this.getById(data.ticketId);
     if (!ticket) return null;
 
-    const msgId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const msgId = `msg_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     await query(
       `INSERT INTO ticket_messages (id, ticket_id, sender_id, sender_name, sender_avatar, sender_role, is_staff, message, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,

@@ -12,3 +12,4 @@ export * from './SettingsRepository';
 export * from './FAQRepository';
 export * from './ReportRepository';
 export * from './SocialLinksRepository';
+export * from './DiscordTokenRepository';

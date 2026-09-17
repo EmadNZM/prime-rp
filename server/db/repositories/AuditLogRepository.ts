@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import { query } from '../postgres';
 import { AuditLogItem } from '../../../src/types';
 
@@ -30,7 +31,7 @@ export class AuditLogRepository {
     metadata?: string;
     ip?: string;
   }): Promise<AuditLogItem> {
-    const id = `log_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const id = `log_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const res = await query(
       `INSERT INTO audit_logs (id, admin_id, admin_name, action, entity, entity_id, metadata, ip, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
