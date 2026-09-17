@@ -7,6 +7,25 @@ export const apiClient = {
     return res.json();
   },
 
+  async getAuthConfig() {
+    try {
+      const res = await fetch('/api/auth/config');
+      if (!res.ok) return { hasDiscordOauth: false };
+      return res.json();
+    } catch {
+      return { hasDiscordOauth: false };
+    }
+  },
+
+  async discordDirectLogin(discordUsername: string, discordId?: string, avatar?: string) {
+    const res = await fetch('/api/auth/discord-direct', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ discordUsername, discordId, avatar })
+    });
+    return res.json();
+  },
+
   async portalLogin(username: string, password?: string) {
     const res = await fetch('/api/auth/portal-login', {
       method: 'POST',

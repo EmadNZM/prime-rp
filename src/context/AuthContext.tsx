@@ -8,7 +8,9 @@ interface AuthContextType {
   isLoading: boolean;
   isAdmin: boolean;
   isStaff: boolean;
+  hasDiscordOauth: boolean;
   loginWithDiscord: () => void;
+  loginWithDiscordDirect: (discordUsername: string, discordId?: string, avatar?: string) => Promise<boolean>;
   portalLogin: (username?: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -19,15 +21,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [hasDiscordOauth, setHasDiscordOauth] = useState<boolean>(false);
 
   const refreshUser = async () => {
     try {
-      const data = await apiClient.getCurrentUser();
+      const [data, authConf] = await Promise.all([
+        apiClient.getCurrentUser(),
+        apiClient.getAuthConfig()
+      ]);
       if (data.authenticated && data.user) {
         setUser(data.user);
       } else {
         setUser(null);
       }
+      setHasDiscordOauth(Boolean(authConf?.hasDiscordOauth));
     } catch (err) {
       console.error('Error refreshing session:', err);
       setUser(null);
@@ -42,6 +49,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithDiscord = () => {
     window.location.href = '/api/auth/discord';
+  };
+
+  const loginWithDiscordDirect = async (discordUsername: string, discordId?: string, avatar?: string): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      const res = await apiClient.discordDirectLogin(discordUsername, discordId, avatar);
+      if (res.success && res.user) {
+        setUser(res.user);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error('Discord direct login error:', err);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const portalLogin = async (username: string = 'PrimeCommander', password?: string) => {
@@ -91,7 +115,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         isAdmin,
         isStaff,
+        hasDiscordOauth,
         loginWithDiscord,
+        loginWithDiscordDirect,
         portalLogin,
         logout,
         refreshUser

@@ -19,15 +19,72 @@ import { LegalPages } from './pages/public/LegalPages';
 import { UserDashboard } from './pages/user/UserDashboard';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 
+const VALID_TABS = [
+  'home',
+  'about',
+  'rules',
+  'jobs',
+  'news',
+  'news-detail',
+  'store',
+  'players',
+  'leaderboard',
+  'support',
+  'tickets',
+  'faq',
+  'login',
+  'dashboard',
+  'orders',
+  'admin',
+  'legal-terms',
+  'legal-privacy'
+];
+
+function getInitialTab(): string {
+  try {
+    const path = window.location.pathname.replace(/^\//, '').split('/')[0];
+    if (path && VALID_TABS.includes(path)) {
+      return path;
+    }
+    const params = new URLSearchParams(window.location.search);
+    const tabParam = params.get('tab');
+    if (tabParam && VALID_TABS.includes(tabParam)) {
+      return tabParam;
+    }
+  } catch {
+    // fallback
+  }
+  return 'home';
+}
+
 function MainApp() {
-  const [currentTab, setCurrentTab] = useState<string>('home');
+  const [currentTab, setCurrentTab] = useState<string>(getInitialTab);
   const [selectedNewsSlug, setSelectedNewsSlug] = useState<string>('');
   const { isRtl } = useLanguage();
 
-  // Listen to browser hash or navigation
+  // Keep browser URL synchronized with active tab
   useEffect(() => {
+    try {
+      const targetPath = currentTab === 'home' ? '/' : `/${currentTab}`;
+      if (window.location.pathname !== targetPath) {
+        // Keep search params when on login to retain notices/prompts
+        const search = currentTab === 'login' ? window.location.search : '';
+        window.history.pushState({ tab: currentTab }, '', targetPath + search);
+      }
+    } catch {
+      // ignore
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [currentTab]);
+
+  // Support browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = () => {
+      setCurrentTab(getInitialTab());
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   return (
     <div className={`min-h-screen bg-[#070707] text-[#E5E5E5] flex flex-col font-sans selection:bg-[#C8874B] selection:text-black ${isRtl ? 'font-cairo' : 'font-montserrat'}`}>
