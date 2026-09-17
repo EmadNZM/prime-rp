@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { db } from '../db/store';
+import { userRepository, sessionRepository } from '../db/repositories';
 import { User, UserRole, UserStatus } from '../../src/types';
 
 declare global {
@@ -10,19 +10,35 @@ declare global {
   }
 }
 
-export function attachUser(req: Request, res: Response, next: NextFunction) {
-  const userId = req.cookies?.prime_session_userId;
-  if (userId) {
-    const user = db.getUserById(userId);
+export async function attachUser(req: Request, res: Response, next: NextFunction) {
+  try {
+    const sessionToken = req.cookies?.prime_session_token;
+    const userIdCookie = req.cookies?.prime_session_userId;
+
+    let user: User | null = null;
+
+    if (sessionToken) {
+      user = await sessionRepository.validateSession(sessionToken);
+    }
+
+    if (!user && userIdCookie) {
+      user = await userRepository.findById(userIdCookie);
+    }
+
     if (user) {
       if (user.status === UserStatus.BANNED) {
-        res.clearCookie('prime_session_userId');
+        const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
+        res.clearCookie('prime_session_token', { path: '/', secure: isHttps });
+        res.clearCookie('prime_session_userId', { path: '/', secure: isHttps });
         return res.status(403).json({ error: 'Your account has been banned from Prime RP.' });
       }
       req.user = user;
     }
+    next();
+  } catch (err: any) {
+    console.error('[AuthMiddleware] Error attaching user:', err.message);
+    next();
   }
-  next();
 }
 
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
