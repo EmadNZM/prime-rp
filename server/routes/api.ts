@@ -10,20 +10,26 @@ import {
   notificationRepository,
   auditLogRepository,
   settingsRepository,
-  faqRepository
+  faqRepository,
+  reportRepository,
+  socialLinksRepository
 } from '../db/repositories';
 import { 
   handleDiscordLogin, 
   handleDiscordCallback, 
-  handleDiscordDirectLogin,
-  getAuthConfig,
-  handlePortalLogin, 
+  getAuthConfig, 
   handleLogout 
 } from '../auth/discordAuth';
-import { attachUser, requireAuth, requireRole, requirePermission } from '../middleware/authMiddleware';
+import { 
+  attachUser, 
+  requireAuth, 
+  requireRole, 
+  requireOwner 
+} from '../middleware/authMiddleware';
 import { UserRole } from '../../src/types';
 import { fiveMService } from '../services/fivemService';
 import { discordService } from '../services/discordService';
+import { paymentService } from '../services/paymentService';
 
 const router = Router();
 
@@ -31,6 +37,7 @@ const router = Router();
 router.use(attachUser);
 
 // ---------------- AUTHENTICATION ----------------
+// Discord OAuth is the sole production authentication flow.
 router.get('/auth/config', getAuthConfig);
 
 router.get('/auth/me', (req: Request, res: Response) => {
@@ -42,8 +49,6 @@ router.get('/auth/me', (req: Request, res: Response) => {
 
 router.get('/auth/discord', handleDiscordLogin);
 router.get('/auth/discord/callback', handleDiscordCallback);
-router.post('/auth/discord-direct', handleDiscordDirectLogin);
-router.post('/auth/portal-login', handlePortalLogin);
 router.post('/auth/logout', handleLogout);
 
 // ---------------- SITE SETTINGS & FIVEM STATUS ----------------
@@ -67,7 +72,40 @@ router.get('/site-settings', async (req: Request, res: Response) => {
   }
 });
 
-// ---------------- PUBLIC CONTENT (NEWS, RULES, JOBS, PRODUCTS, FAQ) ----------------
+// ---------------- FIVE M REAL-TIME ENDPOINTS ----------------
+router.get('/fivem/status', async (req: Request, res: Response) => {
+  try {
+    const telemetry = await fiveMService.getServerStatus();
+    return res.json(telemetry);
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to fetch FiveM status' });
+  }
+});
+
+router.get('/players', async (req: Request, res: Response) => {
+  try {
+    const players = await fiveMService.getPlayers();
+    return res.json(players);
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to fetch live players' });
+  }
+});
+
+router.get('/fivem/players', async (req: Request, res: Response) => {
+  try {
+    const players = await fiveMService.getPlayers();
+    return res.json(players);
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to fetch FiveM players' });
+  }
+});
+
+// Leaderboard: Empty state until in-game database sync is configured
+router.get('/leaderboard', async (req: Request, res: Response) => {
+  return res.json([]);
+});
+
+// ---------------- PUBLIC CONTENT (NEWS, RULES, JOBS, PRODUCTS, FAQ, SOCIALS) ----------------
 router.get('/news', async (req: Request, res: Response) => {
   try {
     const news = await newsRepository.getAll(true);
@@ -121,39 +159,12 @@ router.get('/products', async (req: Request, res: Response) => {
   }
 });
 
-// Alias for store products
 router.get('/store/products', async (req: Request, res: Response) => {
   try {
     const products = await productRepository.getAll(false);
     return res.json(products);
   } catch (err: any) {
     return res.status(500).json({ error: 'Failed to fetch store products' });
-  }
-});
-
-// FiveM Server Real-Time Status Endpoint
-router.get('/fivem/status', async (req: Request, res: Response) => {
-  try {
-    const telemetry = await fiveMService.getServerStatus();
-    return res.json(telemetry);
-  } catch (err: any) {
-    return res.status(500).json({ error: 'Failed to fetch FiveM status' });
-  }
-});
-
-// Leaderboard Endpoint
-router.get('/leaderboard', async (req: Request, res: Response) => {
-  try {
-    const defaultLeaderboard = [
-      { rank: 1, name: 'Sultan Al-Ghamdi', playtimeHours: 420, level: 58, faction: 'LSPD Chief' },
-      { rank: 2, name: 'Fahad Al-Otaibi', playtimeHours: 385, level: 52, faction: 'EMS Director' },
-      { rank: 3, name: 'Rakan Al-Harbi', playtimeHours: 310, level: 47, faction: 'Ballas Leader' },
-      { rank: 4, name: 'Saad Al-Dossari', playtimeHours: 290, level: 44, faction: 'Mechanic Boss' },
-      { rank: 5, name: 'Nasser Al-Qahtani', playtimeHours: 245, level: 39, faction: 'Citizen' }
-    ];
-    return res.json(defaultLeaderboard);
-  } catch (err: any) {
-    return res.status(500).json({ error: 'Failed to fetch leaderboard' });
   }
 });
 
@@ -167,7 +178,17 @@ router.get('/faq', async (req: Request, res: Response) => {
   }
 });
 
-// ---------------- USER ORDERS & CART CHECKOUT ----------------
+router.get('/social-links', async (req: Request, res: Response) => {
+  try {
+    const links = await socialLinksRepository.getAll(true);
+    return res.json(links);
+  } catch (err: any) {
+    console.error('[API] /social-links error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch social links' });
+  }
+});
+
+// ---------------- USER ORDERS & PAYMENT ----------------
 router.get('/orders', requireAuth, async (req: Request, res: Response) => {
   try {
     const orders = await orderRepository.getAll(req.user!.id);
@@ -185,8 +206,8 @@ router.post('/orders/checkout', requireAuth, async (req: Request, res: Response)
   }
 
   try {
-    const order = await orderRepository.create(req.user!.id, productId);
-    if (!order) {
+    const checkoutResult = await paymentService.createCheckoutSession(req.user!.id, productId);
+    if (!checkoutResult) {
       return res.status(404).json({ error: 'Product not found or unavailable' });
     }
 
@@ -195,22 +216,34 @@ router.post('/orders/checkout', requireAuth, async (req: Request, res: Response)
       adminName: req.user!.globalName || req.user!.username,
       action: 'ORDER_PLACED',
       entity: 'Order',
-      entityId: order.id,
-      metadata: `Placed order ${order.orderNumber} for product ${order.productName}`,
+      entityId: checkoutResult.order.id,
+      metadata: `Placed order ${checkoutResult.order.orderNumber} for product ${checkoutResult.order.productName} (${checkoutResult.provider})`,
       ip: req.ip || '127.0.0.1'
     });
 
-    return res.status(201).json(order);
+    // Notify Discord Bot
+    discordService.notifyOrderCreated({
+      id: checkoutResult.order.id,
+      orderNumber: checkoutResult.order.orderNumber,
+      productName: checkoutResult.order.productName,
+      price: checkoutResult.order.price,
+      currency: checkoutResult.order.currency
+    }).catch((err) => console.warn('[Discord Notification] Order error:', err.message));
+
+    return res.status(201).json(checkoutResult);
   } catch (err: any) {
     console.error('[API] /orders/checkout error:', err.message);
     return res.status(500).json({ error: 'Order checkout failed' });
   }
 });
 
-// ---------------- USER TICKETS ----------------
+// ---------------- USER TICKETS (WITH IDOR PROTECTION) ----------------
 router.get('/tickets', requireAuth, async (req: Request, res: Response) => {
   try {
-    const isStaff = [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPPORT].includes(req.user!.role);
+    const isStaff = Boolean(
+      req.user!.isOwner || 
+      [UserRole.OWNER, UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPPORT].includes(req.user!.role)
+    );
     const tickets = isStaff ? await ticketRepository.getAll() : await ticketRepository.getAll(req.user!.id);
     return res.json(tickets);
   } catch (err: any) {
@@ -226,7 +259,10 @@ router.get('/tickets/:id', requireAuth, async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Ticket not found' });
     }
 
-    const isStaff = [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPPORT].includes(req.user!.role);
+    const isStaff = Boolean(
+      req.user!.isOwner || 
+      [UserRole.OWNER, UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPPORT].includes(req.user!.role)
+    );
     if (!isStaff && ticket.userId !== req.user!.id) {
       return res.status(403).json({ error: 'Forbidden: You do not have access to this ticket' });
     }
@@ -265,6 +301,15 @@ router.post('/tickets', requireAuth, async (req: Request, res: Response) => {
       ip: req.ip || '127.0.0.1'
     });
 
+    // Notify Discord Bot
+    discordService.notifyTicketCreated({
+      id: ticket.id,
+      ticketNumber: ticket.ticketNumber,
+      subject: ticket.subject,
+      category: ticket.category,
+      userName: ticket.userName
+    }).catch((err) => console.warn('[Discord Notification] Ticket error:', err.message));
+
     return res.status(201).json(ticket);
   } catch (err: any) {
     console.error('[API] /tickets create error:', err.message);
@@ -284,7 +329,10 @@ router.post('/tickets/:id/messages', requireAuth, async (req: Request, res: Resp
       return res.status(404).json({ error: 'Ticket not found' });
     }
 
-    const isStaff = [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPPORT].includes(req.user!.role);
+    const isStaff = Boolean(
+      req.user!.isOwner || 
+      [UserRole.OWNER, UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPPORT].includes(req.user!.role)
+    );
     if (!isStaff && ticket.userId !== req.user!.id) {
       return res.status(403).json({ error: 'Forbidden' });
     }
@@ -308,7 +356,10 @@ router.post('/tickets/:id/messages', requireAuth, async (req: Request, res: Resp
 
 router.patch('/tickets/:id/status', requireAuth, async (req: Request, res: Response) => {
   const { status } = req.body;
-  const isStaff = [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPPORT].includes(req.user!.role);
+  const isStaff = Boolean(
+    req.user!.isOwner || 
+    [UserRole.OWNER, UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPPORT].includes(req.user!.role)
+  );
   if (!isStaff) {
     return res.status(403).json({ error: 'Only staff can modify ticket status' });
   }
@@ -336,6 +387,115 @@ router.patch('/tickets/:id/status', requireAuth, async (req: Request, res: Respo
   }
 });
 
+// ---------------- REPORTS SYSTEM ----------------
+router.get('/reports', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const isStaff = Boolean(
+      req.user!.isOwner || 
+      [UserRole.OWNER, UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR].includes(req.user!.role)
+    );
+    const reports = isStaff ? await reportRepository.getAll() : await reportRepository.getAll(req.user!.id);
+    return res.json(reports);
+  } catch (err: any) {
+    console.error('[API] /reports error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch reports' });
+  }
+});
+
+router.get('/reports/:id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const report = await reportRepository.getById(req.params.id);
+    if (!report) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+
+    const isStaff = Boolean(
+      req.user!.isOwner || 
+      [UserRole.OWNER, UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR].includes(req.user!.role)
+    );
+    if (!isStaff && report.reporterId !== req.user!.id) {
+      return res.status(403).json({ error: 'Forbidden: You do not have access to this report' });
+    }
+
+    return res.json(report);
+  } catch (err: any) {
+    console.error('[API] /reports/:id error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch report' });
+  }
+});
+
+router.post('/reports', requireAuth, async (req: Request, res: Response) => {
+  const { category, reason, targetId, targetName } = req.body;
+  if (!category || !reason) {
+    return res.status(400).json({ error: 'Report category and reason are required' });
+  }
+
+  try {
+    const report = await reportRepository.create({
+      reporterId: req.user!.id,
+      reporterName: req.user!.globalName || req.user!.username,
+      reporterAvatar: req.user!.avatar,
+      category,
+      reason,
+      targetId,
+      targetName
+    });
+
+    await auditLogRepository.log({
+      adminId: req.user!.id,
+      adminName: req.user!.globalName || req.user!.username,
+      action: 'REPORT_SUBMITTED',
+      entity: 'Report',
+      entityId: report.id,
+      metadata: `User submitted report [${category}] against ${targetName || 'N/A'}`,
+      ip: req.ip || '127.0.0.1'
+    });
+
+    // Notify Discord Bot
+    discordService.notifyReportCreated({
+      id: report.id,
+      category: report.category,
+      reason: report.reason,
+      reporterName: report.reporterName,
+      targetName: report.targetName
+    }).catch((err) => console.warn('[Discord Notification] Report error:', err.message));
+
+    return res.status(201).json(report);
+  } catch (err: any) {
+    console.error('[API] /reports create error:', err.message);
+    return res.status(500).json({ error: 'Failed to submit report' });
+  }
+});
+
+router.patch('/reports/:id/status', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR]), async (req: Request, res: Response) => {
+  const { status, notes } = req.body;
+  if (!status) {
+    return res.status(400).json({ error: 'Status is required' });
+  }
+
+  try {
+    const updated = await reportRepository.updateStatus(req.params.id, status, notes);
+    if (!updated) {
+      return res.status(404).json({ error: 'Report not found' });
+    }
+
+    await auditLogRepository.log({
+      adminId: req.user!.id,
+      adminName: req.user!.globalName || req.user!.username,
+      action: 'REPORT_STATUS_UPDATED',
+      entity: 'Report',
+      entityId: req.params.id,
+      metadata: `Changed report status to ${status}`,
+      ip: req.ip || '127.0.0.1'
+    });
+
+    return res.json(updated);
+  } catch (err: any) {
+    console.error('[API] /reports/:id/status error:', err.message);
+    return res.status(500).json({ error: 'Failed to update report status' });
+  }
+});
+
 // ---------------- USER NOTIFICATIONS ----------------
 router.get('/notifications', requireAuth, async (req: Request, res: Response) => {
   try {
@@ -358,37 +518,46 @@ router.patch('/notifications/:id/read', requireAuth, async (req: Request, res: R
 });
 
 // ---------------- ADMIN OVERVIEW & DASHBOARD ----------------
-router.get('/admin/overview', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPPORT, UserRole.EDITOR, UserRole.STORE_MANAGER]), async (req: Request, res: Response) => {
-  try {
-    const users = await userRepository.getAll();
-    const tickets = await ticketRepository.getAll();
-    const orders = await orderRepository.getAll();
-    const news = await newsRepository.getAll(false);
-    const products = await productRepository.getAll(true);
-    const auditLogs = await auditLogRepository.getRecent(10);
+router.get(
+  '/admin/overview',
+  requireAuth,
+  requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPPORT, UserRole.EDITOR, UserRole.STORE_MANAGER]),
+  async (req: Request, res: Response) => {
+    try {
+      const users = await userRepository.getAll();
+      const tickets = await ticketRepository.getAll();
+      const orders = await orderRepository.getAll();
+      const news = await newsRepository.getAll(false);
+      const products = await productRepository.getAll(true);
+      const reports = await reportRepository.getAll();
+      const auditLogs = await auditLogRepository.getRecent(15);
 
-    const openTicketsCount = tickets.filter((t) => t.status === 'OPEN' || t.status === 'IN_PROGRESS').length;
-    const totalRevenue = orders.reduce((sum, o) => sum + (o.status === 'COMPLETED' ? o.price : 0), 0);
+      const openTicketsCount = tickets.filter((t) => t.status === 'OPEN' || t.status === 'IN_PROGRESS').length;
+      const openReportsCount = reports.filter((r) => r.status === 'OPEN' || r.status === 'IN_REVIEW').length;
+      const totalRevenue = orders.reduce((sum, o) => sum + (o.status === 'COMPLETED' ? o.price : 0), 0);
 
-    return res.json({
-      metrics: {
-        totalUsers: users.length,
-        activeUsers: users.filter((u) => u.status === 'ACTIVE').length,
-        openTickets: openTicketsCount,
-        totalOrders: orders.length,
-        totalRevenue,
-        totalNews: news.length,
-        totalProducts: products.length
-      },
-      recentAuditLogs: auditLogs
-    });
-  } catch (err: any) {
-    console.error('[API] /admin/overview error:', err.message);
-    return res.status(500).json({ error: 'Failed to fetch admin overview' });
+      return res.json({
+        metrics: {
+          totalUsers: users.length,
+          activeUsers: users.filter((u) => u.status === 'ACTIVE').length,
+          openTickets: openTicketsCount,
+          openReports: openReportsCount,
+          totalOrders: orders.length,
+          totalRevenue,
+          totalNews: news.length,
+          totalProducts: products.length
+        },
+        recentAuditLogs: auditLogs
+      });
+    } catch (err: any) {
+      console.error('[API] /admin/overview error:', err.message);
+      return res.status(500).json({ error: 'Failed to fetch admin overview' });
+    }
   }
-});
+);
 
-// ---------------- ADMIN: USER MANAGEMENT ----------------
+// ---------------- ADMIN: USER MANAGEMENT & ROLE ASSIGNMENT ----------------
+// Strictly protected: Only the Server Owner can modify user roles or assign privileges.
 router.get('/admin/users', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR]), async (req: Request, res: Response) => {
   try {
     const users = await userRepository.getAll();
@@ -399,17 +568,33 @@ router.get('/admin/users', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserR
   }
 });
 
-router.patch('/admin/users/:id/role', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]), async (req: Request, res: Response) => {
+router.patch('/admin/users/:id/role', requireAuth, requireOwner, async (req: Request, res: Response) => {
   const { role, permissions } = req.body;
   if (!role) {
     return res.status(400).json({ error: 'Role is required' });
   }
 
+  // Prevent any attempt to assign OWNER role via API
+  if (role === UserRole.OWNER || (role as string) === 'OWNER') {
+    return res.status(400).json({ error: 'OWNER role cannot be assigned. It is reserved exclusively for the declared server owner.' });
+  }
+
+  // Prevent modifying one's own role
+  if (req.user!.id === req.params.id) {
+    return res.status(400).json({ error: 'You cannot modify your own administrative role.' });
+  }
+
   try {
-    const user = await userRepository.updateRole(req.params.id, role, permissions);
-    if (!user) {
+    const targetUser = await userRepository.findById(req.params.id);
+    if (!targetUser) {
       return res.status(404).json({ error: 'User not found' });
     }
+
+    if (targetUser.isOwner) {
+      return res.status(403).json({ error: 'Cannot modify the Owner account.' });
+    }
+
+    const updatedUser = await userRepository.updateRole(req.params.id, role, permissions);
 
     await auditLogRepository.log({
       adminId: req.user!.id,
@@ -417,50 +602,74 @@ router.patch('/admin/users/:id/role', requireAuth, requireRole([UserRole.SUPER_A
       action: 'USER_ROLE_CHANGED',
       entity: 'User',
       entityId: req.params.id,
-      metadata: `Assigned role ${role} to ${user.username}`,
+      metadata: `Owner assigned role ${role} to ${updatedUser?.username}`,
       ip: req.ip || '127.0.0.1'
     });
 
-    return res.json(user);
+    // Notify Discord Bot
+    discordService.notifyRoleChanged({
+      username: updatedUser?.username || 'Unknown',
+      newRole: role,
+      adminName: req.user!.globalName || req.user!.username
+    }).catch((err) => console.warn('[Discord Notification] Role change error:', err.message));
+
+    return res.json(updatedUser);
   } catch (err: any) {
     console.error('[API] /admin/users/:id/role error:', err.message);
-    return res.status(500).json({ error: 'Failed to update user role' });
+    return res.status(500).json({ error: err.message || 'Failed to update user role' });
   }
 });
 
-router.post('/admin/users/assign-role', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]), async (req: Request, res: Response) => {
+router.post('/admin/users/assign-role', requireAuth, requireOwner, async (req: Request, res: Response) => {
   const { identifier, role, permissions } = req.body;
   if (!identifier || !role) {
     return res.status(400).json({ error: 'Identifier (Discord ID or Username) and Role are required' });
   }
 
+  if (role === UserRole.OWNER || (role as string) === 'OWNER') {
+    return res.status(400).json({ error: 'OWNER role cannot be assigned. It is reserved exclusively for the declared server owner.' });
+  }
+
   try {
-    const user = await userRepository.assignRoleByIdentifier(identifier, role, permissions);
+    const updatedUser = await userRepository.assignRoleByIdentifier(identifier, role, permissions);
 
     await auditLogRepository.log({
       adminId: req.user!.id,
       adminName: req.user!.globalName || req.user!.username,
-      action: 'USER_ROLE_ASSIGNED_BY_ADMIN',
+      action: 'USER_ROLE_ASSIGNED_BY_OWNER',
       entity: 'User',
-      entityId: user.id,
-      metadata: `Admin assigned role ${role} to ${identifier}`,
+      entityId: updatedUser.id,
+      metadata: `Owner assigned role ${role} to ${identifier}`,
       ip: req.ip || '127.0.0.1'
     });
 
-    return res.json({ success: true, user });
+    // Notify Discord Bot
+    discordService.notifyRoleChanged({
+      username: updatedUser.username,
+      newRole: role,
+      adminName: req.user!.globalName || req.user!.username
+    }).catch((err) => console.warn('[Discord Notification] Role assign error:', err.message));
+
+    return res.json({ success: true, user: updatedUser });
   } catch (err: any) {
     console.error('[API] /admin/users/assign-role error:', err.message);
-    return res.status(500).json({ error: 'Failed to assign role to user' });
+    return res.status(500).json({ error: err.message || 'Failed to assign role to user' });
   }
 });
 
 router.patch('/admin/users/:id/status', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR]), async (req: Request, res: Response) => {
   const { status } = req.body;
   try {
-    const user = await userRepository.updateStatus(req.params.id, status);
-    if (!user) {
+    const targetUser = await userRepository.findById(req.params.id);
+    if (!targetUser) {
       return res.status(404).json({ error: 'User not found' });
     }
+
+    if (targetUser.isOwner) {
+      return res.status(403).json({ error: 'Cannot modify status of the Server Owner.' });
+    }
+
+    const user = await userRepository.updateStatus(req.params.id, status);
 
     await auditLogRepository.log({
       adminId: req.user!.id,
@@ -468,7 +677,7 @@ router.patch('/admin/users/:id/status', requireAuth, requireRole([UserRole.SUPER
       action: 'USER_STATUS_CHANGED',
       entity: 'User',
       entityId: req.params.id,
-      metadata: `Changed status to ${status} for ${user.username}`,
+      metadata: `Changed status to ${status} for ${user?.username}`,
       ip: req.ip || '127.0.0.1'
     });
 
@@ -577,7 +786,7 @@ router.post('/admin/jobs', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserR
   }
 });
 
-// ---------------- ADMIN: STORE CMS ----------------
+// ---------------- ADMIN: STORE PRODUCTS CMS ----------------
 router.post('/admin/products', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STORE_MANAGER]), async (req: Request, res: Response) => {
   try {
     const item = await productRepository.save(req.body);
@@ -597,6 +806,90 @@ router.post('/admin/products', requireAuth, requireRole([UserRole.SUPER_ADMIN, U
   }
 });
 
+// ---------------- ADMIN: FAQ CMS ----------------
+router.post('/admin/faq', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]), async (req: Request, res: Response) => {
+  try {
+    const item = await faqRepository.save(req.body);
+    await auditLogRepository.log({
+      adminId: req.user!.id,
+      adminName: req.user!.globalName || req.user!.username,
+      action: 'FAQ_UPDATED',
+      entity: 'FAQItem',
+      entityId: item.id,
+      metadata: `Saved FAQ item: ${item.id}`,
+      ip: req.ip || '127.0.0.1'
+    });
+    return res.json(item);
+  } catch (err: any) {
+    console.error('[API] /admin/faq error:', err.message);
+    return res.status(500).json({ error: 'Failed to save FAQ item' });
+  }
+});
+
+router.delete('/admin/faq/:id', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]), async (req: Request, res: Response) => {
+  try {
+    const success = await faqRepository.delete(req.params.id);
+    if (success) {
+      await auditLogRepository.log({
+        adminId: req.user!.id,
+        adminName: req.user!.globalName || req.user!.username,
+        action: 'FAQ_DELETED',
+        entity: 'FAQItem',
+        entityId: req.params.id,
+        metadata: `Deleted FAQ item #${req.params.id}`,
+        ip: req.ip || '127.0.0.1'
+      });
+      return res.json({ success: true });
+    }
+    return res.status(404).json({ error: 'FAQ item not found' });
+  } catch (err: any) {
+    console.error('[API] /admin/faq delete error:', err.message);
+    return res.status(500).json({ error: 'Failed to delete FAQ item' });
+  }
+});
+
+// ---------------- ADMIN: SOCIAL LINKS CMS ----------------
+router.post('/admin/social-links', requireAuth, requireOwner, async (req: Request, res: Response) => {
+  try {
+    const item = await socialLinksRepository.save(req.body);
+    await auditLogRepository.log({
+      adminId: req.user!.id,
+      adminName: req.user!.globalName || req.user!.username,
+      action: 'SOCIAL_LINK_SAVED',
+      entity: 'SocialLink',
+      entityId: item.id,
+      metadata: `Saved social link for ${item.platform}`,
+      ip: req.ip || '127.0.0.1'
+    });
+    return res.json(item);
+  } catch (err: any) {
+    console.error('[API] /admin/social-links error:', err.message);
+    return res.status(500).json({ error: 'Failed to save social link' });
+  }
+});
+
+router.delete('/admin/social-links/:id', requireAuth, requireOwner, async (req: Request, res: Response) => {
+  try {
+    const success = await socialLinksRepository.delete(req.params.id);
+    if (success) {
+      await auditLogRepository.log({
+        adminId: req.user!.id,
+        adminName: req.user!.globalName || req.user!.username,
+        action: 'SOCIAL_LINK_DELETED',
+        entity: 'SocialLink',
+        entityId: req.params.id,
+        metadata: `Deleted social link #${req.params.id}`,
+        ip: req.ip || '127.0.0.1'
+      });
+      return res.json({ success: true });
+    }
+    return res.status(404).json({ error: 'Social link not found' });
+  } catch (err: any) {
+    console.error('[API] /admin/social-links delete error:', err.message);
+    return res.status(500).json({ error: 'Failed to delete social link' });
+  }
+});
+
 // ---------------- ADMIN: AUDIT LOGS & SETTINGS ----------------
 router.get('/admin/audit-logs', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]), async (req: Request, res: Response) => {
   try {
@@ -608,7 +901,7 @@ router.get('/admin/audit-logs', requireAuth, requireRole([UserRole.SUPER_ADMIN, 
   }
 });
 
-router.post('/admin/settings', requireAuth, requireRole([UserRole.SUPER_ADMIN]), async (req: Request, res: Response) => {
+router.post('/admin/settings', requireAuth, requireOwner, async (req: Request, res: Response) => {
   try {
     const updated = await settingsRepository.updateSettings(req.body);
     await auditLogRepository.log({
@@ -617,7 +910,7 @@ router.post('/admin/settings', requireAuth, requireRole([UserRole.SUPER_ADMIN]),
       action: 'SITE_SETTINGS_UPDATED',
       entity: 'SiteSettings',
       entityId: 'global',
-      metadata: 'Updated site configuration parameters',
+      metadata: 'Updated site configuration parameters and branding logos',
       ip: req.ip || '127.0.0.1'
     });
     return res.json(updated);

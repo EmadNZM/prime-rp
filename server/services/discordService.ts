@@ -139,6 +139,82 @@ export class DiscordService {
     if (!targetRole) return false;
     return member.roles.includes(targetRole.id);
   }
+
+  /**
+   * Send notification to a Discord channel via bot token (or webhook if configured)
+   */
+  public async sendChannelMessage(channelId: string, content: string, embed?: any): Promise<boolean> {
+    const token = this.getBotToken();
+    if (!token || !channelId) return false;
+
+    try {
+      const body: any = { content };
+      if (embed) body.embeds = [embed];
+
+      const res = await fetch(`${this.baseUrl}/channels/${channelId}/messages`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bot ${token}`,
+          'Content-Type': 'application/json',
+          'User-Agent': 'PrimeRPPlatform (https://prime-rp.onrender.com, 1.0.0)'
+        },
+        body: JSON.stringify(body)
+      });
+
+      return res.ok;
+    } catch (err: any) {
+      console.error('[DiscordService] Error sending Discord channel message:', err.message);
+      return false;
+    }
+  }
+
+  public async notifyTicketCreated(ticket: { id: string; ticketNumber: string; subject: string; category: string; userName: string }): Promise<void> {
+    const channelId = process.env.DISCORD_TICKETS_CHANNEL_ID;
+    if (!channelId) return;
+
+    await this.sendChannelMessage(channelId, `📩 **تذكرة دعم جديدة**: \`${ticket.ticketNumber}\``, {
+      title: `تذكرة جديدة: ${ticket.subject}`,
+      description: `المرسل: **${ticket.userName}**\nالقسم: **${ticket.category}**\nرقم التذكرة: \`${ticket.ticketNumber}\``,
+      color: 0x5865F2,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  public async notifyReportCreated(report: { id: string; category: string; reason: string; reporterName?: string; targetName?: string }): Promise<void> {
+    const channelId = process.env.DISCORD_REPORTS_CHANNEL_ID || process.env.DISCORD_TICKETS_CHANNEL_ID;
+    if (!channelId) return;
+
+    await this.sendChannelMessage(channelId, `🚨 **بلاغ جديد في النظام**: \`${report.category}\``, {
+      title: `بلاغ: ${report.category}`,
+      description: `المرسل: **${report.reporterName || 'مواطن'}**\nالمستهدف: **${report.targetName || 'غير محدد'}**\nالسبب: ${report.reason}`,
+      color: 0xED4245,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  public async notifyOrderCreated(order: { id: string; orderNumber: string; productName: string; price: number; currency: string }): Promise<void> {
+    const channelId = process.env.DISCORD_ORDERS_CHANNEL_ID;
+    if (!channelId) return;
+
+    await this.sendChannelMessage(channelId, `🛒 **طلب متجر جديد**: \`${order.orderNumber}\``, {
+      title: `طلب متجر: ${order.productName}`,
+      description: `رقم الطلب: \`${order.orderNumber}\`\nالمبلغ: **${order.price} ${order.currency}**\nالحالة: **PENDING (قيد المعالجة)**`,
+      color: 0xFEE75C,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  public async notifyRoleChanged(data: { username: string; newRole: string; adminName: string }): Promise<void> {
+    const channelId = process.env.DISCORD_AUDIT_CHANNEL_ID;
+    if (!channelId) return;
+
+    await this.sendChannelMessage(channelId, `🛡️ **تعديل رتبة إدارية**`, {
+      title: `تحديث رتبة في النظام`,
+      description: `المستخدم: **${data.username}**\nالرتبة الجديدة: **${data.newRole}**\nبواسطة: **${data.adminName}**`,
+      color: 0x57F287,
+      timestamp: new Date().toISOString()
+    });
+  }
 }
 
 export const discordService = DiscordService.getInstance();

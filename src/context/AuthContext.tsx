@@ -8,10 +8,9 @@ interface AuthContextType {
   isLoading: boolean;
   isAdmin: boolean;
   isStaff: boolean;
+  isOwner: boolean;
   hasDiscordOauth: boolean;
   loginWithDiscord: () => void;
-  loginWithDiscordDirect: (discordUsername: string, discordId?: string, avatar?: string) => Promise<boolean>;
-  portalLogin: (username?: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -51,37 +50,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.location.href = '/api/auth/discord';
   };
 
-  const loginWithDiscordDirect = async (discordUsername: string, discordId?: string, avatar?: string): Promise<boolean> => {
-    setIsLoading(true);
-    try {
-      const res = await apiClient.discordDirectLogin(discordUsername, discordId, avatar);
-      if (res.success && res.user) {
-        setUser(res.user);
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error('Discord direct login error:', err);
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const portalLogin = async (username: string = 'PrimeCommander', password?: string) => {
-    setIsLoading(true);
-    try {
-      const res = await apiClient.portalLogin(username, password);
-      if (res.success && res.user) {
-        setUser(res.user);
-      }
-    } catch (err) {
-      console.error('Portal login failed:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const logout = async () => {
     try {
       await apiClient.logout();
@@ -92,19 +60,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const isAuthenticated = Boolean(user);
+  const isOwner = Boolean(user && (user.isOwner || user.role === UserRole.OWNER));
   const isAdmin = Boolean(
-    user && (user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ADMIN)
+    user && (isOwner || user.isAdmin || user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ADMIN)
   );
   const isStaff = Boolean(
     user &&
-      [
-        UserRole.SUPER_ADMIN,
-        UserRole.ADMIN,
-        UserRole.MODERATOR,
-        UserRole.SUPPORT,
-        UserRole.EDITOR,
-        UserRole.STORE_MANAGER
-      ].includes(user.role)
+      (isAdmin ||
+        [
+          UserRole.OWNER,
+          UserRole.SUPER_ADMIN,
+          UserRole.ADMIN,
+          UserRole.MODERATOR,
+          UserRole.SUPPORT,
+          UserRole.EDITOR,
+          UserRole.STORE_MANAGER
+        ].includes(user.role))
   );
 
   return (
@@ -115,10 +86,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         isAdmin,
         isStaff,
+        isOwner,
         hasDiscordOauth,
         loginWithDiscord,
-        loginWithDiscordDirect,
-        portalLogin,
         logout,
         refreshUser
       }}
@@ -128,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');

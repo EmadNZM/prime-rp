@@ -48,7 +48,7 @@ export class OrderRepository {
       `INSERT INTO orders (id, order_number, user_id, product_id, product_name, price, currency, status, created_at, updated_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
        RETURNING *`,
-      [id, orderNumber, userId, product.id, productName, product.price, product.currency, 'COMPLETED']
+      [id, orderNumber, userId, product.id, productName, product.price, product.currency, 'PENDING']
     );
 
     await query(

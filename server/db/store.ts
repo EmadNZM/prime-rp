@@ -199,24 +199,34 @@ class DatabaseStore {
     );
     if (existingIndex >= 0) {
       const existing = this.data.users[existingIndex];
-      const updated = {
+      const assignedRole = userData.role !== undefined ? userData.role : existing.role;
+      const ownerDiscordId = process.env.OWNER_DISCORD_ID || '1195214213187129495';
+      const isOwner = userData.discordId === ownerDiscordId || existing.discordId === ownerDiscordId || assignedRole === 'OWNER';
+      const isAdmin = isOwner || ['SUPER_ADMIN', 'ADMIN'].includes(assignedRole);
+
+      const updated: User = {
         ...existing,
         ...userData,
-        // Preserve admin-assigned role, status and permissions unless explicitly provided
-        role: userData.role !== undefined ? userData.role : existing.role,
+        role: assignedRole,
         permissions: userData.permissions !== undefined ? userData.permissions : existing.permissions,
         status: userData.status !== undefined ? userData.status : existing.status,
+        isAdmin: Boolean(isAdmin),
+        isOwner: Boolean(isOwner),
         updatedAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       };
-      this.data.users[existingIndex] = updated as User;
+      this.data.users[existingIndex] = updated;
       this.save();
-      return updated as User;
+      return updated;
     } else {
       // STRICT REQUIREMENT: Any newly registered user is ALWAYS a standard CITIZEN!
       // The administration grants elevated roles/permissions from the admin panel.
-      const newUserRole = userData.role || ('CITIZEN' as any);
-      const defaultPermissions = newUserRole === 'SUPER_ADMIN'
+      const ownerDiscordId = process.env.OWNER_DISCORD_ID || '1195214213187129495';
+      const isOwner = userData.discordId === ownerDiscordId || userData.role === 'OWNER';
+      const newUserRole = isOwner ? ('OWNER' as any) : (userData.role || ('CITIZEN' as any));
+      const isAdmin = isOwner || ['SUPER_ADMIN', 'ADMIN'].includes(newUserRole);
+
+      const defaultPermissions = isOwner || newUserRole === 'SUPER_ADMIN'
         ? ['*']
         : newUserRole === 'ADMIN'
         ? ['users.view', 'users.edit', 'news.*', 'rules.*', 'jobs.*', 'tickets.*', 'audit.view']
@@ -231,6 +241,8 @@ class DatabaseStore {
         email: userData.email,
         role: newUserRole,
         status: userData.status || ('ACTIVE' as any),
+        isAdmin: Boolean(isAdmin),
+        isOwner: Boolean(isOwner),
         permissions: userData.permissions || defaultPermissions,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),

@@ -17,6 +17,8 @@ import {
   SiteSettings 
 } from '../../types';
 import { LogoManagerSettings } from '../../components/admin/LogoManagerSettings';
+import { ReportsManager } from '../../components/admin/ReportsManager';
+import { SocialLinksManager } from '../../components/admin/SocialLinksManager';
 import { 
   LayoutDashboard, 
   Users, 
@@ -30,12 +32,10 @@ import {
   ShieldCheck, 
   Plus, 
   Trash2, 
-  Edit3, 
   Check, 
   AlertTriangle, 
-  Search, 
-  Send,
-  Lock
+  Lock,
+  Crown
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -43,12 +43,12 @@ interface AdminDashboardProps {
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab }) => {
-  const { t, language } = useLanguage();
-  const { user, isStaff, isAdmin } = useAuth();
+  const { t } = useLanguage();
+  const { user, isStaff, isOwner } = useAuth();
   const { updateSettings: updateGlobalSettings } = useSettings();
 
   const [activeAdminTab, setActiveAdminTab] = useState<
-    'overview' | 'users' | 'news' | 'rules' | 'jobs' | 'store' | 'tickets' | 'audit' | 'settings'
+    'overview' | 'users' | 'reports' | 'news' | 'rules' | 'jobs' | 'store' | 'tickets' | 'audit' | 'settings'
   >('overview');
 
   const [overviewMetrics, setOverviewMetrics] = useState<any>(null);
@@ -140,20 +140,45 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
 
   // User role/status handlers
   const handleUpdateRole = async (userId: string, role: string) => {
-    await apiClient.updateUserRole(userId, role);
-    setUsersList(usersList.map((u) => (u.id === userId ? { ...u, role: role as any } : u)));
-    showToast('تم تحديث رتبة المستخدم بنجاح');
+    if (!isOwner) {
+      showToast('تعديل الرتب متاح فقط لمالك السيرفر المعتمد');
+      return;
+    }
+    try {
+      const res = await apiClient.updateUserRole(userId, role);
+      if (res && !res.error) {
+        setUsersList(usersList.map((u) => (u.id === userId ? { ...u, role: role as any } : u)));
+        showToast('تم تحديث رتبة المستخدم بنجاح');
+      } else {
+        showToast(res?.error || 'تعذر تحديث الرتبة');
+      }
+    } catch (err) {
+      showToast('حدث خطأ أثناء تعديل الرتبة');
+    }
   };
 
   const handleUpdateStatus = async (userId: string, status: string) => {
-    await apiClient.updateUserStatus(userId, status);
-    setUsersList(usersList.map((u) => (u.id === userId ? { ...u, status: status as any } : u)));
-    showToast('تم تحديث حالة المستخدم بنجاح');
+    try {
+      const res = await apiClient.updateUserStatus(userId, status);
+      if (res && !res.error) {
+        setUsersList(usersList.map((u) => (u.id === userId ? { ...u, status: status as any } : u)));
+        showToast('تم تحديث حالة المستخدم بنجاح');
+      } else {
+        showToast(res?.error || 'تعذر تحديث حالة الحساب');
+      }
+    } catch (err) {
+      showToast('حدث خطأ أثناء تعديل حالة الحساب');
+    }
   };
 
   const handleAssignRole = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!assignIdentifier.trim()) return;
+    if (!isOwner) {
+      showToast('صلاحية تعيين الرتب محصورة حصرياً بمالك السيرفر');
+      return;
+    }
+
     setIsAssigningRole(true);
     try {
       const res = await apiClient.assignUserRole(assignIdentifier.trim(), assignRoleValue);
@@ -162,8 +187,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
         setAssignIdentifier('');
         const data = await apiClient.getAdminUsers();
         if (Array.isArray(data)) setUsersList(data);
+      } else {
+        showToast(res?.error || 'تعذر تعيين الرتبة');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
       showToast('تعذر تعيين الرتبة، يرجى التحقق والمحاولة مجدداً');
     } finally {
@@ -260,6 +287,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/20 text-[#C8874B] text-xs font-bold mb-2 border border-[#C8874B]/30">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Staff Administration Suite</span>
+              {isOwner && (
+                <span className="inline-flex items-center gap-1 bg-[#C8874B] text-black px-2 py-0.5 rounded-full text-[10px] font-black">
+                  <Crown className="w-3 h-3" />
+                  <span>Server Owner</span>
+                </span>
+              )}
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white">
               {t('admin.title')}
@@ -282,6 +315,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
           {[
             { id: 'overview', label: t('admin.overview'), icon: LayoutDashboard },
             { id: 'users', label: t('admin.users'), icon: Users },
+            { id: 'reports', label: 'البلاغات والشكاوى', icon: AlertTriangle },
             { id: 'news', label: t('admin.news'), icon: Newspaper },
             { id: 'rules', label: t('admin.rules'), icon: BookOpen },
             { id: 'jobs', label: t('admin.jobs'), icon: Briefcase },
@@ -322,12 +356,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
                 <p className="text-3xl font-black text-amber-400">{overviewMetrics?.openTickets || 0}</p>
               </div>
               <div className="p-6 rounded-2xl bg-[#0B0B0B] border border-[#1C1C1C]">
-                <span className="text-xs text-[#777] block mb-1">إجمالي المبيعات والاشتراكات</span>
-                <p className="text-3xl font-black text-emerald-400">${overviewMetrics?.totalRevenue || 0} USD</p>
+                <span className="text-xs text-[#777] block mb-1">البلاغات المفتوحة</span>
+                <p className="text-3xl font-black text-blue-400">{overviewMetrics?.openReports || 0}</p>
               </div>
               <div className="p-6 rounded-2xl bg-[#0B0B0B] border border-[#1C1C1C]">
-                <span className="text-xs text-[#777] block mb-1">المقالات الإخبارية</span>
-                <p className="text-3xl font-black text-white">{overviewMetrics?.totalNews || 0}</p>
+                <span className="text-xs text-[#777] block mb-1">إجمالي المبيعات</span>
+                <p className="text-3xl font-black text-emerald-400">${overviewMetrics?.totalRevenue || 0} USD</p>
               </div>
             </div>
 
@@ -335,7 +369,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
             <div className="rounded-3xl bg-[#0B0B0B] border border-[#1C1C1C] p-6">
               <h3 className="text-base font-black text-white mb-4">آخر سجلات الأنشطة الإدارية (Audit Trail)</h3>
               <div className="space-y-2 text-xs">
-                {auditLogs.slice(0, 5).map((log) => (
+                {auditLogs.slice(0, 6).map((log) => (
                   <div key={log.id} className="p-3 rounded-xl bg-[#111] border border-[#1C1C1C] flex items-center justify-between">
                     <div>
                       <span className="font-bold text-[#C8874B] mr-2 rtl:mr-0 rtl:ml-2">{log.adminName}</span>
@@ -354,66 +388,79 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
           </div>
         )}
 
-        {/* TAB 2: USERS MANAGEMENT */}
+        {/* TAB 2: USERS MANAGEMENT & ROLE ASSIGNMENT */}
         {activeAdminTab === 'users' && (
           <div className="space-y-6">
-            {/* Quick Role Assignment Form for Administration */}
-            <div className="bg-[#0D0D0D] border border-[#222] rounded-3xl p-6 sm:p-7 shadow-lg">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-[#1A1A1A]">
+            {/* Role Assignment Form */}
+            {isOwner ? (
+              <div className="bg-[#0D0D0D] border border-[#222] rounded-3xl p-6 sm:p-7 shadow-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 pb-4 border-b border-[#1A1A1A]">
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <Crown className="w-5 h-5 text-[#C8874B]" />
+                      <span>تعيين وترقية رتبة مواطن (صلاحية حصرية لمالك السيرفر)</span>
+                    </h3>
+                    <p className="text-xs text-[#888] mt-1">
+                      يدخل المواطنون برتبة Citizen افتراضياً عند تسجيل الدخول عبر Discord. يمكنك ترقية أي مواطن عبر معرف الديسكورد أو اسم المستخدم.
+                    </p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleAssignRole} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
+                  <div className="sm:col-span-6">
+                    <label className="block text-[11px] font-bold text-[#AAA] mb-1.5">
+                      معرف ديسكورد أو اسم المستخدم (Discord ID / Username)
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={assignIdentifier}
+                      onChange={(e) => setAssignIdentifier(e.target.value)}
+                      placeholder="مثال: 947294829102948201 أو Tariq_RP"
+                      className="w-full bg-[#141414] border border-[#2B2B2B] focus:border-[#C8874B] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-[#555] focus:outline-none transition-colors"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-4">
+                    <label className="block text-[11px] font-bold text-[#AAA] mb-1.5">
+                      الرتبة الممنوحة
+                    </label>
+                    <select
+                      value={assignRoleValue}
+                      onChange={(e) => setAssignRoleValue(e.target.value)}
+                      className="w-full bg-[#141414] border border-[#2B2B2B] focus:border-[#C8874B] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none transition-colors"
+                    >
+                      <option value="ADMIN">🛡️ Admin (إدارة وسيرفر)</option>
+                      <option value="MODERATOR">⚖️ Moderator (مشرف)</option>
+                      <option value="SUPPORT">🎧 Support (دعم فني)</option>
+                      <option value="EDITOR">✍️ Editor (محرر أخبار ومحتوى)</option>
+                      <option value="STORE_MANAGER">🛍️ Store Manager (مدير المتجر)</option>
+                      <option value="CITIZEN">👤 Citizen (مواطن عادي)</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <button
+                      type="submit"
+                      disabled={isAssigningRole}
+                      className="w-full py-2.5 rounded-xl bg-[#C8874B] hover:bg-[#b0733a] text-black font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      <span>{isAssigningRole ? 'جاري الحفظ...' : 'تثبيت الرتبة'}</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : (
+              <div className="p-4 rounded-2xl bg-[#141414] border border-[#262626] text-xs text-[#AAA] flex items-center gap-3">
+                <Lock className="w-5 h-5 text-[#C8874B] shrink-0" />
                 <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-[#C8874B]" />
-                    <span>تعيين وترقية رتبة مواطن (صلاحيات الإدارة)</span>
-                  </h3>
-                  <p className="text-xs text-[#888] mt-1">
-                    افتراضياً أي مستخدم يسجل عبر Discord يدخل برتبة مواطن عادي (Citizen). يمكنك هنا منح أي رتبة فوراً عبر اسم حسابه أو معرّف الديسكورد.
+                  <p className="font-bold text-white">إشعار صلاحيات الرتب</p>
+                  <p className="text-[11px] text-[#888] mt-0.5">
+                    تعيين وتعديل الرتب محصور حصرياً بمالك السيرفر المعتمد (Server Owner).
                   </p>
                 </div>
               </div>
-
-              <form onSubmit={handleAssignRole} className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-end">
-                <div className="sm:col-span-6">
-                  <label className="block text-[11px] font-bold text-[#AAA] mb-1.5">
-                    معرف ديسكورد أو اسم المستخدم (Discord ID / Username)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={assignIdentifier}
-                    onChange={(e) => setAssignIdentifier(e.target.value)}
-                    placeholder="مثال: 947294829102948201 أو Tariq_RP"
-                    className="w-full bg-[#141414] border border-[#2B2B2B] focus:border-[#C8874B] rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-[#555] focus:outline-none transition-colors"
-                  />
-                </div>
-
-                <div className="sm:col-span-4">
-                  <label className="block text-[11px] font-bold text-[#AAA] mb-1.5">
-                    الرتبة الممنوحة من الإدارة
-                  </label>
-                  <select
-                    value={assignRoleValue}
-                    onChange={(e) => setAssignRoleValue(e.target.value)}
-                    className="w-full bg-[#141414] border border-[#2B2B2B] focus:border-[#C8874B] rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none transition-colors"
-                  >
-                    <option value="SUPER_ADMIN">👑 Super Admin (إدارة عليا)</option>
-                    <option value="ADMIN">🛡️ Admin (إدارة وسيرفر)</option>
-                    <option value="MODERATOR">⚖️ Moderator (مشرف)</option>
-                    <option value="SUPPORT">🎧 Support (دعم فني)</option>
-                    <option value="CITIZEN">👤 Citizen (مواطن عادي)</option>
-                  </select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <button
-                    type="submit"
-                    disabled={isAssigningRole}
-                    className="w-full py-2.5 rounded-xl bg-[#C8874B] hover:bg-[#b0733a] text-black font-bold text-xs transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
-                  >
-                    <span>{isAssigningRole ? 'جاري الحفظ...' : 'تثبيت الرتبة'}</span>
-                  </button>
-                </div>
-              </form>
-            </div>
+            )}
 
             <div className="bg-[#0B0B0B] border border-[#1C1C1C] rounded-3xl p-6 sm:p-8">
               <h3 className="text-xl font-black text-white mb-6">قائمة حسابات المواطنين والرتب</h3>
@@ -425,60 +472,91 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
                       <th className="pb-3">معرّف ديسكورد</th>
                       <th className="pb-3">الرتبة</th>
                       <th className="pb-3">الحالة</th>
-                      <th className="pb-3">الإجراءات</th>
+                      <th className="pb-3">تاريخ الانضمام</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#1A1A1A]">
-                    {usersList.map((usr) => (
-                      <tr key={usr.id} className="hover:bg-white/[0.01]">
-                        <td className="py-4">
-                          <div className="flex items-center gap-3">
-                            <img src={usr.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=60'} alt="" className="w-8 h-8 rounded-full" />
-                            <div>
-                              <p className="font-bold text-white">{usr.globalName || usr.username}</p>
-                              <span className="text-[10px] text-[#666]">@{usr.username}</span>
+                    {usersList.map((usr) => {
+                      const userIsOwner = Boolean(usr.isOwner || usr.role === UserRole.OWNER);
+
+                      return (
+                        <tr key={usr.id} className="hover:bg-white/[0.01]">
+                          <td className="py-4">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={usr.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=60'}
+                                alt=""
+                                className="w-8 h-8 rounded-full border border-[#2B2B2B]"
+                              />
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="font-bold text-white">{usr.globalName || usr.username}</p>
+                                  {userIsOwner && (
+                                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-[#C8874B]/20 text-[#C8874B] text-[9px] font-black border border-[#C8874B]/40">
+                                      <Crown className="w-2.5 h-2.5" />
+                                      OWNER
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-[10px] text-[#666]">@{usr.username}</span>
+                              </div>
                             </div>
-                          </div>
-                        </td>
-                        <td className="py-4 font-mono text-[#888]">{usr.discordId}</td>
-                        <td className="py-4">
-                          <select
-                            value={usr.role}
-                            onChange={(e) => handleUpdateRole(usr.id, e.target.value)}
-                            className="bg-[#141414] border border-[#282828] rounded-lg px-2.5 py-1 text-white text-[11px] focus:outline-none focus:border-[#C8874B]"
-                          >
-                            <option value="SUPER_ADMIN">👑 Super Admin</option>
-                            <option value="ADMIN">🛡️ Admin</option>
-                            <option value="MODERATOR">⚖️ Moderator</option>
-                            <option value="SUPPORT">🎧 Support</option>
-                            <option value="CITIZEN">👤 Citizen</option>
-                          </select>
-                        </td>
-                        <td className="py-4">
-                          <select
-                            value={usr.status}
-                            onChange={(e) => handleUpdateStatus(usr.id, e.target.value)}
-                            className={`border rounded-lg px-2.5 py-1 text-[11px] font-bold focus:outline-none ${
-                              usr.status === 'ACTIVE'
-                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                                : 'bg-red-500/10 text-red-400 border-red-500/30'
-                            }`}
-                          >
-                            <option value="ACTIVE">ACTIVE</option>
-                            <option value="SUSPENDED">SUSPENDED</option>
-                            <option value="BANNED">BANNED</option>
-                          </select>
-                        </td>
-                        <td className="py-4 text-[#666]">
-                          {new Date(usr.createdAt).toLocaleDateString()}
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="py-4 font-mono text-[#888]">{usr.discordId}</td>
+                          <td className="py-4">
+                            {userIsOwner ? (
+                              <span className="font-bold text-[#C8874B] text-[11px]">Server Owner</span>
+                            ) : (
+                              <select
+                                disabled={!isOwner}
+                                value={usr.role}
+                                onChange={(e) => handleUpdateRole(usr.id, e.target.value)}
+                                className="bg-[#141414] border border-[#282828] rounded-lg px-2.5 py-1 text-white text-[11px] focus:outline-none focus:border-[#C8874B] disabled:opacity-60"
+                              >
+                                <option value="ADMIN">🛡️ Admin</option>
+                                <option value="MODERATOR">⚖️ Moderator</option>
+                                <option value="SUPPORT">🎧 Support</option>
+                                <option value="EDITOR">✍️ Editor</option>
+                                <option value="STORE_MANAGER">🛍️ Store Manager</option>
+                                <option value="CITIZEN">👤 Citizen</option>
+                              </select>
+                            )}
+                          </td>
+                          <td className="py-4">
+                            {userIsOwner ? (
+                              <span className="text-emerald-400 font-bold text-[11px]">ACTIVE</span>
+                            ) : (
+                              <select
+                                value={usr.status}
+                                onChange={(e) => handleUpdateStatus(usr.id, e.target.value)}
+                                className={`border rounded-lg px-2.5 py-1 text-[11px] font-bold focus:outline-none ${
+                                  usr.status === 'ACTIVE'
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                                    : 'bg-red-500/10 text-red-400 border-red-500/30'
+                                }`}
+                              >
+                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="SUSPENDED">SUSPENDED</option>
+                                <option value="BANNED">BANNED</option>
+                              </select>
+                            )}
+                          </td>
+                          <td className="py-4 text-[#666]">
+                            {new Date(usr.createdAt).toLocaleDateString()}
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
+        )}
+
+        {/* TAB: REPORTS CMS */}
+        {activeAdminTab === 'reports' && (
+          <ReportsManager showToast={showToast} />
         )}
 
         {/* TAB 3: NEWS CMS */}
@@ -659,14 +737,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
           </div>
         )}
 
-        {/* TAB 9: SETTINGS & LOGOS */}
+        {/* TAB 9: SETTINGS, LOGOS & SOCIAL LINKS */}
         {activeAdminTab === 'settings' && settings && (
-          <LogoManagerSettings
-            settings={settings}
-            setSettings={setSettings}
-            onSave={handleSaveSettings}
-            showToast={showToast}
-          />
+          <div className="space-y-8">
+            <LogoManagerSettings
+              settings={settings}
+              setSettings={setSettings}
+              onSave={handleSaveSettings}
+              showToast={showToast}
+            />
+            <SocialLinksManager showToast={showToast} isOwner={isOwner} />
+          </div>
         )}
 
         {/* MODAL: ADD NEWS */}

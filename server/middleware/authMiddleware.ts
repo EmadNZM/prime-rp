@@ -13,16 +13,12 @@ declare global {
 export async function attachUser(req: Request, res: Response, next: NextFunction) {
   try {
     const sessionToken = req.cookies?.prime_session_token;
-    const userIdCookie = req.cookies?.prime_session_userId;
 
     let user: User | null = null;
 
+    // Cryptographically verified session in PostgreSQL
     if (sessionToken) {
       user = await sessionRepository.validateSession(sessionToken);
-    }
-
-    if (!user && userIdCookie) {
-      user = await userRepository.findById(userIdCookie);
     }
 
     if (user) {
@@ -48,13 +44,24 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+export function requireOwner(req: Request, res: Response, next: NextFunction) {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+  if (!req.user.isOwner && req.user.role !== UserRole.OWNER) {
+    return res.status(403).json({ error: 'Forbidden: Action strictly reserved for the Server Owner.' });
+  }
+  next();
+}
+
 export function requireRole(allowedRoles: UserRole[]) {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required.' });
     }
 
-    if (req.user.role === UserRole.SUPER_ADMIN) {
+    // Owner and Super Admin have universal administrative access
+    if (req.user.isOwner || req.user.role === UserRole.OWNER || req.user.role === UserRole.SUPER_ADMIN) {
       return next();
     }
 
@@ -72,7 +79,12 @@ export function requirePermission(permission: string) {
       return res.status(401).json({ error: 'Authentication required.' });
     }
 
-    if (req.user.role === UserRole.SUPER_ADMIN || req.user.permissions?.includes('*')) {
+    if (
+      req.user.isOwner ||
+      req.user.role === UserRole.OWNER ||
+      req.user.role === UserRole.SUPER_ADMIN ||
+      req.user.permissions?.includes('*')
+    ) {
       return next();
     }
 

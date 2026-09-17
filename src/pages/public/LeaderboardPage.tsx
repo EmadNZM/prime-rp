@@ -1,39 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
-import { Trophy, Medal, Award, Flame, Shield, Wallet, Clock, Users } from 'lucide-react';
+import { apiClient } from '../../services/apiClient';
+import { Trophy, Clock, Wallet, Shield, Database, RefreshCw, Sparkles } from 'lucide-react';
+
+interface LeaderboardItem {
+  rank: number;
+  name: string;
+  metric: string;
+  subtitle: string;
+  badge?: string;
+}
 
 export const LeaderboardPage: React.FC = () => {
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState<'playtime' | 'wealth' | 'law'>('playtime');
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardItem[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  const playtimeLeaderboard = [
-    { rank: 1, name: 'Sultan Al-Otaibi', metric: '420 ساعة', subtitle: 'LSPD Captain', badge: '🥇' },
-    { rank: 2, name: 'Faris Al-Harbi', metric: '388 ساعة', subtitle: 'EMS Director', badge: '🥈' },
-    { rank: 3, name: 'Tariq Al-Amri', metric: '345 ساعة', subtitle: 'Customs Boss', badge: '🥉' },
-    { rank: 4, name: 'Khaled Mansoor', metric: '310 ساعة', subtitle: 'Citizen Elite', badge: '4' },
-    { rank: 5, name: 'Bandar Al-Dawsari', metric: '295 ساعة', subtitle: 'Mechanic Chief', badge: '5' }
-  ];
-
-  const wealthLeaderboard = [
-    { rank: 1, name: 'Ziyad Al-Ghamdi', metric: '$3,450,000', subtitle: 'Luxury Imports Owner', badge: '🥇' },
-    { rank: 2, name: 'Ryan Al-Shehri', metric: '$2,890,000', subtitle: 'Prime Real Estate Group', badge: '🥈' },
-    { rank: 3, name: 'Nayef Al-Mutairi', metric: '$2,120,000', subtitle: 'Diamond Holding', badge: '🥉' },
-    { rank: 4, name: 'Omar Al-Harbi', metric: '$1,950,000', subtitle: 'Desert Logistics Co.', badge: '4' },
-    { rank: 5, name: 'Saud Al-Qahtani', metric: '$1,680,000', subtitle: 'Apex Motorsport', badge: '5' }
-  ];
-
-  const lawLeaderboard = [
-    { rank: 1, name: 'Mansoor Al-Zahrani', metric: 'LSPD Chief', subtitle: '98 ملف أمني منجز', badge: '🥇' },
-    { rank: 2, name: 'Rayan Al-Fahad', metric: 'Highway Patrol Commander', subtitle: '84 تدخّل تكتيكي', badge: '🥈' },
-    { rank: 3, name: 'Salem Al-Dosari', metric: 'SWAT Tactical Lead', subtitle: '76 عملية خاصة', badge: '🥉' },
-    { rank: 4, name: 'Dr. Hamad Al-Subaie', metric: 'EMS Medical Director', subtitle: '142 إسعاف ميداني', badge: '4' },
-    { rank: 5, name: 'Bader Al-Otaibi', metric: 'Federal Investigation', subtitle: '65 تحقيق جنائي', badge: '5' }
-  ];
-
-  const currentList = 
-    activeTab === 'playtime' ? playtimeLeaderboard :
-    activeTab === 'wealth' ? wealthLeaderboard :
-    lawLeaderboard;
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      try {
+        const data = await apiClient.getLeaderboard();
+        setLeaderboardData(Array.isArray(data) ? data : []);
+      } catch (err) {
+        console.error('Failed to load leaderboard:', err);
+        setLeaderboardData([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchLeaderboard();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#070707] text-[#E5E5E5] pt-28 pb-24 px-4 sm:px-6 lg:px-8">
@@ -41,42 +38,44 @@ export const LeaderboardPage: React.FC = () => {
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/10 text-[#C8874B] text-xs font-bold mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/10 text-[#C8874B] text-xs font-bold mb-4 border border-[#C8874B]/20">
             <Trophy className="w-3.5 h-3.5" />
-            <span>Hall of Fame</span>
+            <span>{language === 'ar' ? 'لوحة شرف المجتمع' : 'Community Hall of Fame'}</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-white mb-4">
-            {t('leaderboard.title')}
+          <h1 className="text-3xl sm:text-5xl font-black text-white mb-4 tracking-tight">
+            {language === 'ar' ? 'المتصدرون والإحصائيات' : 'Leaderboard & Rankings'}
           </h1>
           <p className="text-[#8E8E8E] text-sm sm:text-base leading-relaxed">
-            {t('leaderboard.subtitle')}
+            {language === 'ar'
+              ? 'سجل الإنجازات والنشاط العام المعتمد للاعبي مجتمع وسيرفر PRIME RP.'
+              : 'Official verified rankings and community achievements across the PRIME RP city.'}
           </p>
         </div>
 
-        {/* Community Leaderboard Status */}
+        {/* Database Synchronization Notice */}
         <div className="p-4 sm:p-5 rounded-2xl bg-[#0D0D0D] border border-[#202020] mb-8 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
           <div className="flex items-center gap-3">
             <span className="p-2.5 rounded-xl bg-[#C8874B]/10 text-[#C8874B] border border-[#C8874B]/20">
-              <Trophy className="w-5 h-5" />
+              <Database className="w-5 h-5" />
             </span>
             <div>
               <h3 className="text-sm font-bold text-white">
-                {language === 'ar' ? 'إحصائيات متصدري Prime RP الرسمية' : 'Official Prime RP Community Rankings'}
+                {language === 'ar' ? 'حالة مزامنة بيانات اللعبة' : 'Game Database Synchronization'}
               </h3>
               <p className="text-xs text-[#888]">
                 {language === 'ar' 
-                  ? 'يتم تحديث قائمة الشرف دورياً بناءً على نشاط وسجلات مواطني المدينة في FiveM.' 
-                  : 'Hall of Fame rankings are synchronized with community in-game records and city activity.'}
+                  ? 'يتم ربط بيانات المتصدرين بسجلات قاعدة بيانات السيرفر (In-Game DB) لضمان الدقة والشفافية.' 
+                  : 'Leaderboard records are linked to authoritative server database statistics for transparency.'}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 px-3.5 py-1.5 rounded-full border border-emerald-500/20 shrink-0">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>{language === 'ar' ? 'بيانات السيرفر مباشرة' : 'Live Server Sync'}</span>
+          <div className="flex items-center gap-2 text-xs text-[#C8874B] bg-[#C8874B]/10 px-3.5 py-1.5 rounded-full border border-[#C8874B]/20 shrink-0">
+            <span className="w-2 h-2 rounded-full bg-[#C8874B] animate-pulse" />
+            <span>{language === 'ar' ? 'مزامنة معتمدة' : 'Official Sync'}</span>
           </div>
         </div>
 
-        {/* Filter Tabs */}
+        {/* Filter Categories */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <button
             onClick={() => setActiveTab('playtime')}
@@ -87,7 +86,7 @@ export const LeaderboardPage: React.FC = () => {
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
-            <span>{t('leaderboard.topPlaytime')}</span>
+            <span>{language === 'ar' ? 'ساعات اللعب' : 'Playtime'}</span>
           </button>
           
           <button
@@ -99,7 +98,7 @@ export const LeaderboardPage: React.FC = () => {
             }`}
           >
             <Wallet className="w-3.5 h-3.5" />
-            <span>{t('leaderboard.topWealth')}</span>
+            <span>{language === 'ar' ? 'اقتصاد المدينة' : 'Wealth'}</span>
           </button>
 
           <button
@@ -111,40 +110,61 @@ export const LeaderboardPage: React.FC = () => {
             }`}
           >
             <Shield className="w-3.5 h-3.5" />
-            <span>{t('leaderboard.lawEnforcement')}</span>
+            <span>{language === 'ar' ? 'القطاعات الأمنية' : 'Law Enforcement'}</span>
           </button>
         </div>
 
-        {/* Table / List */}
-        <div className="bg-[#0B0B0B] border border-[#1C1C1C] rounded-3xl overflow-hidden shadow-2xl">
-          <div className="divide-y divide-[#1A1A1A]">
-            {currentList.map((player) => (
+        {/* Loading State */}
+        {isLoading ? (
+          <div className="text-center py-20">
+            <RefreshCw className="w-6 h-6 animate-spin text-[#C8874B] mx-auto mb-3" />
+            <p className="text-xs text-[#888]">{language === 'ar' ? 'جاري التحقق من سجلات السيرفر...' : 'Fetching live records...'}</p>
+          </div>
+        ) : leaderboardData.length === 0 ? (
+          /* Respectful, Clean Empty State (No Fake Data) */
+          <div className="text-center py-20 px-6 rounded-3xl bg-[#0C0C0C] border border-[#1E1E1E] max-w-xl mx-auto">
+            <div className="w-16 h-16 rounded-2xl bg-[#141414] border border-[#262626] flex items-center justify-center mx-auto mb-4 text-[#C8874B]">
+              <Database className="w-8 h-8" />
+            </div>
+            <h3 className="text-base sm:text-lg font-bold text-white mb-2">
+              {language === 'ar'
+                ? 'بانتظار مزامنة قاعدة بيانات اللعبة'
+                : 'Leaderboard Data Pending Synchronization'}
+            </h3>
+            <p className="text-xs sm:text-sm text-[#888] leading-relaxed max-w-md mx-auto mb-6">
+              {language === 'ar'
+                ? 'بيانات المتصدرين وسجلات ساعات اللعب والاقتصاد تُعرض تلقائياً بمجرد اكتمال اتصال قاعدة بيانات سيرفر FiveM الحية. لا يتم عرض أي إحصائيات وهمية حفاظاً على المصداقية والنزاهة.'
+                : 'Leaderboard rankings are dynamically populated from live in-game database telemetry once linked. We strictly avoid displaying mock statistics to preserve competitive integrity.'}
+            </p>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#141414] border border-[#2A2A2A] text-xs text-[#AAA]">
+              <Sparkles className="w-3.5 h-3.5 text-[#C8874B]" />
+              <span>{language === 'ar' ? 'سيتم التحديث آلياً مع التدوين الحي' : 'Auto-updates via live game synchronization'}</span>
+            </div>
+          </div>
+        ) : (
+          /* Render real data if present */
+          <div className="space-y-3">
+            {leaderboardData.map((item) => (
               <div
-                key={player.rank}
-                className="p-5 flex items-center justify-between hover:bg-white/[0.02] transition-colors"
+                key={item.rank}
+                className="p-4 sm:p-5 rounded-2xl bg-[#0C0C0C] border border-[#1A1A1A] hover:border-[#C8874B]/40 transition-all flex items-center justify-between"
               >
                 <div className="flex items-center gap-4">
-                  <span className="w-8 text-center text-lg font-black text-[#C8874B]">
-                    {player.badge}
-                  </span>
+                  <div className="w-9 h-9 rounded-xl bg-[#161616] border border-[#262626] flex items-center justify-center text-xs font-bold text-[#C8874B]">
+                    #{item.rank}
+                  </div>
                   <div>
-                    <h3 className="text-base font-bold text-white">{player.name}</h3>
-                    <span className="text-xs text-[#777]">{player.subtitle}</span>
+                    <h4 className="font-bold text-sm sm:text-base text-white">{item.name}</h4>
+                    <p className="text-xs text-[#777]">{item.subtitle}</p>
                   </div>
                 </div>
-
                 <div className="text-right rtl:text-left">
-                  <p className="text-base font-black text-white">
-                    {player.metric}
-                  </p>
-                  <span className="text-[11px] text-[#666]">
-                    {activeTab === 'wealth' ? 'صافي الثروة' : activeTab === 'playtime' ? 'ساعات الطيران' : 'الرتبة والمهام'}
-                  </span>
+                  <span className="text-xs sm:text-sm font-mono font-bold text-white">{item.metric}</span>
                 </div>
               </div>
             ))}
           </div>
-        </div>
+        )}
 
       </div>
     </div>

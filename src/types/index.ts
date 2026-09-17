@@ -3,6 +3,7 @@
 export type Language = 'ar' | 'en';
 
 export enum UserRole {
+  OWNER = 'OWNER',
   SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
   MODERATOR = 'MODERATOR',
@@ -22,15 +23,19 @@ export interface User {
   id: string;
   discordId: string;
   username: string;
+  displayName?: string;
   globalName?: string;
   avatar?: string;
   email?: string;
   role: UserRole;
   status: UserStatus;
+  isAdmin: boolean;
+  isOwner: boolean;
   permissions: string[];
   createdAt: string;
   updatedAt: string;
   lastLogin: string;
+  lastLoginAt?: string;
   bio?: string;
 }
 
@@ -209,4 +214,46 @@ export interface FAQItem {
     ar: { question: string; answer: string };
     en: { question: string; answer: string };
   };
+}
+
+export type ReportCategory = 'PLAYER_REPORT' | 'STAFF_REPORT' | 'BUG_REPORT' | 'RULE_VIOLATION' | 'OTHER';
+export type ReportStatus = 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'CLOSED';
+
+export interface ReportItem {
+  id: string;
+  reporterId: string;
+  reporterName: string;
+  reporterAvatar?: string;
+  targetId?: string;
+  targetName?: string;
+  category: ReportCategory;
+  reason: string;
+  status: ReportStatus;
+  notes?: string;
+  adminNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SocialLinkItem {
+  id: string;
+  platform: string;
+  url: string;
+  label?: string;
+  sortOrder?: number;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface FiveMTelemetry {
+  online: boolean;
+  playersCount: number;
+  maxPlayers: number;
+  serverName?: string;
+  gametype?: string;
+  mapname?: string;
+  ping?: number;
+  connectUrl?: string;
+  source?: string;
+  raw?: any;
 }

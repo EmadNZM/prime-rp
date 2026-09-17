@@ -17,24 +17,6 @@ export const apiClient = {
     }
   },
 
-  async discordDirectLogin(discordUsername: string, discordId?: string, avatar?: string) {
-    const res = await fetch('/api/auth/discord-direct', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ discordUsername, discordId, avatar })
-    });
-    return res.json();
-  },
-
-  async portalLogin(username: string, password?: string) {
-    const res = await fetch('/api/auth/portal-login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
-    return res.json();
-  },
-
   async logout() {
     const res = await fetch('/api/auth/logout', { method: 'POST' });
     return res.json();
@@ -42,6 +24,23 @@ export const apiClient = {
 
   async getSiteSettings() {
     const res = await fetch('/api/site-settings');
+    return res.json();
+  },
+
+  async getFiveMStatus() {
+    const res = await fetch('/api/fivem/status');
+    return res.json();
+  },
+
+  async getPlayers() {
+    const res = await fetch('/api/players');
+    if (!res.ok) return [];
+    return res.json();
+  },
+
+  async getLeaderboard() {
+    const res = await fetch('/api/leaderboard');
+    if (!res.ok) return [];
     return res.json();
   },
 
@@ -73,6 +72,11 @@ export const apiClient = {
 
   async getFAQ() {
     const res = await fetch('/api/faq');
+    return res.json();
+  },
+
+  async getSocialLinks() {
+    const res = await fetch('/api/social-links');
     return res.json();
   },
 
@@ -124,6 +128,37 @@ export const apiClient = {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ status })
+    });
+    return res.json();
+  },
+
+  // Reports
+  async getReports() {
+    const res = await fetch('/api/reports');
+    if (!res.ok) return [];
+    return res.json();
+  },
+
+  async getReport(id: string) {
+    const res = await fetch(`/api/reports/${id}`);
+    if (!res.ok) return null;
+    return res.json();
+  },
+
+  async createReport(data: { category: string; reason: string; targetId?: string; targetName?: string }) {
+    const res = await fetch('/api/reports', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async updateReportStatus(id: string, status: string, notes?: string) {
+    const res = await fetch(`/api/reports/${id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status, notes })
     });
     return res.json();
   },
@@ -219,6 +254,34 @@ export const apiClient = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
     });
+    return res.json();
+  },
+
+  async saveFAQ(data: any) {
+    const res = await fetch('/api/admin/faq', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async deleteFAQ(id: string) {
+    const res = await fetch(`/api/admin/faq/${id}`, { method: 'DELETE' });
+    return res.json();
+  },
+
+  async saveSocialLink(data: any) {
+    const res = await fetch('/api/admin/social-links', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async deleteSocialLink(id: string) {
+    const res = await fetch(`/api/admin/social-links/${id}`, { method: 'DELETE' });
     return res.json();
   },
 

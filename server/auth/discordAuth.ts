@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
-import { userRepository, sessionRepository, settingsRepository } from '../db/repositories';
+import crypto from 'crypto';
+import { userRepository, sessionRepository } from '../db/repositories';
 import { UserRole, UserStatus } from '../../src/types';
 
-export function setSessionCookies(req: Request, res: Response, sessionId: string, userId: string) {
+export function setSessionCookies(req: Request, res: Response, sessionId: string) {
   const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
   const cookieOptions = {
     httpOnly: true,
@@ -13,16 +14,12 @@ export function setSessionCookies(req: Request, res: Response, sessionId: string
   };
 
   res.cookie('prime_session_token', sessionId, cookieOptions);
-  res.cookie('prime_session_userId', userId, cookieOptions);
 }
 
 export async function getDiscordConfig(req?: Request) {
   const clientId = process.env.DISCORD_CLIENT_ID || '';
   const clientSecret = process.env.DISCORD_CLIENT_SECRET || '';
 
-  // Determine Redirect URI:
-  // 1. Prioritize DISCORD_REDIRECT_URI environment variable (e.g. production URL on Render)
-  // 2. Fall back to current request host
   let redirectUri = process.env.DISCORD_REDIRECT_URI || '';
   let currentHostRedirect = '';
 
@@ -56,13 +53,16 @@ export async function handleDiscordLogin(req: Request, res: Response) {
     return res.redirect('/login?error=discord_credentials_missing');
   }
 
-  const state = Math.random().toString(36).substring(7);
+  // Cryptographically secure state parameter
+  const state = crypto.randomBytes(32).toString('hex');
   const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
+
   res.cookie('discord_oauth_state', state, {
     httpOnly: true,
     secure: isHttps,
-    sameSite: isHttps ? 'none' : 'lax',
-    maxAge: 10 * 60 * 1000
+    sameSite: (isHttps ? 'none' : 'lax') as 'none' | 'lax',
+    path: '/',
+    maxAge: 10 * 60 * 1000 // 10 minutes
   });
 
   const params = new URLSearchParams({
@@ -84,6 +84,12 @@ export async function handleDiscordCallback(req: Request, res: Response) {
 
   if (!code) {
     return res.redirect('/login?error=no_code_provided');
+  }
+
+  // Cryptographic state verification against CSRF attacks
+  if (!state || !storedState || state !== storedState) {
+    console.warn('[Discord OAuth] State mismatch or missing state parameter. Rejecting OAuth flow.');
+    return res.redirect('/login?error=invalid_oauth_state');
   }
 
   try {
@@ -127,43 +133,46 @@ export async function handleDiscordCallback(req: Request, res: Response) {
       ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
       : `https://cdn.discordapp.com/embed/avatars/${parseInt(discordUser.discriminator || '0', 10) % 5}.png`;
 
-    // 1. Search for user in PostgreSQL
-    const existing = await userRepository.findByDiscordId(discordUser.id);
+    // Strict Owner Verification:
+    // Only the exact Discord ID declared in OWNER_DISCORD_ID is granted OWNER privileges.
+    const ownerDiscordId = (process.env.OWNER_DISCORD_ID || '').trim();
+    const isOwner = Boolean(ownerDiscordId && discordUser.id === ownerDiscordId);
 
+    // Upsert user into PostgreSQL
+    const existing = await userRepository.findByDiscordId(discordUser.id);
     let user;
+
     if (existing) {
-      // 2. Existing user: update profile, strictly preserve existing role and permissions
       user = await userRepository.upsert({
         discordId: discordUser.id,
         username: discordUser.username,
         globalName: discordUser.global_name || discordUser.username,
         avatar: avatarUrl,
         email: discordUser.email || existing.email,
-        role: existing.role,
-        permissions: existing.permissions,
+        role: isOwner ? UserRole.OWNER : (existing.role === UserRole.OWNER ? UserRole.CITIZEN : existing.role),
+        permissions: isOwner ? ['*'] : existing.permissions,
         status: existing.status
       });
     } else {
-      // 3. New user: DEFAULT IS CITIZEN with base citizen privileges
       user = await userRepository.upsert({
         discordId: discordUser.id,
         username: discordUser.username,
         globalName: discordUser.global_name || discordUser.username,
         avatar: avatarUrl,
         email: discordUser.email,
-        role: UserRole.CITIZEN,
+        role: isOwner ? UserRole.OWNER : UserRole.CITIZEN,
         status: UserStatus.ACTIVE,
-        permissions: ['tickets.create', 'orders.create']
+        permissions: isOwner ? ['*'] : ['tickets.create', 'orders.create']
       });
     }
 
-    // 4. Create secure server-side session in PostgreSQL
+    // Create secure server-side session in PostgreSQL
     const ip = req.ip || req.get('x-forwarded-for') || '127.0.0.1';
     const userAgent = req.get('user-agent') || 'Unknown';
     const sessionId = await sessionRepository.createSession(user.id, ip, userAgent);
 
-    // Set secure HTTP-only cookies
-    setSessionCookies(req, res, sessionId, user.id);
+    // Set secure HTTP-only cookie
+    setSessionCookies(req, res, sessionId);
 
     res.clearCookie('discord_oauth_state', { path: '/' });
     return res.redirect('/dashboard');
@@ -171,76 +180,6 @@ export async function handleDiscordCallback(req: Request, res: Response) {
     console.error('[Discord OAuth] Exception during callback:', error);
     return res.redirect('/login?error=oauth_failed');
   }
-}
-
-// Development Portal Login (Strictly disabled in production)
-export async function handlePortalLogin(req: Request, res: Response) {
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(403).json({
-      success: false,
-      error: 'Direct portal credentials login is strictly disabled in production. Please use Discord OAuth.'
-    });
-  }
-
-  const { username = '', role } = req.body;
-  const cleanUsername = String(username).trim() || 'DevUser';
-
-  let targetUser = await userRepository.findByUsername(cleanUsername);
-
-  if (!targetUser) {
-    const assignedRole = role || UserRole.CITIZEN;
-    targetUser = await userRepository.upsert({
-      discordId: `dev_${Date.now()}`,
-      username: cleanUsername,
-      globalName: cleanUsername,
-      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-      role: assignedRole,
-      status: UserStatus.ACTIVE,
-      permissions: assignedRole === UserRole.SUPER_ADMIN ? ['*'] : ['tickets.create', 'orders.create']
-    });
-  }
-
-  const sessionId = await sessionRepository.createSession(targetUser.id, req.ip, req.get('user-agent'));
-  setSessionCookies(req, res, sessionId, targetUser.id);
-  return res.json({ success: true, user: targetUser });
-}
-
-// Direct Instant Login (Strictly disabled in production)
-export async function handleDiscordDirectLogin(req: Request, res: Response) {
-  if (process.env.NODE_ENV === 'production') {
-    return res.status(403).json({
-      success: false,
-      error: 'Direct login is disabled in production. Please sign in through Discord OAuth.'
-    });
-  }
-
-  const { discordUsername = '', discordId, avatar } = req.body;
-  const cleanUsername = String(discordUsername).trim();
-
-  if (!cleanUsername) {
-    return res.status(400).json({ success: false, error: 'Discord username is required' });
-  }
-
-  let targetUser = discordId ? await userRepository.findByDiscordId(discordId) : null;
-  if (!targetUser) {
-    targetUser = await userRepository.findByUsername(cleanUsername);
-  }
-
-  if (!targetUser) {
-    targetUser = await userRepository.upsert({
-      discordId: discordId || `dev_${Date.now()}`,
-      username: cleanUsername,
-      globalName: cleanUsername,
-      avatar: avatar || 'https://cdn.discordapp.com/embed/avatars/0.png',
-      role: UserRole.CITIZEN,
-      status: UserStatus.ACTIVE,
-      permissions: ['tickets.create', 'orders.create']
-    });
-  }
-
-  const sessionId = await sessionRepository.createSession(targetUser.id, req.ip, req.get('user-agent'));
-  setSessionCookies(req, res, sessionId, targetUser.id);
-  return res.json({ success: true, user: targetUser });
 }
 
 export async function handleLogout(req: Request, res: Response) {
@@ -253,12 +192,12 @@ export async function handleLogout(req: Request, res: Response) {
   res.clearCookie('prime_session_token', {
     path: '/',
     secure: isHttps,
-    sameSite: isHttps ? 'none' : 'lax'
+    sameSite: (isHttps ? 'none' : 'lax') as 'none' | 'lax'
   });
   res.clearCookie('prime_session_userId', {
     path: '/',
     secure: isHttps,
-    sameSite: isHttps ? 'none' : 'lax'
+    sameSite: (isHttps ? 'none' : 'lax') as 'none' | 'lax'
   });
   res.clearCookie('discord_oauth_state', { path: '/' });
   return res.json({ success: true, message: 'Logged out successfully' });

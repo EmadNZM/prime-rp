@@ -20,68 +20,7 @@ export const initialSiteSettings: SiteSettings = {
   }
 };
 
-export const initialUsers = [
-  {
-    id: 'usr_superadmin',
-    discordId: '109876543210987654',
-    username: 'PrimeCommander',
-    globalName: 'Prime Owner',
-    avatar: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&auto=format&fit=crop&q=80',
-    email: 'owner@prime-rp.com',
-    role: UserRole.SUPER_ADMIN,
-    status: UserStatus.ACTIVE,
-    permissions: ['*'],
-    createdAt: new Date('2026-01-01').toISOString(),
-    updatedAt: new Date().toISOString(),
-    lastLogin: new Date().toISOString(),
-    bio: 'مؤسس وإداري أول في مجتمع Prime RP.'
-  },
-  {
-    id: 'usr_admin',
-    discordId: '209876543210987655',
-    username: 'Faris_Admin',
-    globalName: 'Faris Al-Harbi',
-    avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
-    email: 'faris@prime-rp.com',
-    role: UserRole.ADMIN,
-    status: UserStatus.ACTIVE,
-    permissions: ['users.view', 'users.edit', 'news.*', 'rules.*', 'jobs.*', 'tickets.*', 'audit.view'],
-    createdAt: new Date('2026-01-15').toISOString(),
-    updatedAt: new Date().toISOString(),
-    lastLogin: new Date().toISOString(),
-    bio: 'مسؤول إدارة شؤون المواطنين والفعاليات الرسمية.'
-  },
-  {
-    id: 'usr_support',
-    discordId: '309876543210987656',
-    username: 'Sultan_Support',
-    globalName: 'Sultan Tech',
-    avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=150&auto=format&fit=crop&q=80',
-    email: 'support1@prime-rp.com',
-    role: UserRole.SUPPORT,
-    status: UserStatus.ACTIVE,
-    permissions: ['tickets.view', 'tickets.reply', 'tickets.close'],
-    createdAt: new Date('2026-02-01').toISOString(),
-    updatedAt: new Date().toISOString(),
-    lastLogin: new Date().toISOString(),
-    bio: 'عضو فريق الدعم الفني وخدمة المجتمع.'
-  },
-  {
-    id: 'usr_citizen',
-    discordId: '409876543210987657',
-    username: 'Tariq_Roleplay',
-    globalName: 'Tariq Al-Amri',
-    avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150&auto=format&fit=crop&q=80',
-    email: 'citizen@prime-rp.com',
-    role: UserRole.CITIZEN,
-    status: UserStatus.ACTIVE,
-    permissions: ['tickets.create', 'orders.create'],
-    createdAt: new Date('2026-02-10').toISOString(),
-    updatedAt: new Date().toISOString(),
-    lastLogin: new Date().toISOString(),
-    bio: 'مواطن نشط في قطاع الأعمال والمزادات.'
-  }
-];
+export const initialUsers: any[] = [];
 
 export const initialNews: NewsItem[] = [
   {

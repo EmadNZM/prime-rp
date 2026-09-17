@@ -10,3 +10,5 @@ export * from './NotificationRepository';
 export * from './AuditLogRepository';
 export * from './SettingsRepository';
 export * from './FAQRepository';
+export * from './ReportRepository';
+export * from './SocialLinksRepository';
