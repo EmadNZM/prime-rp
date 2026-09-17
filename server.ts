@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import apiRoutes from './server/routes/api';
 import { initPostgres, checkDatabaseHealth } from './server/db/postgres';
 import { runMigrationsAndSeed } from './server/db/migrations/migrate';
+import { checkEnvironmentOrWarn, validateEnvironment } from './server/config/env';
 
 dotenv.config();
 
@@ -14,6 +15,9 @@ async function startServer() {
 
   // Render & Reverse Proxy compatibility
   app.set('trust proxy', 1);
+
+  // Validate all 8 Environment Variables at startup
+  checkEnvironmentOrWarn();
 
   // Initialize PostgreSQL & run migrations/seeding
   try {
@@ -32,17 +36,17 @@ async function startServer() {
   app.use(express.urlencoded({ extended: true, limit: '25mb' }));
   app.use(cookieParser());
 
-  // Real Database & Application Health Check
+  // Strict Health Check Endpoint according to specification
   app.get('/api/health', async (req, res) => {
     const dbHealth = await checkDatabaseHealth();
+    const envStatus = validateEnvironment();
     const isHealthy = dbHealth.connected;
+
     return res.status(isHealthy ? 200 : 503).json({
       status: isHealthy ? 'ok' : 'degraded',
       database: dbHealth.connected ? 'connected' : 'disconnected',
-      latencyMs: dbHealth.latencyMs,
-      error: dbHealth.error,
-      timestamp: new Date().toISOString(),
-      platform: 'Prime RP'
+      discord: envStatus.discord,
+      fivem: envStatus.fivem
     });
   });
 
