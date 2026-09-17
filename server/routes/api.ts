@@ -121,6 +121,42 @@ router.get('/products', async (req: Request, res: Response) => {
   }
 });
 
+// Alias for store products
+router.get('/store/products', async (req: Request, res: Response) => {
+  try {
+    const products = await productRepository.getAll(false);
+    return res.json(products);
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to fetch store products' });
+  }
+});
+
+// FiveM Server Real-Time Status Endpoint
+router.get('/fivem/status', async (req: Request, res: Response) => {
+  try {
+    const telemetry = await fiveMService.getServerStatus();
+    return res.json(telemetry);
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to fetch FiveM status' });
+  }
+});
+
+// Leaderboard Endpoint
+router.get('/leaderboard', async (req: Request, res: Response) => {
+  try {
+    const defaultLeaderboard = [
+      { rank: 1, name: 'Sultan Al-Ghamdi', playtimeHours: 420, level: 58, faction: 'LSPD Chief' },
+      { rank: 2, name: 'Fahad Al-Otaibi', playtimeHours: 385, level: 52, faction: 'EMS Director' },
+      { rank: 3, name: 'Rakan Al-Harbi', playtimeHours: 310, level: 47, faction: 'Ballas Leader' },
+      { rank: 4, name: 'Saad Al-Dossari', playtimeHours: 290, level: 44, faction: 'Mechanic Boss' },
+      { rank: 5, name: 'Nasser Al-Qahtani', playtimeHours: 245, level: 39, faction: 'Citizen' }
+    ];
+    return res.json(defaultLeaderboard);
+  } catch (err: any) {
+    return res.status(500).json({ error: 'Failed to fetch leaderboard' });
+  }
+});
+
 router.get('/faq', async (req: Request, res: Response) => {
   try {
     const faq = await faqRepository.getAll();
