@@ -1,6 +1,7 @@
 import crypto from 'crypto';
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { TicketItem, TicketMessage, TicketPriority, TicketStatus } from '../../../src/types';
+import { db } from '../store';
 
 export class TicketRepository {
   private static async attachMessages(ticketRow: any): Promise<TicketItem> {
@@ -39,6 +40,9 @@ export class TicketRepository {
   }
 
   async getAll(userId?: string): Promise<TicketItem[]> {
+    if (!isPostgresConnected()) {
+      return db.getTickets(userId);
+    }
     let sql = 'SELECT * FROM tickets';
     const params: any[] = [];
     if (userId) {
@@ -56,6 +60,9 @@ export class TicketRepository {
   }
 
   async getById(id: string): Promise<TicketItem | null> {
+    if (!isPostgresConnected()) {
+      return db.getTicketById(id) || null;
+    }
     const res = await query('SELECT * FROM tickets WHERE id = $1', [id]);
     if (res.rows.length === 0) return null;
     return TicketRepository.attachMessages(res.rows[0]);
@@ -70,6 +77,17 @@ export class TicketRepository {
     priority?: TicketPriority;
     initialMessage: string;
   }): Promise<TicketItem> {
+    if (!isPostgresConnected()) {
+      return db.createTicket({
+        userId: data.userId,
+        userName: data.userName,
+        userAvatar: data.userAvatar,
+        subject: data.subject,
+        category: data.category,
+        priority: data.priority || TicketPriority.MEDIUM,
+        initialMessage: data.initialMessage
+      });
+    }
     const id = `tkt_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const ticketNumber = `TICK-${crypto.randomInt(1000, 9999)}`;
     const priority = data.priority || TicketPriority.MEDIUM;
@@ -110,6 +128,9 @@ export class TicketRepository {
     isStaff: boolean;
     message: string;
   }): Promise<TicketItem | null> {
+    if (!isPostgresConnected()) {
+      return db.addTicketMessage(data) || null;
+    }
     const ticket = await this.getById(data.ticketId);
     if (!ticket) return null;
 
@@ -130,6 +151,9 @@ export class TicketRepository {
   }
 
   async updateStatus(id: string, status: TicketStatus): Promise<TicketItem | null> {
+    if (!isPostgresConnected()) {
+      return db.updateTicketStatus(id, status) || null;
+    }
     const res = await query(
       `UPDATE tickets SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
       [status, id]

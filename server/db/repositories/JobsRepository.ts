@@ -1,5 +1,6 @@
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { JobItem } from '../../../src/types';
+import { db } from '../store';
 
 export class JobsRepository {
   private static async attachTranslations(jobRow: any): Promise<JobItem> {
@@ -35,6 +36,9 @@ export class JobsRepository {
   }
 
   async getAll(): Promise<JobItem[]> {
+    if (!isPostgresConnected()) {
+      return db.getJobs();
+    }
     const res = await query('SELECT * FROM jobs ORDER BY category ASC, created_at ASC');
     const jobs: JobItem[] = [];
     for (const row of res.rows) {
@@ -44,12 +48,18 @@ export class JobsRepository {
   }
 
   async getBySlug(slug: string): Promise<JobItem | null> {
+    if (!isPostgresConnected()) {
+      return db.getJobs().find(j => j.slug === slug) || null;
+    }
     const res = await query('SELECT * FROM jobs WHERE slug = $1', [slug]);
     if (res.rows.length === 0) return null;
     return JobsRepository.attachTranslations(res.rows[0]);
   }
 
   async save(job: Partial<JobItem>): Promise<JobItem> {
+    if (!isPostgresConnected()) {
+      return db.saveJob(job as any);
+    }
     const id = job.id || `job_${Date.now()}`;
     const slug = job.slug || `job-${Date.now()}`;
     const category = job.category || 'CIVILIAN';

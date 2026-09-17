@@ -1,9 +1,13 @@
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { SiteSettings } from '../../../src/types';
 import { initialSiteSettings } from '../seedData';
+import { db } from '../store';
 
 export class SettingsRepository {
   async getSettings(): Promise<SiteSettings> {
+    if (!isPostgresConnected()) {
+      return db.getSiteSettings();
+    }
     const res = await query('SELECT data FROM site_settings WHERE key = $1', ['global']);
     if (res.rows.length === 0) {
       return initialSiteSettings;
@@ -15,6 +19,9 @@ export class SettingsRepository {
   }
 
   async updateSettings(partial: Partial<SiteSettings>): Promise<SiteSettings> {
+    if (!isPostgresConnected()) {
+      return db.updateSiteSettings(partial);
+    }
     const current = await this.getSettings();
     const updated = {
       ...current,

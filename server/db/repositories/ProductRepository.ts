@@ -1,5 +1,6 @@
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { ProductItem } from '../../../src/types';
+import { db } from '../store';
 
 export class ProductRepository {
   private static async attachTranslations(prodRow: any): Promise<ProductItem> {
@@ -36,6 +37,9 @@ export class ProductRepository {
   }
 
   async getAll(includeHidden: boolean = false): Promise<ProductItem[]> {
+    if (!isPostgresConnected()) {
+      return includeHidden ? db.getProducts() : db.getProducts().filter(p => p.status !== 'HIDDEN');
+    }
     let sql = 'SELECT * FROM products';
     const params: any[] = [];
     if (!includeHidden) {
@@ -53,18 +57,27 @@ export class ProductRepository {
   }
 
   async getById(id: string): Promise<ProductItem | null> {
+    if (!isPostgresConnected()) {
+      return db.getProducts().find(p => p.id === id) || null;
+    }
     const res = await query('SELECT * FROM products WHERE id = $1', [id]);
     if (res.rows.length === 0) return null;
     return ProductRepository.attachTranslations(res.rows[0]);
   }
 
   async getBySlug(slug: string): Promise<ProductItem | null> {
+    if (!isPostgresConnected()) {
+      return db.getProducts().find(p => p.slug === slug) || null;
+    }
     const res = await query('SELECT * FROM products WHERE slug = $1', [slug]);
     if (res.rows.length === 0) return null;
     return ProductRepository.attachTranslations(res.rows[0]);
   }
 
   async save(product: Partial<ProductItem>): Promise<ProductItem> {
+    if (!isPostgresConnected()) {
+      return db.saveProduct(product as any);
+    }
     const id = product.id || `prod_${Date.now()}`;
     const slug = product.slug || `item-${Date.now()}`;
     const category = product.category || 'VIP';

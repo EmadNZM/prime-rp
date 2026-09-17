@@ -1,4 +1,5 @@
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
+import { db } from '../store';
 
 export interface DiscordTokens {
   userId: string;
@@ -14,6 +15,9 @@ export class DiscordTokenRepository {
     refreshToken: string,
     expiresInSeconds: number = 604800
   ): Promise<void> {
+    if (!isPostgresConnected()) {
+      return db.saveDiscordTokens(userId, accessToken, refreshToken, expiresInSeconds);
+    }
     const expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
     await query(
       `INSERT INTO discord_oauth_tokens (user_id, access_token, refresh_token, expires_at, updated_at)
@@ -28,6 +32,16 @@ export class DiscordTokenRepository {
   }
 
   async getTokens(userId: string): Promise<DiscordTokens | null> {
+    if (!isPostgresConnected()) {
+      const tok = db.getDiscordTokens(userId);
+      if (!tok) return null;
+      return {
+        userId: tok.userId,
+        accessToken: tok.accessToken,
+        refreshToken: tok.refreshToken,
+        expiresAt: new Date(tok.expiresAt)
+      };
+    }
     const res = await query(
       'SELECT user_id, access_token, refresh_token, expires_at FROM discord_oauth_tokens WHERE user_id = $1',
       [userId]
@@ -82,6 +96,9 @@ export class DiscordTokenRepository {
   }
 
   async deleteTokens(userId: string): Promise<void> {
+    if (!isPostgresConnected()) {
+      return db.deleteDiscordTokens(userId);
+    }
     await query('DELETE FROM discord_oauth_tokens WHERE user_id = $1', [userId]);
   }
 }

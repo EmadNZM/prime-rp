@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 import { 
   initialUsers, 
   initialNews, 
@@ -7,7 +8,9 @@ import {
   initialJobs, 
   initialProducts, 
   initialFAQ, 
-  initialSiteSettings 
+  initialSiteSettings,
+  initialSocialLinks,
+  initialReports
 } from './seedData';
 import { 
   User, 
@@ -20,8 +23,28 @@ import {
   NotificationItem, 
   AuditLogItem, 
   SiteSettings, 
-  FAQItem 
+  FAQItem,
+  ReportItem,
+  SocialLinkItem,
+  ReportStatus
 } from '../../src/types';
+
+export interface StoredSession {
+  id: string;
+  userId: string;
+  ipAddress?: string;
+  userAgent?: string;
+  expiresAt: string;
+  createdAt: string;
+  lastUsedAt: string;
+}
+
+export interface StoredDiscordTokens {
+  userId: string;
+  accessToken: string;
+  refreshToken: string;
+  expiresAt: string;
+}
 
 interface DatabaseSchema {
   users: User[];
@@ -35,6 +58,10 @@ interface DatabaseSchema {
   auditLogs: AuditLogItem[];
   siteSettings: SiteSettings;
   faq: FAQItem[];
+  reports: ReportItem[];
+  socialLinks: SocialLinkItem[];
+  sessions: StoredSession[];
+  discordTokens: StoredDiscordTokens[];
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -56,7 +83,11 @@ class DatabaseStore {
       notifications: [],
       auditLogs: [],
       siteSettings: initialSiteSettings,
-      faq: []
+      faq: [],
+      reports: [],
+      socialLinks: [],
+      sessions: [],
+      discordTokens: []
     };
     this.init();
   }
@@ -75,7 +106,11 @@ class DatabaseStore {
         this.data = {
           ...this.data,
           ...parsed,
-          siteSettings: { ...initialSiteSettings, ...(parsed.siteSettings || {}) }
+          siteSettings: { ...initialSiteSettings, ...(parsed.siteSettings || {}) },
+          reports: parsed.reports || [...initialReports],
+          socialLinks: parsed.socialLinks || [...initialSocialLinks],
+          sessions: parsed.sessions || [],
+          discordTokens: parsed.discordTokens || []
         };
       } catch (err) {
         console.error('Failed to parse database file, resetting to seed data:', err);
@@ -95,6 +130,10 @@ class DatabaseStore {
     this.data.jobs = [...initialJobs];
     this.data.products = [...initialProducts];
     this.data.faq = [...initialFAQ];
+    this.data.reports = [...initialReports];
+    this.data.socialLinks = [...initialSocialLinks];
+    this.data.sessions = [];
+    this.data.discordTokens = [];
     this.data.siteSettings = { ...initialSiteSettings };
     this.data.orders = [
       {
@@ -189,8 +228,39 @@ class DatabaseStore {
     return this.data.users;
   }
 
+  getUser(id: string): User | undefined {
+    return this.data.users.find((u) => u.id === id || u.discordId === id);
+  }
+
   getUserById(id: string): User | undefined {
     return this.data.users.find((u) => u.id === id || u.discordId === id);
+  }
+
+  getUserByDiscordId(discordId: string): User | undefined {
+    return this.data.users.find((u) => u.discordId === discordId);
+  }
+
+  saveUser(user: User): User {
+    const idx = this.data.users.findIndex(u => u.id === user.id);
+    if (idx >= 0) {
+      this.data.users[idx] = user;
+    } else {
+      this.data.users.push(user);
+    }
+    this.save();
+    return user;
+  }
+
+  updateUser(id: string, partial: Partial<User>): User | null {
+    const idx = this.data.users.findIndex(u => u.id === id || u.discordId === id);
+    if (idx < 0) return null;
+    this.data.users[idx] = {
+      ...this.data.users[idx],
+      ...partial,
+      updatedAt: new Date().toISOString()
+    };
+    this.save();
+    return this.data.users[idx];
   }
 
   upsertUser(userData: Partial<User> & { discordId: string }): User {
@@ -682,9 +752,224 @@ class DatabaseStore {
     return this.data.siteSettings;
   }
 
+  // --- RULES EXTRA ---
+  deleteRuleCategory(id: string): boolean {
+    const initialLen = this.data.rules.length;
+    this.data.rules = this.data.rules.filter(r => r.id !== id);
+    if (this.data.rules.length !== initialLen) {
+      this.save();
+      return true;
+    }
+    return false;
+  }
+
+  // --- JOBS EXTRA ---
+  deleteJob(id: string): boolean {
+    const initialLen = this.data.jobs.length;
+    this.data.jobs = this.data.jobs.filter(j => j.id !== id);
+    if (this.data.jobs.length !== initialLen) {
+      this.save();
+      return true;
+    }
+    return false;
+  }
+
+  // --- PRODUCTS EXTRA ---
+  deleteProduct(id: string): boolean {
+    const initialLen = this.data.products.length;
+    this.data.products = this.data.products.filter(p => p.id !== id);
+    if (this.data.products.length !== initialLen) {
+      this.save();
+      return true;
+    }
+    return false;
+  }
+
   // --- FAQ ---
   getFAQ(): FAQItem[] {
     return this.data.faq;
+  }
+
+  saveFAQ(data: Partial<FAQItem>): FAQItem {
+    const id = data.id || `faq_${Date.now()}`;
+    const existingIndex = this.data.faq.findIndex(f => f.id === id);
+    const item: FAQItem = {
+      id,
+      category: data.category || 'عام',
+      order: typeof data.order === 'number' ? data.order : 0,
+      translations: data.translations || { ar: { question: '', answer: '' }, en: { question: '', answer: '' } }
+    };
+    if (existingIndex >= 0) {
+      this.data.faq[existingIndex] = item;
+    } else {
+      this.data.faq.push(item);
+    }
+    this.save();
+    return item;
+  }
+
+  deleteFAQ(id: string): boolean {
+    const initialLen = this.data.faq.length;
+    this.data.faq = this.data.faq.filter(f => f.id !== id);
+    if (this.data.faq.length !== initialLen) {
+      this.save();
+      return true;
+    }
+    return false;
+  }
+
+  // --- REPORTS ---
+  getReports(reporterId?: string): ReportItem[] {
+    if (reporterId) {
+      return this.data.reports.filter(r => r.reporterId === reporterId);
+    }
+    return this.data.reports;
+  }
+
+  getReportById(id: string): ReportItem | undefined {
+    return this.data.reports.find(r => r.id === id);
+  }
+
+  createReport(data: {
+    reporterId: string;
+    reporterName: string;
+    reporterAvatar?: string;
+    targetId?: string;
+    targetName?: string;
+    category: any;
+    reason: string;
+    notes?: string;
+  }): ReportItem {
+    const id = `rep_${Date.now()}_${crypto.randomBytes(3).toString('hex')}`;
+    const report: ReportItem = {
+      id,
+      reporterId: data.reporterId,
+      reporterName: data.reporterName,
+      reporterAvatar: data.reporterAvatar,
+      targetId: data.targetId,
+      targetName: data.targetName,
+      category: data.category,
+      reason: data.reason,
+      status: 'OPEN',
+      notes: data.notes,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    this.data.reports.unshift(report);
+    this.save();
+    return report;
+  }
+
+  updateReportStatus(id: string, status: any, notes?: string): ReportItem | null {
+    const report = this.data.reports.find(r => r.id === id);
+    if (!report) return null;
+    report.status = status;
+    if (notes !== undefined) {
+      report.adminNotes = notes;
+    }
+    report.updatedAt = new Date().toISOString();
+    this.save();
+    return report;
+  }
+
+  // --- SOCIAL LINKS ---
+  getSocialLinks(activeOnly: boolean = false): SocialLinkItem[] {
+    if (activeOnly) {
+      return this.data.socialLinks.filter(s => s.isActive);
+    }
+    return this.data.socialLinks;
+  }
+
+  saveSocialLink(data: { id?: string; platform: string; url: string; isActive?: boolean }): SocialLinkItem {
+    const id = data.id || `soc_${Date.now()}`;
+    const existingIndex = this.data.socialLinks.findIndex(s => s.id === id);
+    const item: SocialLinkItem = {
+      id,
+      platform: data.platform,
+      url: data.url,
+      isActive: data.isActive !== undefined ? data.isActive : true,
+      createdAt: existingIndex >= 0 ? this.data.socialLinks[existingIndex].createdAt : new Date().toISOString()
+    };
+    if (existingIndex >= 0) {
+      this.data.socialLinks[existingIndex] = item;
+    } else {
+      this.data.socialLinks.push(item);
+    }
+    this.save();
+    return item;
+  }
+
+  deleteSocialLink(id: string): boolean {
+    const initialLen = this.data.socialLinks.length;
+    this.data.socialLinks = this.data.socialLinks.filter(s => s.id !== id);
+    if (this.data.socialLinks.length !== initialLen) {
+      this.save();
+      return true;
+    }
+    return false;
+  }
+
+  // --- SESSIONS ---
+  createSession(userId: string, ipAddress?: string, userAgent?: string, durationDays: number = 30): string {
+    const sessionId = `ses_${crypto.randomBytes(32).toString('hex')}`;
+    const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+    const session: StoredSession = {
+      id: sessionId,
+      userId,
+      ipAddress,
+      userAgent,
+      expiresAt,
+      createdAt: new Date().toISOString(),
+      lastUsedAt: new Date().toISOString()
+    };
+    this.data.sessions.push(session);
+    this.save();
+    return sessionId;
+  }
+
+  validateSession(sessionId: string): User | null {
+    const session = this.data.sessions.find(s => s.id === sessionId);
+    if (!session) return null;
+    if (new Date(session.expiresAt) < new Date()) {
+      this.deleteSession(sessionId);
+      return null;
+    }
+    session.lastUsedAt = new Date().toISOString();
+    this.save();
+    const user = this.getUserById(session.userId);
+    return user || null;
+  }
+
+  deleteSession(sessionId: string): void {
+    this.data.sessions = this.data.sessions.filter(s => s.id !== sessionId);
+    this.save();
+  }
+
+  deleteUserSessions(userId: string): void {
+    this.data.sessions = this.data.sessions.filter(s => s.userId !== userId);
+    this.save();
+  }
+
+  // --- DISCORD TOKENS ---
+  saveDiscordTokens(userId: string, accessToken: string, refreshToken: string, expiresInSeconds: number = 604800): void {
+    const expiresAt = new Date(Date.now() + expiresInSeconds * 1000).toISOString();
+    const idx = this.data.discordTokens.findIndex(t => t.userId === userId);
+    const entry: StoredDiscordTokens = { userId, accessToken, refreshToken, expiresAt };
+    if (idx >= 0) {
+      this.data.discordTokens[idx] = entry;
+    } else {
+      this.data.discordTokens.push(entry);
+    }
+    this.save();
+  }
+
+  getDiscordTokens(userId: string): StoredDiscordTokens | null {
+    return this.data.discordTokens.find(t => t.userId === userId) || null;
+  }
+
+  deleteDiscordTokens(userId: string): void {
+    this.data.discordTokens = this.data.discordTokens.filter(t => t.userId !== userId);
+    this.save();
   }
 }
 

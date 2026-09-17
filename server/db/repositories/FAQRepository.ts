@@ -1,5 +1,6 @@
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { FAQItem } from '../../../src/types';
+import { db } from '../store';
 
 export class FAQRepository {
   private static async attachTranslations(faqRow: any): Promise<FAQItem> {
@@ -29,6 +30,9 @@ export class FAQRepository {
   }
 
   async getAll(): Promise<FAQItem[]> {
+    if (!isPostgresConnected()) {
+      return db.getFAQ();
+    }
     const res = await query('SELECT * FROM faq ORDER BY sort_order ASC, created_at ASC');
     const items: FAQItem[] = [];
     for (const row of res.rows) {
@@ -38,6 +42,9 @@ export class FAQRepository {
   }
 
   async save(data: Partial<FAQItem>): Promise<FAQItem> {
+    if (!isPostgresConnected()) {
+      return db.saveFAQ(data);
+    }
     const id = data.id || `faq_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
     const category = data.category || 'عام';
     const sortOrder = typeof data.order === 'number' ? data.order : 0;
@@ -72,6 +79,9 @@ export class FAQRepository {
   }
 
   async delete(id: string): Promise<boolean> {
+    if (!isPostgresConnected()) {
+      return db.deleteFAQ(id);
+    }
     const res = await query('DELETE FROM faq WHERE id = $1', [id]);
     return (res.rowCount || 0) > 0;
   }

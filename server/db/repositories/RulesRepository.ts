@@ -1,5 +1,6 @@
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { RuleCategory, RuleItem } from '../../../src/types';
+import { db } from '../store';
 
 export class RulesRepository {
   private static async attachCategoryDetails(catRow: any): Promise<RuleCategory> {
@@ -42,6 +43,9 @@ export class RulesRepository {
   }
 
   async getAll(): Promise<RuleCategory[]> {
+    if (!isPostgresConnected()) {
+      return db.getRules();
+    }
     const res = await query('SELECT * FROM rules ORDER BY sort_order ASC, created_at ASC');
     const categories: RuleCategory[] = [];
     for (const row of res.rows) {
@@ -51,12 +55,18 @@ export class RulesRepository {
   }
 
   async getBySlug(slug: string): Promise<RuleCategory | null> {
+    if (!isPostgresConnected()) {
+      return db.getRules().find(r => r.slug === slug) || null;
+    }
     const res = await query('SELECT * FROM rules WHERE slug = $1', [slug]);
     if (res.rows.length === 0) return null;
     return RulesRepository.attachCategoryDetails(res.rows[0]);
   }
 
   async saveCategory(cat: Partial<RuleCategory>): Promise<RuleCategory> {
+    if (!isPostgresConnected()) {
+      return db.saveRuleCategory(cat as any);
+    }
     const id = cat.id || `rule_cat_${Date.now()}`;
     const slug = cat.slug || `rule-${Date.now()}`;
     const order = cat.order ?? 0;

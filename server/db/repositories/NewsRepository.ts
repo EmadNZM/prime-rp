@@ -1,5 +1,6 @@
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { NewsItem } from '../../../src/types';
+import { db } from '../store';
 
 export class NewsRepository {
   private static async attachTranslations(newsRow: any): Promise<NewsItem> {
@@ -39,6 +40,9 @@ export class NewsRepository {
   }
 
   async getAll(onlyPublished: boolean = true): Promise<NewsItem[]> {
+    if (!isPostgresConnected()) {
+      return db.getNews(onlyPublished);
+    }
     let sql = 'SELECT * FROM news';
     const params: any[] = [];
     if (onlyPublished) {
@@ -56,18 +60,27 @@ export class NewsRepository {
   }
 
   async getBySlug(slug: string): Promise<NewsItem | null> {
+    if (!isPostgresConnected()) {
+      return db.getNewsBySlug(slug) || null;
+    }
     const res = await query('SELECT * FROM news WHERE slug = $1', [slug]);
     if (res.rows.length === 0) return null;
     return NewsRepository.attachTranslations(res.rows[0]);
   }
 
   async getById(id: string): Promise<NewsItem | null> {
+    if (!isPostgresConnected()) {
+      return db.getNews(false).find(n => n.id === id) || null;
+    }
     const res = await query('SELECT * FROM news WHERE id = $1', [id]);
     if (res.rows.length === 0) return null;
     return NewsRepository.attachTranslations(res.rows[0]);
   }
 
   async save(item: Partial<NewsItem> & { slug: string; translations: any }): Promise<NewsItem> {
+    if (!isPostgresConnected()) {
+      return db.saveNews(item);
+    }
     const id = item.id || `news_${Date.now()}`;
     const slug = item.slug;
     const status = item.status || 'PUBLISHED';
@@ -111,6 +124,9 @@ export class NewsRepository {
   }
 
   async delete(id: string): Promise<boolean> {
+    if (!isPostgresConnected()) {
+      return db.deleteNews(id);
+    }
     const res = await query('DELETE FROM news WHERE id = $1', [id]);
     return (res.rowCount ?? 0) > 0;
   }

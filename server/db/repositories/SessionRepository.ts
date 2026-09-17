@@ -1,7 +1,8 @@
 import crypto from 'crypto';
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { User } from '../../../src/types';
 import { userRepository } from './UserRepository';
+import { db } from '../store';
 
 export class SessionRepository {
   /**
@@ -13,6 +14,9 @@ export class SessionRepository {
     userAgent?: string,
     durationDays: number = 30
   ): Promise<string> {
+    if (!isPostgresConnected()) {
+      return db.createSession(userId, ipAddress, userAgent, durationDays);
+    }
     const sessionId = crypto.randomBytes(32).toString('hex');
     const expiresAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
 
@@ -30,6 +34,10 @@ export class SessionRepository {
    */
   async validateSession(sessionId: string): Promise<User | null> {
     if (!sessionId || typeof sessionId !== 'string') return null;
+
+    if (!isPostgresConnected()) {
+      return db.validateSession(sessionId);
+    }
 
     const res = await query(
       `SELECT s.id, s.user_id, s.expires_at, s.last_used_at 
@@ -68,15 +76,26 @@ export class SessionRepository {
 
   async deleteSession(sessionId: string): Promise<void> {
     if (!sessionId) return;
+    if (!isPostgresConnected()) {
+      db.deleteSession(sessionId);
+      return;
+    }
     await query('DELETE FROM sessions WHERE id = $1', [sessionId]);
   }
 
   async deleteUserSessions(userId: string): Promise<void> {
     if (!userId) return;
+    if (!isPostgresConnected()) {
+      db.deleteUserSessions(userId);
+      return;
+    }
     await query('DELETE FROM sessions WHERE user_id = $1', [userId]);
   }
 
   async deleteExpiredSessions(): Promise<void> {
+    if (!isPostgresConnected()) {
+      return;
+    }
     await query('DELETE FROM sessions WHERE expires_at <= NOW()');
   }
 }

@@ -1,6 +1,7 @@
 import crypto from 'crypto';
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { AuditLogItem } from '../../../src/types';
+import { db } from '../store';
 
 export class AuditLogRepository {
   private static mapRowToAuditLog(row: any): AuditLogItem {
@@ -18,6 +19,9 @@ export class AuditLogRepository {
   }
 
   async getRecent(limit: number = 50): Promise<AuditLogItem[]> {
+    if (!isPostgresConnected()) {
+      return db.getAuditLogs(limit);
+    }
     const res = await query('SELECT * FROM audit_logs ORDER BY created_at DESC LIMIT $1', [limit]);
     return res.rows.map(AuditLogRepository.mapRowToAuditLog);
   }
@@ -31,6 +35,17 @@ export class AuditLogRepository {
     metadata?: string;
     ip?: string;
   }): Promise<AuditLogItem> {
+    if (!isPostgresConnected()) {
+      return db.logAudit({
+        adminId: entry.adminId,
+        adminName: entry.adminName,
+        action: entry.action,
+        entity: entry.entity,
+        entityId: entry.entityId,
+        metadata: entry.metadata,
+        ip: entry.ip || '127.0.0.1'
+      });
+    }
     const id = `log_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const res = await query(
       `INSERT INTO audit_logs (id, admin_id, admin_name, action, entity, entity_id, metadata, ip, created_at)

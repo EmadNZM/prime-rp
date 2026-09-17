@@ -5,9 +5,14 @@ let isConnected = false;
 let lastError: string | null = null;
 
 export function getPoolConfig(): PoolConfig {
-  const connectionString = process.env.DATABASE_URL;
+  const connectionString = process.env.DATABASE_URL || '';
   if (!connectionString) {
-    throw new Error('DATABASE_URL environment variable is not defined');
+    return {
+      connectionString: '',
+      max: 1,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 1000
+    };
   }
 
   // Parse connection string to cleanly handle SSL requirements (e.g. Aiven / Render)
@@ -38,7 +43,10 @@ export function getPoolConfig(): PoolConfig {
   }
 }
 
-export function getPool(): Pool {
+export function getPool(): Pool | null {
+  if (!process.env.DATABASE_URL) {
+    return null;
+  }
   if (!pool) {
     const config = getPoolConfig();
     pool = new Pool(config);
@@ -56,8 +64,39 @@ export async function query<T extends QueryResultRow = any>(
   text: string,
   params?: any[]
 ): Promise<QueryResult<T>> {
-  const p = getPool();
-  return p.query<T>(text, params);
+  if (!process.env.DATABASE_URL) {
+    return {
+      rows: [],
+      rowCount: 0,
+      command: '',
+      oid: 0,
+      fields: []
+    } as any;
+  }
+  try {
+    const p = getPool();
+    if (!p) {
+      return {
+        rows: [],
+        rowCount: 0,
+        command: '',
+        oid: 0,
+        fields: []
+      } as any;
+    }
+    return await p.query<T>(text, params);
+  } catch (err: any) {
+    console.warn('[PostgreSQL] Query failed, returning empty result:', err.message);
+    isConnected = false;
+    lastError = err.message;
+    return {
+      rows: [],
+      rowCount: 0,
+      command: '',
+      oid: 0,
+      fields: []
+    } as any;
+  }
 }
 
 export async function initPostgres(): Promise<{ connected: boolean; error?: string }> {

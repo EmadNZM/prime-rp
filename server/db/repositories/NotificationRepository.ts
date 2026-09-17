@@ -1,6 +1,7 @@
 import crypto from 'crypto';
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { NotificationItem } from '../../../src/types';
+import { db } from '../store';
 
 export class NotificationRepository {
   private static mapRowToNotification(row: any): NotificationItem {
@@ -17,6 +18,9 @@ export class NotificationRepository {
   }
 
   async getByUserId(userId: string): Promise<NotificationItem[]> {
+    if (!isPostgresConnected()) {
+      return db.getNotifications(userId);
+    }
     const res = await query(
       'SELECT * FROM notifications WHERE user_id = $1 ORDER BY created_at DESC',
       [userId]
@@ -31,6 +35,15 @@ export class NotificationRepository {
     message: string;
     link?: string;
   }): Promise<NotificationItem> {
+    if (!isPostgresConnected()) {
+      return db.createNotification({
+        userId: notif.userId,
+        type: (notif.type as any) || 'SYSTEM',
+        title: notif.title,
+        message: notif.message,
+        link: notif.link
+      });
+    }
     const id = `notif_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
     const res = await query(
       `INSERT INTO notifications (id, user_id, type, title, message, link, is_read, created_at)
@@ -42,6 +55,9 @@ export class NotificationRepository {
   }
 
   async markAsRead(id: string): Promise<boolean> {
+    if (!isPostgresConnected()) {
+      return db.markNotificationAsRead(id);
+    }
     const res = await query('UPDATE notifications SET is_read = TRUE WHERE id = $1', [id]);
     return (res.rowCount ?? 0) > 0;
   }

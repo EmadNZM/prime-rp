@@ -1,7 +1,8 @@
 import crypto from 'crypto';
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { OrderItem } from '../../../src/types';
 import { productRepository } from './ProductRepository';
+import { db } from '../store';
 
 export class OrderRepository {
   private static mapRowToOrder(row: any): OrderItem {
@@ -19,6 +20,9 @@ export class OrderRepository {
   }
 
   async getAll(userId?: string): Promise<OrderItem[]> {
+    if (!isPostgresConnected()) {
+      return db.getOrders(userId);
+    }
     let sql = 'SELECT * FROM orders';
     const params: any[] = [];
     if (userId) {
@@ -32,12 +36,18 @@ export class OrderRepository {
   }
 
   async getById(id: string): Promise<OrderItem | null> {
+    if (!isPostgresConnected()) {
+      return db.getOrders().find(o => o.id === id) || null;
+    }
     const res = await query('SELECT * FROM orders WHERE id = $1', [id]);
     if (res.rows.length === 0) return null;
     return OrderRepository.mapRowToOrder(res.rows[0]);
   }
 
   async create(userId: string, productId: string): Promise<OrderItem | null> {
+    if (!isPostgresConnected()) {
+      return db.createOrder(userId, productId) || null;
+    }
     const product = await productRepository.getById(productId);
     if (!product) return null;
 

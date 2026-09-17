@@ -1,6 +1,7 @@
 import crypto from 'crypto';
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { User, UserRole, UserStatus } from '../../../src/types';
+import { db } from '../store';
 
 export class UserRepository {
   private static mapRowToUser(row: any): User {
@@ -35,24 +36,40 @@ export class UserRepository {
   }
 
   async findById(id: string): Promise<User | null> {
+    if (!isPostgresConnected()) {
+      return db.getUser(id) || null;
+    }
     const res = await query('SELECT * FROM users WHERE id = $1', [id]);
     if (res.rows.length === 0) return null;
     return UserRepository.mapRowToUser(res.rows[0]);
   }
 
   async findByDiscordId(discordId: string): Promise<User | null> {
+    if (!isPostgresConnected()) {
+      return db.getUserByDiscordId(discordId) || null;
+    }
     const res = await query('SELECT * FROM users WHERE discord_id = $1', [discordId]);
     if (res.rows.length === 0) return null;
     return UserRepository.mapRowToUser(res.rows[0]);
   }
 
   async findByUsername(username: string): Promise<User | null> {
+    if (!isPostgresConnected()) {
+      const u = db.getUsers().find(
+        user => user.username.toLowerCase() === username.toLowerCase() ||
+        (user.displayName && user.displayName.toLowerCase() === username.toLowerCase())
+      );
+      return u || null;
+    }
     const res = await query('SELECT * FROM users WHERE LOWER(username) = LOWER($1) OR LOWER(global_name) = LOWER($1)', [username]);
     if (res.rows.length === 0) return null;
     return UserRepository.mapRowToUser(res.rows[0]);
   }
 
   async getAll(): Promise<User[]> {
+    if (!isPostgresConnected()) {
+      return db.getUsers();
+    }
     const res = await query('SELECT * FROM users ORDER BY created_at DESC');
     return res.rows.map(UserRepository.mapRowToUser);
   }
@@ -70,6 +87,55 @@ export class UserRepository {
   }): Promise<User> {
     const ownerDiscordId = process.env.OWNER_DISCORD_ID?.trim();
     const isOwner = Boolean(ownerDiscordId && data.discordId === ownerDiscordId);
+
+    if (!isPostgresConnected()) {
+      const existing = db.getUserByDiscordId(data.discordId);
+      if (existing) {
+        const role = isOwner ? UserRole.OWNER : (existing.role === UserRole.OWNER ? UserRole.CITIZEN : existing.role);
+        const permissions = isOwner ? ['*'] : existing.permissions;
+        const isAdmin = isOwner || role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
+
+        const updated = db.updateUser(existing.id, {
+          username: data.username,
+          displayName: data.globalName || data.username,
+          avatar: data.avatar,
+          email: data.email || existing.email,
+          role,
+          permissions,
+          isOwner,
+          isAdmin,
+          lastLogin: new Date().toISOString(),
+          lastLoginAt: new Date().toISOString()
+        });
+        return updated!;
+      }
+
+      const id = `usr_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+      const role = isOwner ? UserRole.OWNER : UserRole.CITIZEN;
+      const permissions = isOwner ? ['*'] : ['tickets.create', 'orders.create'];
+      const status = data.status || UserStatus.ACTIVE;
+      const isAdmin = isOwner;
+
+      const newUser: User = {
+        id,
+        discordId: data.discordId,
+        username: data.username,
+        displayName: data.globalName || data.username,
+        avatar: data.avatar,
+        email: data.email,
+        role,
+        status,
+        permissions,
+        isOwner,
+        isAdmin,
+        bio: data.bio || '',
+        lastLogin: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      return db.saveUser(newUser);
+    }
 
     const existing = await this.findByDiscordId(data.discordId);
 
@@ -154,6 +220,15 @@ export class UserRepository {
 
     const isAdmin = (role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN);
 
+    if (!isPostgresConnected()) {
+      return db.updateUser(id, {
+        role,
+        permissions: perms,
+        isAdmin,
+        isOwner: false
+      });
+    }
+
     const res = await query(
       `UPDATE users 
        SET role = $1, permissions = $2, is_admin = $3, is_owner = FALSE, updated_at = NOW() 
@@ -173,6 +248,10 @@ export class UserRepository {
       throw new Error('Cannot suspend or ban the Server Owner.');
     }
 
+    if (!isPostgresConnected()) {
+      return db.updateUser(id, { status });
+    }
+
     const res = await query(
       `UPDATE users 
        SET status = $1, updated_at = NOW() 
@@ -190,12 +269,6 @@ export class UserRepository {
     }
 
     const clean = identifier.trim();
-    const findRes = await query(
-      `SELECT * FROM users 
-       WHERE discord_id = $1 OR LOWER(username) = LOWER($1) OR LOWER(global_name) = LOWER($1)
-       LIMIT 1`,
-      [clean]
-    );
 
     let perms = customPermissions;
     if (!perms) {
@@ -208,6 +281,50 @@ export class UserRepository {
     }
 
     const isAdmin = (role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN);
+
+    if (!isPostgresConnected()) {
+      const existing = db.getUsers().find(
+        u => u.discordId === clean || u.username.toLowerCase() === clean.toLowerCase()
+      );
+      if (existing) {
+        const ownerDiscordId = process.env.OWNER_DISCORD_ID?.trim();
+        if (ownerDiscordId && existing.discordId === ownerDiscordId) {
+          throw new Error('Cannot modify Server Owner role.');
+        }
+        return db.updateUser(existing.id, {
+          role,
+          permissions: perms,
+          isAdmin,
+          isOwner: false
+        })!;
+      }
+
+      const newId = `usr_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+      const isDiscordId = /^\d{17,20}$/.test(clean);
+      const newUser: User = {
+        id: newId,
+        discordId: isDiscordId ? clean : `pending_${clean}`,
+        username: clean,
+        displayName: clean,
+        role,
+        status: UserStatus.ACTIVE,
+        permissions: perms,
+        isAdmin,
+        isOwner: false,
+        lastLogin: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      return db.saveUser(newUser);
+    }
+
+    const findRes = await query(
+      `SELECT * FROM users 
+       WHERE discord_id = $1 OR LOWER(username) = LOWER($1) OR LOWER(global_name) = LOWER($1)
+       LIMIT 1`,
+      [clean]
+    );
 
     if (findRes.rows.length > 0) {
       const user = findRes.rows[0];

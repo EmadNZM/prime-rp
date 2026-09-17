@@ -1,5 +1,6 @@
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { ReportItem, ReportCategory, ReportStatus } from '../../../src/types';
+import { db } from '../store';
 
 export class ReportRepository {
   private static mapRowToReport(row: any): ReportItem {
@@ -20,6 +21,9 @@ export class ReportRepository {
   }
 
   async getAll(reporterId?: string): Promise<ReportItem[]> {
+    if (!isPostgresConnected()) {
+      return db.getReports(reporterId);
+    }
     let sql = 'SELECT * FROM reports';
     const params: any[] = [];
     if (reporterId) {
@@ -33,6 +37,9 @@ export class ReportRepository {
   }
 
   async getById(id: string): Promise<ReportItem | null> {
+    if (!isPostgresConnected()) {
+      return db.getReports().find(r => r.id === id) || null;
+    }
     const res = await query('SELECT * FROM reports WHERE id = $1', [id]);
     if (res.rows.length === 0) return null;
     return ReportRepository.mapRowToReport(res.rows[0]);
@@ -47,6 +54,12 @@ export class ReportRepository {
     category: ReportCategory;
     reason: string;
   }): Promise<ReportItem> {
+    if (!isPostgresConnected()) {
+      return db.createReport({
+        ...data,
+        reporterName: data.reporterName || 'Anonymous'
+      });
+    }
     const id = `rep_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const res = await query(
       `INSERT INTO reports (id, reporter_id, reporter_name, reporter_avatar, target_id, target_name, category, reason, status, created_at, updated_at)
@@ -68,6 +81,9 @@ export class ReportRepository {
   }
 
   async updateStatus(id: string, status: ReportStatus, notes?: string): Promise<ReportItem | null> {
+    if (!isPostgresConnected()) {
+      return db.updateReportStatus(id, status, notes);
+    }
     const res = await query(
       `UPDATE reports 
        SET status = $1, notes = COALESCE($2, notes), updated_at = NOW() 

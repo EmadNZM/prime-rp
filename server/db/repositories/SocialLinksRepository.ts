@@ -1,5 +1,6 @@
-import { query } from '../postgres';
+import { query, isPostgresConnected } from '../postgres';
 import { SocialLinkItem } from '../../../src/types';
+import { db } from '../store';
 
 export class SocialLinksRepository {
   private static mapRowToSocial(row: any): SocialLinkItem {
@@ -13,6 +14,9 @@ export class SocialLinksRepository {
   }
 
   async getAll(activeOnly: boolean = false): Promise<SocialLinkItem[]> {
+    if (!isPostgresConnected()) {
+      return db.getSocialLinks(activeOnly);
+    }
     let sql = 'SELECT * FROM social_links';
     const params: any[] = [];
     if (activeOnly) {
@@ -25,6 +29,9 @@ export class SocialLinksRepository {
   }
 
   async save(data: { id?: string; platform: string; url: string; isActive?: boolean }): Promise<SocialLinkItem> {
+    if (!isPostgresConnected()) {
+      return db.saveSocialLink(data);
+    }
     const id = data.id || `soc_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
     const isActive = data.isActive !== undefined ? data.isActive : true;
 
@@ -41,6 +48,9 @@ export class SocialLinksRepository {
   }
 
   async delete(id: string): Promise<boolean> {
+    if (!isPostgresConnected()) {
+      return db.deleteSocialLink(id);
+    }
     const res = await query('DELETE FROM social_links WHERE id = $1', [id]);
     return (res.rowCount ?? 0) > 0;
   }

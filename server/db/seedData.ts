@@ -523,3 +523,12 @@ export const initialFAQ: FAQItem[] = [
     }
   }
 ];
+
+export const initialSocialLinks = [
+  { id: 'soc_1', platform: 'DISCORD', url: 'https://discord.gg/primerp', label: 'Discord', isActive: true, createdAt: new Date('2026-01-01').toISOString() },
+  { id: 'soc_2', platform: 'YOUTUBE', url: 'https://youtube.com/@primerp', label: 'YouTube', isActive: true, createdAt: new Date('2026-01-01').toISOString() },
+  { id: 'soc_3', platform: 'TWITTER', url: 'https://x.com/primerp', label: 'Twitter / X', isActive: true, createdAt: new Date('2026-01-01').toISOString() },
+  { id: 'soc_4', platform: 'TIKTOK', url: 'https://tiktok.com/@primerp', label: 'TikTok', isActive: true, createdAt: new Date('2026-01-01').toISOString() }
+];
+
+export const initialReports = [];
