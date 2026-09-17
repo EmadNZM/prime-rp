@@ -85,6 +85,42 @@ export const apiClient = {
     return res.json();
   },
 
+  async getJob(id: string) {
+    const res = await apiFetch(`/api/jobs/${id}`);
+    if (!res.ok) return null;
+    return res.json();
+  },
+
+  async getMyJobApplications() {
+    const res = await apiFetch('/api/jobs/applications/me');
+    if (!res.ok) return [];
+    return res.json();
+  },
+
+  async checkJobApplication(jobId: string) {
+    const res = await apiFetch(`/api/jobs/applications/check/${jobId}`);
+    if (!res.ok) return { hasApplied: false, application: null };
+    return res.json();
+  },
+
+  async submitJobApplication(jobId: string, data: {
+    characterName: string;
+    characterAge: number;
+    experience: string;
+    dailyAvailability: string;
+    answers?: Record<string, any>;
+  }) {
+    const res = await apiFetch(`/api/jobs/${jobId}/applications`, {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error || 'Failed to submit application');
+    }
+    return json;
+  },
+
   async getProducts() {
     const res = await apiFetch('/api/products');
     return res.json();
@@ -254,6 +290,43 @@ export const apiClient = {
       body: JSON.stringify(data)
     });
     return res.json();
+  },
+
+  async deleteJobCMS(id: string) {
+    const res = await apiFetch(`/api/admin/jobs/${id}`, {
+      method: 'DELETE'
+    });
+    return res.json();
+  },
+
+  async getAdminJobApplications(filters?: { status?: string; jobId?: string }) {
+    let url = '/api/admin/job-applications';
+    const params = new URLSearchParams();
+    if (filters?.status) params.append('status', filters.status);
+    if (filters?.jobId) params.append('jobId', filters.jobId);
+    if (params.toString()) url += `?${params.toString()}`;
+
+    const res = await apiFetch(url);
+    if (!res.ok) return [];
+    return res.json();
+  },
+
+  async getAdminJobApplication(id: string) {
+    const res = await apiFetch(`/api/admin/job-applications/${id}`);
+    if (!res.ok) return null;
+    return res.json();
+  },
+
+  async updateAdminJobApplicationStatus(id: string, status: string, reviewNotes?: string) {
+    const res = await apiFetch(`/api/admin/job-applications/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status, reviewNotes })
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      throw new Error(json.error || 'Failed to update application status');
+    }
+    return json;
   },
 
   async saveProductCMS(data: any) {

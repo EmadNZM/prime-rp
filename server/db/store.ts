@@ -26,7 +26,9 @@ import {
   FAQItem,
   ReportItem,
   SocialLinkItem,
-  ReportStatus
+  ReportStatus,
+  JobApplication,
+  JobApplicationStatus
 } from '../../src/types';
 
 export interface StoredSession {
@@ -62,6 +64,7 @@ interface DatabaseSchema {
   socialLinks: SocialLinkItem[];
   sessions: StoredSession[];
   discordTokens: StoredDiscordTokens[];
+  jobApplications: JobApplication[];
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -87,7 +90,8 @@ class DatabaseStore {
       reports: [],
       socialLinks: [],
       sessions: [],
-      discordTokens: []
+      discordTokens: [],
+      jobApplications: []
     };
     this.init();
   }
@@ -110,7 +114,8 @@ class DatabaseStore {
           reports: parsed.reports || [...initialReports],
           socialLinks: parsed.socialLinks || [...initialSocialLinks],
           sessions: parsed.sessions || [],
-          discordTokens: parsed.discordTokens || []
+          discordTokens: parsed.discordTokens || [],
+          jobApplications: parsed.jobApplications || []
         };
       } catch (err) {
         console.error('Failed to parse database file, resetting to seed data:', err);
@@ -970,6 +975,66 @@ class DatabaseStore {
   deleteDiscordTokens(userId: string): void {
     this.data.discordTokens = this.data.discordTokens.filter(t => t.userId !== userId);
     this.save();
+  }
+
+  // --- JOB APPLICATIONS ---
+  createJobApplication(app: JobApplication): JobApplication {
+    const job = this.data.jobs.find(j => j.id === app.jobId);
+    const user = this.data.users.find(u => u.id === app.userId);
+    const enriched: JobApplication = {
+      ...app,
+      jobTitle: job?.translations.ar?.name || job?.translations.en?.name || job?.slug,
+      jobCategory: job?.category,
+      applicantUsername: user?.username,
+      applicantDiscordId: user?.discordId,
+      applicantAvatar: user?.avatar
+    };
+    this.data.jobApplications.push(enriched);
+    this.save();
+    return enriched;
+  }
+
+  getJobApplicationById(id: string): JobApplication | null {
+    return this.data.jobApplications.find(a => a.id === id) || null;
+  }
+
+  getJobApplicationsByUserId(userId: string): JobApplication[] {
+    return this.data.jobApplications
+      .filter(a => a.userId === userId)
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  getJobApplicationByJobAndUser(jobId: string, userId: string): JobApplication | null {
+    return this.data.jobApplications.find(a => a.jobId === jobId && a.userId === userId) || null;
+  }
+
+  getAllJobApplications(filters?: { status?: string; jobId?: string }): JobApplication[] {
+    let list = [...this.data.jobApplications];
+    if (filters?.status) {
+      list = list.filter(a => a.status === filters.status);
+    }
+    if (filters?.jobId) {
+      list = list.filter(a => a.jobId === filters.jobId);
+    }
+    return list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  updateJobApplicationStatus(
+    id: string,
+    status: JobApplicationStatus,
+    reviewerId: string,
+    reviewNotes?: string
+  ): JobApplication | null {
+    const reviewer = this.data.users.find(u => u.id === reviewerId);
+    const app = this.data.jobApplications.find(a => a.id === id);
+    if (!app) return null;
+    app.status = status;
+    app.reviewerId = reviewerId;
+    app.reviewerName = reviewer?.username || 'Staff';
+    if (reviewNotes !== undefined) app.reviewNotes = reviewNotes;
+    app.updatedAt = new Date().toISOString();
+    this.save();
+    return app;
   }
 }
 

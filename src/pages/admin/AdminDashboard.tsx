@@ -19,6 +19,7 @@ import {
 import { LogoManagerSettings } from '../../components/admin/LogoManagerSettings';
 import { ReportsManager } from '../../components/admin/ReportsManager';
 import { SocialLinksManager } from '../../components/admin/SocialLinksManager';
+import { JobsManager } from '../../components/admin/JobsManager';
 import { 
   LayoutDashboard, 
   Users, 
@@ -607,6 +608,84 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 4: RULES CMS */}
+        {activeAdminTab === 'rules' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-black text-white">دستور وقوانين السيرفر (Rules CMS)</h3>
+                <p className="text-xs text-[#888] mt-1">استعراض وتحديث فئات القوانين الرسمية المنشورة للمواطنين</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {rulesList.map((category) => (
+                <div key={category.id} className="p-6 rounded-2xl bg-[#0B0B0B] border border-[#1E1E1E] space-y-4">
+                  <div className="flex items-center justify-between border-b border-[#1A1A1A] pb-3">
+                    <div>
+                      <span className="text-[10px] font-extrabold uppercase text-[#C8874B] block">{category.icon}</span>
+                      <h4 className="text-base font-bold text-white">{category.translations.ar?.title || category.id}</h4>
+                    </div>
+                    <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-[#141414] text-[#AAA] border border-[#222]">
+                      {category.rules.length} قواعد
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                    {category.rules.map((r, idx) => (
+                      <div key={idx} className="p-3 rounded-xl bg-[#111] border border-[#1C1C1C] text-xs space-y-1">
+                        <span className="font-bold text-white block">#{r.order || idx + 1} {r.translations.ar?.title}</span>
+                        <p className="text-[#888] text-[11px] leading-relaxed">{r.translations.ar?.description}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: JOBS & APPLICATIONS RECRUITMENT SUITE */}
+        {activeAdminTab === 'jobs' && (
+          <JobsManager showToast={showToast} />
+        )}
+
+        {/* TAB 6: STORE & PACKAGES CMS */}
+        {activeAdminTab === 'store' && (
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-black text-white">متجر السيرفر والباقات (Store CMS)</h3>
+                <p className="text-xs text-[#888] mt-1">إدارة الباقات والسيارات والرتب المعروضة في المتجر الإلكتروني</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {productsList.map((product) => (
+                <div key={product.id} className="p-5 rounded-2xl bg-[#0B0B0B] border border-[#1E1E1E] flex flex-col justify-between space-y-4">
+                  <div>
+                    <div className="relative h-36 rounded-xl overflow-hidden mb-3 border border-[#222]">
+                      <img src={product.image} alt={product.translations.ar?.name} className="w-full h-full object-cover" />
+                      <span className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-bold bg-black/80 text-white">
+                        {product.category}
+                      </span>
+                    </div>
+
+                    <h4 className="text-base font-bold text-white mb-1">{product.translations.ar?.name}</h4>
+                    <p className="text-xs text-[#888] line-clamp-2 mb-3">{product.translations.ar?.description}</p>
+                    <p className="text-lg font-black text-[#C8874B]">${product.price} USD</p>
+                  </div>
+
+                  <div className="pt-3 border-t border-[#1C1C1C] text-xs text-[#666] flex justify-between items-center">
+                    <span>النوع: {product.type}</span>
+                    <span className="text-emerald-400 font-bold">نشط بالمتجر</span>
                   </div>
                 </div>
               ))}

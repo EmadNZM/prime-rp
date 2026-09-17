@@ -3,6 +3,7 @@ export * from './SessionRepository';
 export * from './NewsRepository';
 export * from './RulesRepository';
 export * from './JobsRepository';
+export * from './JobApplicationRepository';
 export * from './ProductRepository';
 export * from './OrderRepository';
 export * from './TicketRepository';

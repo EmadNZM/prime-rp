@@ -26,6 +26,29 @@ export async function runMigrations(): Promise<void> {
     );
   `);
 
+  // Ensure job_applications table exists
+  await query(`
+    CREATE TABLE IF NOT EXISTS job_applications (
+      id VARCHAR(100) PRIMARY KEY,
+      job_id VARCHAR(100) REFERENCES jobs(id) ON DELETE CASCADE,
+      user_id VARCHAR(100) REFERENCES users(id) ON DELETE CASCADE,
+      status VARCHAR(50) DEFAULT 'PENDING',
+      character_name VARCHAR(100) NOT NULL,
+      character_age INT NOT NULL,
+      experience TEXT NOT NULL,
+      daily_availability VARCHAR(100) NOT NULL,
+      answers JSONB DEFAULT '{}'::JSONB,
+      reviewer_id VARCHAR(100) REFERENCES users(id) ON DELETE SET NULL,
+      review_notes TEXT,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW()
+    );
+    CREATE INDEX IF NOT EXISTS idx_job_applications_user_id ON job_applications(user_id);
+    CREATE INDEX IF NOT EXISTS idx_job_applications_job_id ON job_applications(job_id);
+    CREATE INDEX IF NOT EXISTS idx_job_applications_status ON job_applications(status);
+    CREATE INDEX IF NOT EXISTS idx_job_applications_created ON job_applications(created_at DESC);
+  `);
+
   console.log('[Migration] PostgreSQL schema DDL successfully applied.');
 
   // Seed default roles if not present

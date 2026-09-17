@@ -90,6 +90,31 @@ export interface JobItem {
   };
 }
 
+export type JobApplicationStatus = 'PENDING' | 'UNDER_REVIEW' | 'ACCEPTED' | 'REJECTED';
+
+export interface JobApplication {
+  id: string;
+  jobId: string;
+  userId: string;
+  status: JobApplicationStatus;
+  characterName: string;
+  characterAge: number;
+  experience: string;
+  dailyAvailability: string;
+  answers: Record<string, any>;
+  reviewerId?: string;
+  reviewerName?: string;
+  reviewNotes?: string;
+  createdAt: string;
+  updatedAt: string;
+  // Relational details when joined
+  jobTitle?: string;
+  jobCategory?: string;
+  applicantUsername?: string;
+  applicantDiscordId?: string;
+  applicantAvatar?: string;
+}
+
 export interface ProductItem {
   id: string;
   slug: string;

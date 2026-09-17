@@ -1,8 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 import { apiClient } from '../../services/apiClient';
-import { JobItem } from '../../types';
-import { Briefcase, DollarSign, CheckCircle2, ChevronRight, ChevronLeft, Building2 } from 'lucide-react';
+import { JobItem, JobApplication } from '../../types';
+import { JobApplicationModal } from '../../components/jobs/JobApplicationModal';
+import { 
+  Briefcase, 
+  DollarSign, 
+  CheckCircle2, 
+  ChevronRight, 
+  ChevronLeft, 
+  Building2,
+  Clock,
+  ShieldCheck,
+  LogIn,
+  FileCheck,
+  AlertCircle
+} from 'lucide-react';
 
 interface JobsPageProps {
   setCurrentTab: (tab: string) => void;
@@ -10,9 +24,16 @@ interface JobsPageProps {
 
 export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
   const { t, language, isRtl } = useLanguage();
+  const { user, isAuthenticated, loginWithDiscord } = useAuth();
+  
   const [jobs, setJobs] = useState<JobItem[]>([]);
   const [selectedJob, setSelectedJob] = useState<JobItem | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+
+  // Application state
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const [activeApplication, setActiveApplication] = useState<JobApplication | null>(null);
+  const [isCheckingApp, setIsCheckingApp] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadJobs() {
@@ -29,7 +50,36 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
     loadJobs();
   }, []);
 
+  // Check application status when selectedJob or user changes
+  useEffect(() => {
+    async function checkStatus() {
+      if (!selectedJob || !isAuthenticated) {
+        setActiveApplication(null);
+        return;
+      }
+      setIsCheckingApp(true);
+      try {
+        const res = await apiClient.checkJobApplication(selectedJob.id);
+        if (res.hasApplied && res.application) {
+          setActiveApplication(res.application);
+        } else {
+          setActiveApplication(null);
+        }
+      } catch (err) {
+        console.error('Error checking application:', err);
+        setActiveApplication(null);
+      } finally {
+        setIsCheckingApp(false);
+      }
+    }
+    checkStatus();
+  }, [selectedJob, isAuthenticated]);
+
   const ArrowIcon = isRtl ? ChevronLeft : ChevronRight;
+
+  const handleApplicationSuccess = (app: JobApplication) => {
+    setActiveApplication(app);
+  };
 
   return (
     <div className="min-h-screen bg-[#070707] text-[#E5E5E5] pt-28 pb-24 px-4 sm:px-6 lg:px-8">
@@ -125,7 +175,7 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
                       </p>
                     </div>
                     <div>
-                      <span className="text-xs text-[#777] block mb-1">القسم / Category</span>
+                      <span className="text-xs text-[#777] block mb-1">القطاع / Department</span>
                       <p className="text-sm font-bold text-white">{selectedJob.category}</p>
                     </div>
                   </div>
@@ -165,16 +215,86 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
                   </div>
                 </div>
 
-                <button
-                  onClick={() => setCurrentTab('support')}
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-extrabold text-sm tracking-wide hover:brightness-110 transition-all shadow-lg shadow-[#C8874B]/20"
-                >
-                  {t('jobs.applyNow')}
-                </button>
+                {/* Application CTA State Handling */}
+                <div className="pt-4 border-t border-[#1C1C1C]">
+                  {!isAuthenticated ? (
+                    <button
+                      onClick={loginWithDiscord}
+                      className="w-full py-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-extrabold text-sm tracking-wide transition-all shadow-lg shadow-[#5865F2]/20 flex items-center justify-center gap-2"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span>تسجيل الدخول عبر ديسكورد للتقديم على الوظيفة</span>
+                    </button>
+                  ) : activeApplication ? (
+                    <div className="p-4 rounded-2xl bg-[#141414] border border-[#222] space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <FileCheck className="w-5 h-5 text-[#C8874B]" />
+                          <span className="text-sm font-bold text-white">لديك طلب مقدم لهذه الوظيفة</span>
+                        </div>
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold ${
+                          activeApplication.status === 'ACCEPTED' 
+                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                            : activeApplication.status === 'UNDER_REVIEW'
+                            ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+                            : activeApplication.status === 'REJECTED'
+                            ? 'bg-red-500/10 text-red-400 border border-red-500/20'
+                            : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        }`}>
+                          {activeApplication.status === 'ACCEPTED' && 'تم القبول'}
+                          {activeApplication.status === 'UNDER_REVIEW' && 'قيد المراجعة'}
+                          {activeApplication.status === 'REJECTED' && 'تم الرفض'}
+                          {activeApplication.status === 'PENDING' && 'قيد الانتظار'}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#888]">
+                        الشخصية: <span className="text-white font-bold">{activeApplication.characterName}</span> • تاريخ التقديم: {new Date(activeApplication.createdAt).toLocaleDateString('ar-SA')}
+                      </p>
+                      {activeApplication.reviewNotes && (
+                        <div className="p-2.5 rounded-xl bg-[#1C1C1C] text-xs text-[#AAA]">
+                          <span className="font-bold text-[#C8874B]">ملاحظة الإدارة: </span>
+                          <span>{activeApplication.reviewNotes}</span>
+                        </div>
+                      )}
+                      <button
+                        onClick={() => setCurrentTab('dashboard')}
+                        className="w-full py-2.5 rounded-xl bg-[#1F1F1F] hover:bg-[#2A2A2A] text-xs font-bold text-white transition-all text-center"
+                      >
+                        عرض ومتابعة كافة طلباتي في لوحة التحكم
+                      </button>
+                    </div>
+                  ) : selectedJob.status === 'HIRING_CLOSED' ? (
+                    <button
+                      disabled
+                      className="w-full py-4 rounded-xl bg-[#181818] border border-[#222] text-[#666] font-extrabold text-sm tracking-wide cursor-not-allowed"
+                    >
+                      {t('jobs.hiringClosed')}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => setIsModalOpen(true)}
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-extrabold text-sm tracking-wide hover:brightness-110 transition-all shadow-lg shadow-[#C8874B]/20"
+                    >
+                      {t('jobs.applyNow')}
+                    </button>
+                  )}
+                </div>
+
               </div>
             )}
 
           </div>
+        )}
+
+        {/* Modal for Application */}
+        {selectedJob && (
+          <JobApplicationModal
+            job={selectedJob}
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSuccess={handleApplicationSuccess}
+            onNavigateToDashboard={() => setCurrentTab('dashboard')}
+          />
         )}
 
       </div>

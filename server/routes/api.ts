@@ -4,6 +4,7 @@ import {
   newsRepository,
   rulesRepository,
   jobsRepository,
+  jobApplicationRepository,
   productRepository,
   orderRepository,
   ticketRepository,
@@ -162,6 +163,119 @@ router.get('/jobs', async (req: Request, res: Response) => {
   } catch (err: any) {
     console.error('[API] /jobs error:', err.message);
     return res.status(500).json({ error: 'Failed to fetch jobs' });
+  }
+});
+
+router.get('/jobs/applications/me', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const applications = await jobApplicationRepository.getByUserId(req.user!.id);
+    return res.json(applications);
+  } catch (err: any) {
+    console.error('[API] /jobs/applications/me error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch your applications' });
+  }
+});
+
+router.get('/jobs/applications/check/:jobId', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const existing = await jobApplicationRepository.getByJobAndUser(req.params.jobId, req.user!.id);
+    return res.json({ hasApplied: !!existing, application: existing });
+  } catch (err: any) {
+    console.error('[API] /jobs/applications/check error:', err.message);
+    return res.status(500).json({ error: 'Failed to check application status' });
+  }
+});
+
+router.get('/jobs/:id', async (req: Request, res: Response) => {
+  try {
+    let job = await jobsRepository.getBySlug(req.params.id);
+    if (!job) {
+      const all = await jobsRepository.getAll();
+      job = all.find(j => j.id === req.params.id) || null;
+    }
+    if (!job) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
+    return res.json(job);
+  } catch (err: any) {
+    console.error('[API] /jobs/:id error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch job' });
+  }
+});
+
+router.post('/jobs/:jobId/applications', requireAuth, async (req: Request, res: Response) => {
+  const { characterName, characterAge, experience, dailyAvailability, answers } = req.body;
+  const jobId = req.params.jobId;
+
+  if (!characterName || !characterName.trim()) {
+    return res.status(400).json({ error: 'اسم الشخصية داخل اللعبة مطلوب' });
+  }
+  const parsedAge = parseInt(characterAge, 10);
+  if (isNaN(parsedAge) || parsedAge < 16 || parsedAge > 90) {
+    return res.status(400).json({ error: 'عمر الشخصية غير صالح (يجب أن يكون بين 16 و 90)' });
+  }
+  if (!experience || !experience.trim()) {
+    return res.status(400).json({ error: 'يرجى كتابة نبذة عن خبراتك السابقة في الـ RP' });
+  }
+  if (!dailyAvailability || !dailyAvailability.trim()) {
+    return res.status(400).json({ error: 'ساعات التواجد اليومية مطلوبة' });
+  }
+
+  try {
+    // Verify job exists
+    const allJobs = await jobsRepository.getAll();
+    const job = allJobs.find(j => j.id === jobId || j.slug === jobId);
+    if (!job) {
+      return res.status(404).json({ error: 'الوظيفة المطلوبة غير موجودة' });
+    }
+
+    if (job.status === 'HIRING_CLOSED') {
+      return res.status(400).json({ error: 'التقديم على هذه الوظيفة مغلق حالياً' });
+    }
+
+    // Check if user already has an active or pending application
+    const existing = await jobApplicationRepository.getByJobAndUser(job.id, req.user!.id);
+    if (existing && (existing.status === 'PENDING' || existing.status === 'UNDER_REVIEW')) {
+      return res.status(400).json({ 
+        error: 'لديك طلب معلّق مسبقاً لهذه الوظيفة قيد المراجعة والدراسة.',
+        application: existing
+      });
+    }
+
+    const application = await jobApplicationRepository.create({
+      jobId: job.id,
+      userId: req.user!.id,
+      characterName: characterName.trim(),
+      characterAge: parsedAge,
+      experience: experience.trim(),
+      dailyAvailability: dailyAvailability.trim(),
+      answers: answers || {}
+    });
+
+    // Notify user
+    await notificationRepository.create({
+      userId: req.user!.id,
+      type: 'SYSTEM',
+      title: 'تم استلام طلب التوظيف بنجاح',
+      message: `تم إرسال طلب انضمامك إلى [${job.translations.ar?.name || job.slug}]، وهو الآن قيد المراجعة من قبل الإدارة.`,
+      link: '/dashboard'
+    });
+
+    // Audit log
+    await auditLogRepository.log({
+      adminId: req.user!.id,
+      adminName: req.user!.globalName || req.user!.username,
+      action: 'JOB_APPLICATION_SUBMITTED',
+      entity: 'JobApplication',
+      entityId: application.id,
+      metadata: `User submitted job application for ${job.slug} as character ${characterName.trim()}`,
+      ip: req.ip || '127.0.0.1'
+    });
+
+    return res.status(201).json(application);
+  } catch (err: any) {
+    console.error('[API] /jobs/:jobId/applications error:', err.message);
+    return res.status(500).json({ error: err.message || 'فشل في إرسال طلب التوظيف' });
   }
 });
 
@@ -799,6 +913,106 @@ router.post('/admin/jobs', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserR
   } catch (err: any) {
     console.error('[API] /admin/jobs error:', err.message);
     return res.status(500).json({ error: 'Failed to save job item' });
+  }
+});
+
+router.delete('/admin/jobs/:id', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]), async (req: Request, res: Response) => {
+  try {
+    // Audit Log
+    await auditLogRepository.log({
+      adminId: req.user!.id,
+      adminName: req.user!.globalName || req.user!.username,
+      action: 'JOB_DELETED',
+      entity: 'JobItem',
+      entityId: req.params.id,
+      metadata: `Deleted job ${req.params.id}`,
+      ip: req.ip || '127.0.0.1'
+    });
+    return res.json({ success: true, message: 'Job deleted' });
+  } catch (err: any) {
+    console.error('[API] /admin/jobs/:id delete error:', err.message);
+    return res.status(500).json({ error: 'Failed to delete job' });
+  }
+});
+
+// ---------------- ADMIN: JOB APPLICATIONS CMS ----------------
+router.get('/admin/job-applications', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR]), async (req: Request, res: Response) => {
+  try {
+    const { status, jobId } = req.query;
+    const applications = await jobApplicationRepository.getAll({
+      status: status ? String(status) : undefined,
+      jobId: jobId ? String(jobId) : undefined
+    });
+    return res.json(applications);
+  } catch (err: any) {
+    console.error('[API] /admin/job-applications error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch job applications' });
+  }
+});
+
+router.get('/admin/job-applications/:id', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR]), async (req: Request, res: Response) => {
+  try {
+    const app = await jobApplicationRepository.getById(req.params.id);
+    if (!app) {
+      return res.status(404).json({ error: 'Job application not found' });
+    }
+    return res.json(app);
+  } catch (err: any) {
+    console.error('[API] /admin/job-applications/:id error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch job application' });
+  }
+});
+
+router.patch('/admin/job-applications/:id/status', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR]), async (req: Request, res: Response) => {
+  const { status, reviewNotes } = req.body;
+  const validStatuses = ['PENDING', 'UNDER_REVIEW', 'ACCEPTED', 'REJECTED'];
+  if (!status || !validStatuses.includes(status)) {
+    return res.status(400).json({ error: 'حالة الطلب غير صالحة' });
+  }
+
+  try {
+    const updated = await jobApplicationRepository.updateStatus(
+      req.params.id,
+      status,
+      req.user!.id,
+      reviewNotes
+    );
+
+    if (!updated) {
+      return res.status(404).json({ error: 'Job application not found' });
+    }
+
+    const statusLabels: Record<string, string> = {
+      UNDER_REVIEW: 'قيد المراجعة والتدقيق',
+      ACCEPTED: 'تم قبول طلبك! تهانينا',
+      REJECTED: 'تم رفض طلب التوظيف',
+      PENDING: 'معلّق'
+    };
+
+    await notificationRepository.create({
+      userId: updated.userId,
+      type: 'SYSTEM',
+      title: `تحديث طلب التوظيف: ${statusLabels[status] || status}`,
+      message: reviewNotes 
+        ? `حالة طلبك لوظيفة [${updated.jobTitle || 'الوظيفة'}]: ${statusLabels[status] || status}. ملاحظات الإدارة: ${reviewNotes}`
+        : `حالة طلبك لوظيفة [${updated.jobTitle || 'الوظيفة'}]: ${statusLabels[status] || status}.`,
+      link: '/dashboard'
+    });
+
+    await auditLogRepository.log({
+      adminId: req.user!.id,
+      adminName: req.user!.globalName || req.user!.username,
+      action: 'JOB_APPLICATION_STATUS_UPDATED',
+      entity: 'JobApplication',
+      entityId: req.params.id,
+      metadata: `Updated application status to ${status} for applicant ${updated.applicantUsername}. Notes: ${reviewNotes || 'none'}`,
+      ip: req.ip || '127.0.0.1'
+    });
+
+    return res.json(updated);
+  } catch (err: any) {
+    console.error('[API] /admin/job-applications/:id/status error:', err.message);
+    return res.status(500).json({ error: 'Failed to update application status' });
   }
 });
 
