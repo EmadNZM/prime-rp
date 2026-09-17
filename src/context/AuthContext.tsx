@@ -9,8 +9,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isStaff: boolean;
   loginWithDiscord: () => void;
-  portalLogin: (role?: string, username?: string) => Promise<void>;
-  devLogin: (role?: string, username?: string) => Promise<void>;
+  portalLogin: (username?: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -45,15 +44,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     window.location.href = '/api/auth/discord';
   };
 
-  const devLogin = async (role: string = 'SUPER_ADMIN', username: string = 'PrimeCommander') => {
+  const portalLogin = async (username: string = 'PrimeCommander', password?: string) => {
     setIsLoading(true);
     try {
-      const res = await apiClient.devLogin(role, username);
+      const res = await apiClient.portalLogin(username, password);
       if (res.success && res.user) {
         setUser(res.user);
       }
     } catch (err) {
-      console.error('Dev login failed:', err);
+      console.error('Portal login failed:', err);
     } finally {
       setIsLoading(false);
     }
@@ -93,8 +92,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAdmin,
         isStaff,
         loginWithDiscord,
-        portalLogin: devLogin,
-        devLogin,
+        portalLogin,
         logout,
         refreshUser
       }}

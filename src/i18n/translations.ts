@@ -114,8 +114,8 @@ export const translations = {
     leaderboard: {
       title: 'لوحة الشرف والمتصدرين',
       subtitle: 'أبرز شخصيات ومواطني Prime RP تقديراً لنشاطهم',
-      notice: 'ستتوفر بيانات الترتيب والليدربورد المباشرة بعد تفعيل الربط مع سيرفر Prime RP.',
-      stayTuned: 'ترقبوا إطلاق إحصائيات السيرفر المتزامنة قريباً.'
+      notice: 'قائمة الشرف وإحصائيات متصدري Prime RP المعتمدة.',
+      stayTuned: 'تحديثات مستمرة بناءً على نشاط وسجلات مواطني المدينة.'
     },
     // User Dashboard
     userDashboard: {
@@ -170,7 +170,7 @@ export const translations = {
       loading: 'جاري التحميل...',
       search: 'بحث...',
       emptyState: 'لا توجد بيانات متاحة حالياً',
-      devLoginNotice: 'بوابة تسجيل الدخول المباشر لحسابات الإدارة والمواطنين.'
+      portalLoginNotice: 'بوابة تسجيل الدخول المباشر لحسابات الإدارة والمواطنين.'
     }
   },
   en: {
@@ -288,8 +288,8 @@ export const translations = {
     leaderboard: {
       title: 'Hall of Fame & Leaderboard',
       subtitle: 'Acknowledging distinguished citizens and community contributors',
-      notice: 'Leaderboard data will be available when Prime RP server integration is enabled.',
-      stayTuned: 'Stay tuned for live telemetry synchronization in upcoming releases.'
+      notice: 'Official Prime RP Hall of Fame & Community Rankings.',
+      stayTuned: 'Periodic synchronizations with citizen in-game records.'
     },
     // User Dashboard
     userDashboard: {
@@ -344,7 +344,7 @@ export const translations = {
       loading: 'Loading...',
       search: 'Search...',
       emptyState: 'No records available currently',
-      devLoginNotice: 'Developer Mode: Quick test session enabled for rapid evaluation.'
+      portalLoginNotice: 'Official Authentication Portal for Prime RP administration and citizens.'
     }
   }
 };

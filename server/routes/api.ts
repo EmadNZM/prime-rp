@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { db } from '../db/store';
-import { handleDiscordLogin, handleDiscordCallback, handleDevLogin, handleLogout } from '../auth/discordAuth';
+import { handleDiscordLogin, handleDiscordCallback, handlePortalLogin, handleLogout } from '../auth/discordAuth';
 import { attachUser, requireAuth, requireRole, requirePermission } from '../middleware/authMiddleware';
 import { UserRole } from '../../src/types';
 import { fiveMService } from '../services/fivemService';
@@ -20,7 +20,7 @@ router.get('/auth/me', (req: Request, res: Response) => {
 
 router.get('/auth/discord', handleDiscordLogin);
 router.get('/auth/discord/callback', handleDiscordCallback);
-router.post('/auth/dev-login', handleDevLogin);
+router.post('/auth/portal-login', handlePortalLogin);
 router.post('/auth/logout', handleLogout);
 
 // ---------------- SITE SETTINGS & FIVEM STATUS ----------------

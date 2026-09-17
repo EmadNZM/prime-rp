@@ -345,7 +345,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             كن على تواصل مع أكثر من 15,000 لاعب، شارك في الفعاليات الأسبوعية، وتقدم للوظائف الرسمية.
           </p>
           <a
-            href="https://discord.gg/primerp"
+            href={siteSettings?.discordUrl || 'https://discord.gg/primerp'}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-extrabold text-base transition-all shadow-xl shadow-[#5865F2]/25 hover:scale-105"

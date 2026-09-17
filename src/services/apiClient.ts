@@ -7,11 +7,11 @@ export const apiClient = {
     return res.json();
   },
 
-  async devLogin(role: string, username: string) {
-    const res = await fetch('/api/auth/dev-login', {
+  async portalLogin(username: string, password?: string) {
+    const res = await fetch('/api/auth/portal-login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role, username })
+      body: JSON.stringify({ username, password })
     });
     return res.json();
   },

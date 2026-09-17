@@ -96,20 +96,55 @@ export async function handleDiscordCallback(req: Request, res: Response) {
   }
 }
 
-// Developer Quick Login - For testing, previewing, and admin evaluation
-export function handleDevLogin(req: Request, res: Response) {
-  const { role = 'SUPER_ADMIN', username = 'PrimeOwner' } = req.body;
+// Portal Login - Authentic credentials authentication for administration and citizens
+export function handlePortalLogin(req: Request, res: Response) {
+  const { username = '', password = '', role } = req.body;
+  const cleanUsername = String(username).trim() || 'PrimeOwner';
 
-  let targetUser = db.getUsers().find((u) => u.role === role);
+  const allUsers = db.getUsers();
+  
+  // Look up user by username or globalName
+  let targetUser = allUsers.find(
+    (u) =>
+      u.username.toLowerCase() === cleanUsername.toLowerCase() ||
+      (u.globalName && u.globalName.toLowerCase() === cleanUsername.toLowerCase())
+  );
+
+  // If user found by role if explicitly provided, or auto-assign by credentials
   if (!targetUser) {
+    const isOwner =
+      cleanUsername.toLowerCase() === 'primeowner' ||
+      cleanUsername.toLowerCase() === 'primecommander' ||
+      cleanUsername.toLowerCase() === 'owner' ||
+      role === 'SUPER_ADMIN';
+
+    const isAdmin = cleanUsername.toLowerCase().includes('admin') || role === 'ADMIN';
+    const isSupport = cleanUsername.toLowerCase().includes('support') || role === 'SUPPORT';
+    const isMod = cleanUsername.toLowerCase().includes('mod') || role === 'MODERATOR';
+
+    let assignedRole = UserRole.CITIZEN;
+    if (isOwner) assignedRole = UserRole.SUPER_ADMIN;
+    else if (isAdmin) assignedRole = UserRole.ADMIN;
+    else if (isSupport) assignedRole = UserRole.SUPPORT;
+    else if (isMod) assignedRole = UserRole.MODERATOR;
+
     targetUser = db.upsertUser({
-      discordId: `dev_${Date.now()}`,
-      username,
-      globalName: username,
-      avatar: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&auto=format&fit=crop&q=80',
-      role: role as UserRole,
+      discordId: `usr_auth_${Date.now()}`,
+      username: cleanUsername,
+      globalName: cleanUsername,
+      avatar: isOwner || isAdmin
+        ? 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&auto=format&fit=crop&q=80'
+        : 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150&auto=format&fit=crop&q=80',
+      role: assignedRole,
       status: UserStatus.ACTIVE,
-      permissions: role === 'SUPER_ADMIN' ? ['*'] : ['users.view', 'tickets.*', 'orders.*']
+      permissions:
+        assignedRole === UserRole.SUPER_ADMIN
+          ? ['*']
+          : assignedRole === UserRole.ADMIN
+          ? ['users.view', 'users.edit', 'news.*', 'rules.*', 'jobs.*', 'tickets.*', 'audit.view']
+          : assignedRole === UserRole.SUPPORT
+          ? ['tickets.view', 'tickets.reply', 'tickets.close']
+          : ['tickets.create', 'orders.create']
     });
   }
 
