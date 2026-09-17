@@ -116,6 +116,15 @@ export class ProductRepository {
     const row = (await query('SELECT * FROM products WHERE id = $1', [id])).rows[0];
     return ProductRepository.attachTranslations(row);
   }
+
+  async delete(id: string): Promise<boolean> {
+    if (!isPostgresConnected()) {
+      return db.deleteProduct(id);
+    }
+    await query('DELETE FROM product_translations WHERE product_id = $1', [id]);
+    const res = await query('DELETE FROM products WHERE id = $1', [id]);
+    return (res.rowCount || 0) > 0;
+  }
 }
 
 export const productRepository = new ProductRepository();

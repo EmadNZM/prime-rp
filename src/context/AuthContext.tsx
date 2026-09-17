@@ -11,6 +11,7 @@ interface AuthContextType {
   isOwner: boolean;
   hasDiscordOauth: boolean;
   loginWithDiscord: () => void;
+  demoLogin: (role?: 'admin' | 'citizen') => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -48,6 +49,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithDiscord = () => {
     window.location.href = '/api/auth/discord';
+  };
+
+  const demoLogin = async (role: 'admin' | 'citizen' = 'admin') => {
+    try {
+      setIsLoading(true);
+      await apiClient.demoLogin(role);
+      await refreshUser();
+    } catch (err) {
+      console.error('Demo login error:', err);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const logout = async () => {
@@ -89,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isOwner,
         hasDiscordOauth,
         loginWithDiscord,
+        demoLogin,
         logout,
         refreshUser
       }}

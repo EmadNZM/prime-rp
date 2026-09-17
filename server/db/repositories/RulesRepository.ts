@@ -109,6 +109,16 @@ export class RulesRepository {
     const row = (await query('SELECT * FROM rules WHERE id = $1', [id])).rows[0];
     return RulesRepository.attachCategoryDetails(row);
   }
+
+  async deleteCategory(id: string): Promise<boolean> {
+    if (!isPostgresConnected()) {
+      return db.deleteRuleCategory(id);
+    }
+    await query('DELETE FROM rule_items WHERE rule_category_id = $1', [id]);
+    await query('DELETE FROM rule_translations WHERE rule_id = $1', [id]);
+    const res = await query('DELETE FROM rules WHERE id = $1', [id]);
+    return (res.rowCount || 0) > 0;
+  }
 }
 
 export const rulesRepository = new RulesRepository();

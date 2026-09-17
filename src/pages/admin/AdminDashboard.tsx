@@ -33,6 +33,7 @@ import {
   ShieldCheck, 
   Plus, 
   Trash2, 
+  Edit,
   Check, 
   AlertTriangle, 
   Lock,
@@ -82,6 +83,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
       ar: { title: '', excerpt: '', content: '' },
       en: { title: '', excerpt: '', content: '' }
     }
+  });
+
+  // Product CMS state
+  const [showProductModal, setShowProductModal] = useState<boolean>(false);
+  const [editingProduct, setEditingProduct] = useState<ProductItem | null>(null);
+  const [productForm, setProductForm] = useState<any>({
+    id: '',
+    slug: '',
+    category: 'VIP',
+    price: 25,
+    currency: 'USD',
+    image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800',
+    stock: 100,
+    status: 'ACTIVE',
+    featured: false,
+    translations: {
+      ar: { name: '', description: '', perks: [] },
+      en: { name: '', description: '', perks: [] }
+    }
+  });
+
+  // Rule Category CMS state
+  const [showRuleModal, setShowRuleModal] = useState<boolean>(false);
+  const [ruleCategoryForm, setRuleCategoryForm] = useState<any>({
+    id: '',
+    slug: '',
+    order: 1,
+    translations: {
+      ar: { title: '', description: '', penaltyInfo: '' },
+      en: { title: '', description: '', penaltyInfo: '' }
+    },
+    rules: []
   });
 
   // Ticket reply in admin
@@ -215,6 +248,105 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
       await apiClient.deleteNewsCMS(id);
       setNewsList(newsList.filter((n) => n.id !== id));
       showToast('تم حذف المقال');
+    }
+  };
+
+  // Product CMS handlers
+  const openProductModal = (prod?: ProductItem) => {
+    if (prod) {
+      setEditingProduct(prod);
+      setProductForm({
+        id: prod.id,
+        slug: prod.slug,
+        category: prod.category || 'VIP',
+        price: prod.price,
+        currency: prod.currency || 'USD',
+        image: prod.image,
+        stock: prod.stock || 100,
+        status: prod.status || 'ACTIVE',
+        featured: !!prod.featured,
+        translations: {
+          ar: {
+            name: prod.translations.ar?.name || '',
+            description: prod.translations.ar?.description || '',
+            perks: prod.translations.ar?.perks || []
+          },
+          en: {
+            name: prod.translations.en?.name || '',
+            description: prod.translations.en?.description || '',
+            perks: prod.translations.en?.perks || []
+          }
+        }
+      });
+    } else {
+      setEditingProduct(null);
+      setProductForm({
+        id: `prod_${Date.now()}`,
+        slug: `prod-${Date.now().toString().slice(-4)}`,
+        category: 'VIP',
+        price: 20,
+        currency: 'USD',
+        image: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800',
+        stock: 50,
+        status: 'ACTIVE',
+        featured: false,
+        translations: {
+          ar: { name: '', description: '', perks: [] },
+          en: { name: '', description: '', perks: [] }
+        }
+      });
+    }
+    setShowProductModal(true);
+  };
+
+  const handleSaveProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const saved = await apiClient.saveProductCMS(productForm);
+      if (saved) {
+        setShowProductModal(false);
+        setProductsList(prev => [saved, ...prev.filter(p => p.id !== saved.id)]);
+        showToast('تم حفظ بيانات المنتج بالمتجر بنجاح');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'فشل حفظ المنتج');
+    }
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    if (!window.confirm('هل أنت متأكد من رغبتك في حذف هذا المنتج من المتجر؟')) return;
+    try {
+      await apiClient.deleteProductCMS(id);
+      setProductsList(prev => prev.filter(p => p.id !== id));
+      showToast('تم حذف المنتج من المتجر');
+    } catch (err: any) {
+      showToast(err.message || 'فشل حذف المنتج');
+    }
+  };
+
+  // Rule Category CMS handlers
+  const handleSaveRuleCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const saved = await apiClient.saveRuleCMS(ruleCategoryForm);
+      if (saved) {
+        setShowRuleModal(false);
+        setRulesList(prev => [saved, ...prev.filter(r => r.id !== saved.id)]);
+        showToast('تم حفظ قسم القوانين بنجاح');
+      }
+    } catch (err: any) {
+      showToast(err.message || 'فشل حفظ قسم القوانين');
+    }
+  };
+
+  const handleDeleteRuleCategory = async (id: string) => {
+    if (!window.confirm('هل أنت متأكد من رغبتك في حذف قسم القوانين هذا؟')) return;
+    try {
+      await apiClient.deleteRuleCMS(id);
+      setRulesList(prev => prev.filter(r => r.id !== id));
+      showToast('تم حذف قسم القوانين');
+    } catch (err: any) {
+      showToast(err.message || 'فشل حذف قسم القوانين');
     }
   };
 
@@ -623,6 +755,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
                 <h3 className="text-xl font-black text-white">دستور وقوانين السيرفر (Rules CMS)</h3>
                 <p className="text-xs text-[#888] mt-1">استعراض وتحديث فئات القوانين الرسمية المنشورة للمواطنين</p>
               </div>
+              <button
+                onClick={() => {
+                  setRuleCategoryForm({
+                    id: `rule_cat_${Date.now()}`,
+                    slug: `rules-${Date.now().toString().slice(-4)}`,
+                    order: rulesList.length + 1,
+                    translations: {
+                      ar: { title: '', description: '', penaltyInfo: '' },
+                      en: { title: '', description: '', penaltyInfo: '' }
+                    },
+                    rules: []
+                  });
+                  setShowRuleModal(true);
+                }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C8874B] text-black text-xs font-bold hover:bg-[#b0733d] transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                <span>إضافة قسم قوانين جديد</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -633,18 +784,31 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
                       <span className="text-[10px] font-extrabold uppercase text-[#C8874B] block">{category.icon}</span>
                       <h4 className="text-base font-bold text-white">{category.translations.ar?.title || category.id}</h4>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-[#141414] text-[#AAA] border border-[#222]">
-                      {category.rules.length} قواعد
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-0.5 rounded text-[10px] font-bold bg-[#141414] text-[#AAA] border border-[#222]">
+                        {category.rules?.length || 0} قواعد
+                      </span>
+                      <button
+                        onClick={() => handleDeleteRuleCategory(category.id)}
+                        className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                        title="حذف هذا القسم"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                    {category.rules.map((r, idx) => (
-                      <div key={idx} className="p-3 rounded-xl bg-[#111] border border-[#1C1C1C] text-xs space-y-1">
-                        <span className="font-bold text-white block">#{r.order || idx + 1} {r.translations.ar?.title}</span>
-                        <p className="text-[#888] text-[11px] leading-relaxed">{r.translations.ar?.description}</p>
-                      </div>
-                    ))}
+                    {category.rules && category.rules.length > 0 ? (
+                      category.rules.map((r, idx) => (
+                        <div key={idx} className="p-3 rounded-xl bg-[#111] border border-[#1C1C1C] text-xs space-y-1">
+                          <span className="font-bold text-white block">#{r.order || idx + 1} {r.translations.ar?.title}</span>
+                          <p className="text-[#888] text-[11px] leading-relaxed">{r.translations.ar?.description}</p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-xs text-[#666] py-3 text-center">لا توجد بنود فرعية بعد في هذا القسم</p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -665,6 +829,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
                 <h3 className="text-xl font-black text-white">متجر السيرفر والباقات (Store CMS)</h3>
                 <p className="text-xs text-[#888] mt-1">إدارة الباقات والسيارات والرتب المعروضة في المتجر الإلكتروني</p>
               </div>
+              <button
+                onClick={() => openProductModal()}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C8874B] text-black text-xs font-bold hover:bg-[#b0733d] transition-all"
+              >
+                <Plus className="w-4 h-4" />
+                <span>إضافة منتج جديد</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -684,8 +855,23 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
                   </div>
 
                   <div className="pt-3 border-t border-[#1C1C1C] text-xs text-[#666] flex justify-between items-center">
-                    <span>النوع: {product.type}</span>
-                    <span className="text-emerald-400 font-bold">نشط بالمتجر</span>
+                    <span className="text-[#C8874B] font-semibold">{product.category}</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => openProductModal(product)}
+                        className="p-1.5 rounded-lg bg-white/5 text-[#AAA] hover:text-white hover:bg-white/10 transition-colors"
+                        title="تعديل المنتج"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
+                        title="حذف المنتج"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -829,7 +1015,301 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
           </div>
         )}
 
-        {/* MODAL: ADD NEWS */}
+        {/* MODAL: ADD/EDIT STORE PRODUCT */}
+        {showProductModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-[#0B0B0B] border border-[#282828] rounded-3xl p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-black text-white mb-4">
+                {editingProduct ? 'تعديل منتج بالمتجر' : 'إضافة منتج جديد للمتجر'}
+              </h3>
+              <form onSubmit={handleSaveProduct} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#AAA] mb-1">الرابط الدائم (Slug)</label>
+                    <input
+                      type="text"
+                      required
+                      value={productForm.slug}
+                      onChange={(e) => setProductForm({ ...productForm, slug: e.target.value })}
+                      className="w-full bg-[#111] border border-[#222] rounded-xl p-2 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#AAA] mb-1">التصنيف (Category)</label>
+                    <select
+                      value={productForm.category}
+                      onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
+                      className="w-full bg-[#111] border border-[#222] rounded-xl p-2 text-xs text-white"
+                    >
+                      <option value="VIP">عضويات VIP</option>
+                      <option value="VEHICLES">مركبات وسيارات (Vehicles)</option>
+                      <option value="PROPERTIES">عقارات ومقرات (Properties)</option>
+                      <option value="BUNDLES">باقات مجمعة (Bundles)</option>
+                      <option value="OTHER">أخرى (Other)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#AAA] mb-1">السعر ($)</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      step="0.01"
+                      value={productForm.price}
+                      onChange={(e) => setProductForm({ ...productForm, price: parseFloat(e.target.value) || 0 })}
+                      className="w-full bg-[#111] border border-[#222] rounded-xl p-2 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#AAA] mb-1">المخزون (Stock)</label>
+                    <input
+                      type="number"
+                      required
+                      min="0"
+                      value={productForm.stock}
+                      onChange={(e) => setProductForm({ ...productForm, stock: parseInt(e.target.value, 10) || 0 })}
+                      className="w-full bg-[#111] border border-[#222] rounded-xl p-2 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#AAA] mb-1">الحالة</label>
+                    <select
+                      value={productForm.status}
+                      onChange={(e) => setProductForm({ ...productForm, status: e.target.value })}
+                      className="w-full bg-[#111] border border-[#222] rounded-xl p-2 text-xs text-white"
+                    >
+                      <option value="ACTIVE">نشط (Active)</option>
+                      <option value="OUT_OF_STOCK">نفد المخزون</option>
+                      <option value="HIDDEN">مخفي (Hidden)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#AAA] mb-1">رابط الصورة</label>
+                  <input
+                    type="text"
+                    required
+                    value={productForm.image}
+                    onChange={(e) => setProductForm({ ...productForm, image: e.target.value })}
+                    className="w-full bg-[#111] border border-[#222] rounded-xl p-2 text-xs text-white"
+                  />
+                </div>
+
+                {/* Arabic Information */}
+                <div className="p-4 rounded-2xl bg-[#121212] border border-[#222] space-y-3">
+                  <h4 className="text-xs font-bold text-[#C8874B]">المعلومات بالعربية</h4>
+                  <input
+                    type="text"
+                    required
+                    placeholder="اسم المنتج بالعربية"
+                    value={productForm.translations.ar?.name || ''}
+                    onChange={(e) =>
+                      setProductForm({
+                        ...productForm,
+                        translations: {
+                          ...productForm.translations,
+                          ar: { ...productForm.translations.ar, name: e.target.value }
+                        }
+                      })
+                    }
+                    className="w-full bg-[#0B0B0B] border border-[#222] rounded-xl p-2 text-xs text-white"
+                  />
+                  <textarea
+                    rows={2}
+                    placeholder="وصف المنتج بالعربية..."
+                    value={productForm.translations.ar?.description || ''}
+                    onChange={(e) =>
+                      setProductForm({
+                        ...productForm,
+                        translations: {
+                          ...productForm.translations,
+                          ar: { ...productForm.translations.ar, description: e.target.value }
+                        }
+                      })
+                    }
+                    className="w-full bg-[#0B0B0B] border border-[#222] rounded-xl p-2 text-xs text-white"
+                  />
+                </div>
+
+                {/* English Information */}
+                <div className="p-4 rounded-2xl bg-[#121212] border border-[#222] space-y-3">
+                  <h4 className="text-xs font-bold text-[#C8874B]">English Information</h4>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Product Name in English"
+                    value={productForm.translations.en?.name || ''}
+                    onChange={(e) =>
+                      setProductForm({
+                        ...productForm,
+                        translations: {
+                          ...productForm.translations,
+                          en: { ...productForm.translations.en, name: e.target.value }
+                        }
+                      })
+                    }
+                    className="w-full bg-[#0B0B0B] border border-[#222] rounded-xl p-2 text-xs text-white"
+                  />
+                  <textarea
+                    rows={2}
+                    placeholder="Product description in English..."
+                    value={productForm.translations.en?.description || ''}
+                    onChange={(e) =>
+                      setProductForm({
+                        ...productForm,
+                        translations: {
+                          ...productForm.translations,
+                          en: { ...productForm.translations.en, description: e.target.value }
+                        }
+                      })
+                    }
+                    className="w-full bg-[#0B0B0B] border border-[#222] rounded-xl p-2 text-xs text-white"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-[#1C1C1C]">
+                  <button
+                    type="button"
+                    onClick={() => setShowProductModal(false)}
+                    className="px-4 py-2 rounded-xl bg-[#1A1A1A] text-white text-xs font-bold"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 rounded-xl bg-[#C8874B] text-black text-xs font-extrabold"
+                  >
+                    حفظ المنتج
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* MODAL: ADD RULE CATEGORY */}
+        {showRuleModal && (
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-[#0B0B0B] border border-[#282828] rounded-3xl p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-black text-white mb-4">إضافة قسم قوانين جديد</h3>
+              <form onSubmit={handleSaveRuleCategory} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#AAA] mb-1">الرابط الدائم (Slug)</label>
+                    <input
+                      type="text"
+                      required
+                      value={ruleCategoryForm.slug}
+                      onChange={(e) => setRuleCategoryForm({ ...ruleCategoryForm, slug: e.target.value })}
+                      className="w-full bg-[#111] border border-[#222] rounded-xl p-2 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-[#AAA] mb-1">الترتيب الرقمي</label>
+                    <input
+                      type="number"
+                      required
+                      min="1"
+                      value={ruleCategoryForm.order}
+                      onChange={(e) => setRuleCategoryForm({ ...ruleCategoryForm, order: parseInt(e.target.value, 10) || 1 })}
+                      className="w-full bg-[#111] border border-[#222] rounded-xl p-2 text-xs text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#121212] border border-[#222] space-y-3">
+                  <h4 className="text-xs font-bold text-[#C8874B]">المعلومات بالعربية</h4>
+                  <input
+                    type="text"
+                    required
+                    placeholder="عنوان القسم بالعربية (مثال: القواعد العامة)"
+                    value={ruleCategoryForm.translations.ar?.title || ''}
+                    onChange={(e) =>
+                      setRuleCategoryForm({
+                        ...ruleCategoryForm,
+                        translations: {
+                          ...ruleCategoryForm.translations,
+                          ar: { ...ruleCategoryForm.translations.ar, title: e.target.value }
+                        }
+                      })
+                    }
+                    className="w-full bg-[#0B0B0B] border border-[#222] rounded-xl p-2 text-xs text-white"
+                  />
+                  <textarea
+                    rows={2}
+                    placeholder="وصف مختصر لمجال هذه القوانين..."
+                    value={ruleCategoryForm.translations.ar?.description || ''}
+                    onChange={(e) =>
+                      setRuleCategoryForm({
+                        ...ruleCategoryForm,
+                        translations: {
+                          ...ruleCategoryForm.translations,
+                          ar: { ...ruleCategoryForm.translations.ar, description: e.target.value }
+                        }
+                      })
+                    }
+                    className="w-full bg-[#0B0B0B] border border-[#222] rounded-xl p-2 text-xs text-white"
+                  />
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#121212] border border-[#222] space-y-3">
+                  <h4 className="text-xs font-bold text-[#C8874B]">English Information</h4>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Category Title in English (e.g., General Rules)"
+                    value={ruleCategoryForm.translations.en?.title || ''}
+                    onChange={(e) =>
+                      setRuleCategoryForm({
+                        ...ruleCategoryForm,
+                        translations: {
+                          ...ruleCategoryForm.translations,
+                          en: { ...ruleCategoryForm.translations.en, title: e.target.value }
+                        }
+                      })
+                    }
+                    className="w-full bg-[#0B0B0B] border border-[#222] rounded-xl p-2 text-xs text-white"
+                  />
+                  <textarea
+                    rows={2}
+                    placeholder="Short description of this section..."
+                    value={ruleCategoryForm.translations.en?.description || ''}
+                    onChange={(e) =>
+                      setRuleCategoryForm({
+                        ...ruleCategoryForm,
+                        translations: {
+                          ...ruleCategoryForm.translations,
+                          en: { ...ruleCategoryForm.translations.en, description: e.target.value }
+                        }
+                      })
+                    }
+                    className="w-full bg-[#0B0B0B] border border-[#222] rounded-xl p-2 text-xs text-white"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-[#1C1C1C]">
+                  <button
+                    type="button"
+                    onClick={() => setShowRuleModal(false)}
+                    className="px-4 py-2 rounded-xl bg-[#1A1A1A] text-white text-xs font-bold"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 rounded-xl bg-[#C8874B] text-black text-xs font-extrabold"
+                  >
+                    حفظ القسم
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
         {showNewsModal && (
           <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-[#0B0B0B] border border-[#282828] rounded-3xl p-6 sm:p-8 max-w-xl w-full max-h-[90vh] overflow-y-auto">

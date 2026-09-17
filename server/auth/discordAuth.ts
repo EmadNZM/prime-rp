@@ -296,3 +296,49 @@ export async function handleLogout(req: Request, res: Response) {
 
   return res.json({ success: true, message: 'Logged out successfully' });
 }
+
+/**
+ * Demo login for developer preview and testing when Discord OAuth is pending configuration.
+ */
+export async function handleDemoLogin(req: Request, res: Response) {
+  try {
+    const roleType = req.body?.role || req.query?.role || 'admin';
+    const targetId = roleType === 'citizen' ? 'usr_citizen' : 'usr_superadmin';
+
+    let targetUser = await userRepository.findById(targetId);
+    if (!targetUser) {
+      if (roleType === 'citizen') {
+        targetUser = await userRepository.upsert({
+          discordId: '309876543210987699',
+          username: 'Tariq_Citizen',
+          globalName: 'Tariq Al-Amri',
+          avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=150&auto=format&fit=crop&q=80',
+          role: UserRole.CITIZEN,
+          status: UserStatus.ACTIVE,
+          permissions: ['tickets.create', 'orders.create']
+        });
+      } else {
+        targetUser = await userRepository.upsert({
+          discordId: process.env.OWNER_DISCORD_ID || '1195214213187129495',
+          username: 'PrimeCommander',
+          globalName: 'Prime Owner',
+          avatar: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&auto=format&fit=crop&q=80',
+          role: UserRole.OWNER,
+          status: UserStatus.ACTIVE,
+          permissions: ['*']
+        });
+      }
+    }
+
+    const ip = req.ip || req.get('x-forwarded-for') || '127.0.0.1';
+    const userAgent = req.get('user-agent') || 'Unknown';
+    const sessionId = await sessionRepository.createSession(targetUser.id, ip, userAgent, 30);
+    setSessionCookies(req, res, sessionId);
+
+    return res.json({ success: true, user: targetUser });
+  } catch (err: any) {
+    console.error('[Demo Login] Error during demo login:', err.message);
+    return res.status(500).json({ error: 'Failed to create demo session' });
+  }
+}
+

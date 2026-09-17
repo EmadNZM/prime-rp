@@ -42,6 +42,14 @@ export const apiClient = {
     return res.json();
   },
 
+  async demoLogin(role: 'admin' | 'citizen' = 'admin') {
+    const res = await apiFetch('/api/auth/demo-login', {
+      method: 'POST',
+      body: JSON.stringify({ role })
+    });
+    return res.json();
+  },
+
   async getSiteSettings() {
     const res = await apiFetch('/api/site-settings');
     return res.json();
@@ -284,6 +292,13 @@ export const apiClient = {
     return res.json();
   },
 
+  async deleteRuleCMS(id: string) {
+    const res = await apiFetch(`/api/admin/rules/${id}`, {
+      method: 'DELETE'
+    });
+    return res.json();
+  },
+
   async saveJobCMS(data: any) {
     const res = await apiFetch('/api/admin/jobs', {
       method: 'POST',
@@ -333,6 +348,13 @@ export const apiClient = {
     const res = await apiFetch('/api/admin/products', {
       method: 'POST',
       body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async deleteProductCMS(id: string) {
+    const res = await apiFetch(`/api/admin/products/${id}`, {
+      method: 'DELETE'
     });
     return res.json();
   },

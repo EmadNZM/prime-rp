@@ -19,7 +19,8 @@ import {
   handleDiscordLogin, 
   handleDiscordCallback, 
   getAuthConfig, 
-  handleLogout 
+  handleLogout,
+  handleDemoLogin
 } from '../auth/discordAuth';
 import { 
   attachUser, 
@@ -67,6 +68,7 @@ router.get('/auth/me', (req: Request, res: Response) => {
 router.get('/auth/discord', handleDiscordLogin);
 router.get('/auth/discord/callback', handleDiscordCallback);
 router.post('/auth/logout', handleLogout);
+router.post('/auth/demo-login', handleDemoLogin);
 
 // ---------------- SITE SETTINGS & FIVEM STATUS ----------------
 router.get('/site-settings', async (req: Request, res: Response) => {
@@ -896,6 +898,28 @@ router.post('/admin/rules', requireAuth, requireRole([UserRole.SUPER_ADMIN, User
   }
 });
 
+router.delete('/admin/rules/:id', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]), async (req: Request, res: Response) => {
+  try {
+    const success = await rulesRepository.deleteCategory(req.params.id);
+    if (success) {
+      await auditLogRepository.log({
+        adminId: req.user!.id,
+        adminName: req.user!.globalName || req.user!.username,
+        action: 'RULES_DELETED',
+        entity: 'RuleCategory',
+        entityId: req.params.id,
+        metadata: `Deleted rule category #${req.params.id}`,
+        ip: req.ip || '127.0.0.1'
+      });
+      return res.json({ success: true, message: 'Rule category deleted' });
+    }
+    return res.status(404).json({ error: 'Rule category not found' });
+  } catch (err: any) {
+    console.error('[API] /admin/rules/:id delete error:', err.message);
+    return res.status(500).json({ error: 'Failed to delete rule category' });
+  }
+});
+
 // ---------------- ADMIN: JOBS CMS ----------------
 router.post('/admin/jobs', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.EDITOR]), async (req: Request, res: Response) => {
   try {
@@ -918,17 +942,20 @@ router.post('/admin/jobs', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserR
 
 router.delete('/admin/jobs/:id', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]), async (req: Request, res: Response) => {
   try {
-    // Audit Log
-    await auditLogRepository.log({
-      adminId: req.user!.id,
-      adminName: req.user!.globalName || req.user!.username,
-      action: 'JOB_DELETED',
-      entity: 'JobItem',
-      entityId: req.params.id,
-      metadata: `Deleted job ${req.params.id}`,
-      ip: req.ip || '127.0.0.1'
-    });
-    return res.json({ success: true, message: 'Job deleted' });
+    const success = await jobsRepository.delete(req.params.id);
+    if (success) {
+      await auditLogRepository.log({
+        adminId: req.user!.id,
+        adminName: req.user!.globalName || req.user!.username,
+        action: 'JOB_DELETED',
+        entity: 'JobItem',
+        entityId: req.params.id,
+        metadata: `Deleted job ${req.params.id}`,
+        ip: req.ip || '127.0.0.1'
+      });
+      return res.json({ success: true, message: 'Job deleted' });
+    }
+    return res.status(404).json({ error: 'Job not found' });
   } catch (err: any) {
     console.error('[API] /admin/jobs/:id delete error:', err.message);
     return res.status(500).json({ error: 'Failed to delete job' });
@@ -1033,6 +1060,28 @@ router.post('/admin/products', requireAuth, requireRole([UserRole.SUPER_ADMIN, U
   } catch (err: any) {
     console.error('[API] /admin/products error:', err.message);
     return res.status(500).json({ error: 'Failed to save product' });
+  }
+});
+
+router.delete('/admin/products/:id', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STORE_MANAGER]), async (req: Request, res: Response) => {
+  try {
+    const success = await productRepository.delete(req.params.id);
+    if (success) {
+      await auditLogRepository.log({
+        adminId: req.user!.id,
+        adminName: req.user!.globalName || req.user!.username,
+        action: 'PRODUCT_DELETED',
+        entity: 'ProductItem',
+        entityId: req.params.id,
+        metadata: `Deleted store product #${req.params.id}`,
+        ip: req.ip || '127.0.0.1'
+      });
+      return res.json({ success: true, message: 'Product deleted' });
+    }
+    return res.status(404).json({ error: 'Product not found' });
+  } catch (err: any) {
+    console.error('[API] /admin/products/:id delete error:', err.message);
+    return res.status(500).json({ error: 'Failed to delete product' });
   }
 });
 

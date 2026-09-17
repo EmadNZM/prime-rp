@@ -97,6 +97,15 @@ export class JobsRepository {
     const row = (await query('SELECT * FROM jobs WHERE id = $1', [id])).rows[0];
     return JobsRepository.attachTranslations(row);
   }
+
+  async delete(id: string): Promise<boolean> {
+    if (!isPostgresConnected()) {
+      return db.deleteJob(id);
+    }
+    await query('DELETE FROM job_translations WHERE job_id = $1', [id]);
+    const res = await query('DELETE FROM jobs WHERE id = $1', [id]);
+    return (res.rowCount || 0) > 0;
+  }
 }
 
 export const jobsRepository = new JobsRepository();
