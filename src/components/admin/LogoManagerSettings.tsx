@@ -432,7 +432,7 @@ export const LogoManagerSettings: React.FC<LogoManagerSettingsProps> = ({
                 </span>
               </div>
               <p className="text-[11px] text-[#888] leading-relaxed">
-                يمكنك إدخال مفاتيح تطبيقك هنا مباشرة لحفظها في الموقع، أو تعيينها كمتغيرات بيئة (<span className="text-white font-mono">DISCORD_CLIENT_ID</span> و <span className="text-white font-mono">DISCORD_CLIENT_SECRET</span>) في استضافة Render.
+                يمكنك إدخال مفاتيح تطبيقك هنا مباشرة لحفظها في الموقع، أو تعيينها كمتغيرات بيئة (<span className="text-white font-mono">DISCORD_CLIENT_ID</span> و <span className="text-white font-mono">DISCORD_CLIENT_SECRET</span>) في ملف <span className="text-white font-mono">.env</span> الخاص بالمشروع مباشرة.
               </p>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

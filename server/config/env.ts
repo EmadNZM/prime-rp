@@ -1,3 +1,6 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 // Environment Configuration & Strict Validation
 // Validates all required server-side environment variables without exposing secrets.
 
