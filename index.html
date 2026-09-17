@@ -1,6 +1,40 @@
 <!doctype html>
 <html lang="ar" dir="rtl" class="dark">
   <head>
+    <script>
+      (function() {
+        try {
+          var win = typeof window !== 'undefined' ? window : (typeof globalThis !== 'undefined' ? globalThis : null);
+          if (!win) return;
+          var nativeFetch = typeof win.fetch === 'function' ? win.fetch.bind(win) : null;
+          var currentFetch = nativeFetch;
+
+          var proto = Object.getPrototypeOf ? Object.getPrototypeOf(win) : (win.__proto__ || null);
+          if (proto) {
+            try {
+              var protoDesc = Object.getOwnPropertyDescriptor(proto, 'fetch');
+              if (protoDesc && !protoDesc.set && protoDesc.configurable) {
+                Object.defineProperty(proto, 'fetch', {
+                  get: function() { return currentFetch; },
+                  set: function(val) { currentFetch = val; },
+                  configurable: true,
+                  enumerable: true
+                });
+              }
+            } catch (e) {}
+          }
+
+          try {
+            Object.defineProperty(win, 'fetch', {
+              get: function() { return currentFetch; },
+              set: function(val) { currentFetch = val; },
+              configurable: true,
+              enumerable: true
+            });
+          } catch (e) {}
+        } catch (_) {}
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PRIME RP | المنصة الرسمية وسيرفر اللعب الواقعي</title>
