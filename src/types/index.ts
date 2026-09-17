@@ -188,6 +188,9 @@ export interface SiteSettings {
   activePlayersCount: number;
   maxPlayersCount: number;
   serverStatus: 'ONLINE' | 'MAINTENANCE' | 'OFFLINE';
+  discordClientId?: string;
+  discordClientSecret?: string;
+  discordRedirectUri?: string;
   logos?: {
     main?: string;       // Primary website logo
     navbar?: string;     // Top navigation bar logo

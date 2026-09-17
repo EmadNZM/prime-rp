@@ -420,6 +420,69 @@ export const LogoManagerSettings: React.FC<LogoManagerSettingsProps> = ({
               </div>
             </div>
 
+            {/* Discord OAuth Integration Credentials */}
+            <div className="p-5 rounded-2xl bg-[#0F0F16] border border-[#5865F2]/20 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-[#5865F2]">
+                  <Sparkles className="w-4 h-4" />
+                  <h4 className="text-xs font-black text-white">بيانات اعتماد تسجيل الدخول الفعلي عبر Discord (OAuth2)</h4>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-[#5865F2]/20 text-[#8EA1FF] font-mono font-bold">
+                  Discord Developer Portal
+                </span>
+              </div>
+              <p className="text-[11px] text-[#888] leading-relaxed">
+                يمكنك إدخال مفاتيح تطبيقك هنا مباشرة لحفظها في الموقع، أو تعيينها كمتغيرات بيئة (<span className="text-white font-mono">DISCORD_CLIENT_ID</span> و <span className="text-white font-mono">DISCORD_CLIENT_SECRET</span>) في استضافة Render.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#AAA] mb-1">
+                    معرف التطبيق (Client ID)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="مثال: 123456789012345678"
+                    value={settings.discordClientId || ''}
+                    onChange={(e) => setSettings({ ...settings, discordClientId: e.target.value.trim() })}
+                    className="w-full bg-[#14141E] border border-[#2B2B3B] focus:border-[#5865F2] rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#AAA] mb-1">
+                    المفتاح السري للتطبيق (Client Secret)
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="مثال: aBcDeFgHiJkLmNoPqRsTuVwXyZ"
+                    value={settings.discordClientSecret || ''}
+                    onChange={(e) => setSettings({ ...settings, discordClientSecret: e.target.value.trim() })}
+                    className="w-full bg-[#14141E] border border-[#2B2B3B] focus:border-[#5865F2] rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-black/40 border border-[#222] flex items-center justify-between gap-3 text-[11px]">
+                <div className="truncate">
+                  <span className="text-[#777]">الرابط المطلوب في Discord Redirects: </span>
+                  <span className="font-mono text-[#8EA1FF]">
+                    {typeof window !== 'undefined' ? `${window.location.origin}/api/auth/discord/callback` : '/api/auth/discord/callback'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/api/auth/discord/callback`);
+                    showToast('تم نسخ رابط الاسترجاع Redirect URI');
+                  }}
+                  className="shrink-0 px-3 py-1 rounded-lg bg-[#5865F2] hover:bg-[#4752C4] text-white text-[10px] font-bold"
+                >
+                  نسخ الرابط
+                </button>
+              </div>
+            </div>
+
             <div className="flex items-center gap-3 pt-3 border-t border-[#181818]">
               <input
                 type="checkbox"

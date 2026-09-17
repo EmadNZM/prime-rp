@@ -21,15 +21,21 @@ interface LoginPageProps {
 
 export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
   const { language, isRtl } = useLanguage();
-  const { isAuthenticated, loginWithDiscord, portalLogin } = useAuth();
+  const { isAuthenticated, loginWithDiscord, loginWithDiscordDirect, portalLogin } = useAuth();
   
   const [username, setUsername] = useState<string>('PrimeOwner');
   const [password, setPassword] = useState<string>('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isCredentialsMissing, setIsCredentialsMissing] = useState<boolean>(false);
   const [infoMsg, setInfoMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isRedirectingDiscord, setIsRedirectingDiscord] = useState<boolean>(false);
   const [copiedRedirect, setCopiedRedirect] = useState<boolean>(false);
+
+  // Direct Discord fallback
+  const [showDirectDiscord, setShowDirectDiscord] = useState<boolean>(false);
+  const [directDiscordName, setDirectDiscordName] = useState<string>('');
+  const [isSubmittingDirect, setIsSubmittingDirect] = useState<boolean>(false);
 
   const currentCallbackUrl = `${window.location.origin}/api/auth/discord/callback`;
 
@@ -45,9 +51,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
     
     if (err) {
       if (err === 'discord_credentials_missing') {
+        setIsCredentialsMissing(true);
+        setShowDirectDiscord(true);
         setErrorMsg(
           language === 'ar'
-            ? 'بيانات اعتماد تطبيق Discord (Client ID / Secret) غير متوفرة في بيئة الخادم.'
+            ? 'بيانات اعتماد تطبيق Discord (Client ID / Secret) غير متوفرة في بيئة الخادم (Render).'
             : 'Discord OAuth credentials (Client ID / Secret) are not yet configured on the server.'
         );
       } else if (err === 'oauth_failed' || err === 'token_exchange_failed') {
@@ -76,6 +84,30 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
     navigator.clipboard.writeText(currentCallbackUrl);
     setCopiedRedirect(true);
     setTimeout(() => setCopiedRedirect(false), 2500);
+  };
+
+  const handleDirectDiscordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!directDiscordName.trim()) return;
+    setIsSubmittingDirect(true);
+    setErrorMsg(null);
+    try {
+      const success = await loginWithDiscordDirect(directDiscordName.trim());
+      if (success) {
+        setCurrentTab('dashboard');
+      } else {
+        setErrorMsg(
+          language === 'ar'
+            ? 'تعذر إتمام الدخول، يرجى المحاولة لاحقاً.'
+            : 'Sign in failed. Please try again.'
+        );
+      }
+    } catch (err) {
+      console.error('Direct login error:', err);
+      setErrorMsg(language === 'ar' ? 'حدث خطأ في النظام.' : 'System error.');
+    } finally {
+      setIsSubmittingDirect(false);
+    }
   };
 
   const handlePortalSubmit = async (e: React.FormEvent) => {
@@ -148,24 +180,93 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
 
         {/* Error notice if any */}
         {errorMsg && (
-          <div className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/30 flex flex-col gap-2 text-xs text-red-400">
+          <div className="mb-5 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 flex flex-col gap-3 text-xs text-red-400">
             <div className="flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <p className="leading-relaxed">{errorMsg}</p>
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+              <div className="space-y-1">
+                <p className="font-bold leading-relaxed">{errorMsg}</p>
+                {isCredentialsMissing && (
+                  <p className="text-[11px] text-[#CCC] leading-relaxed">
+                    لتفعيل تسجيل الدخول الفعلي مع ديسكورد، يرجى إضافة المفاتيح في لوحة تحكم Render (من تبويب prime-rp المفتوح عندك):
+                  </p>
+                )}
+              </div>
             </div>
-            {/* Quick helper for developer redirect URI */}
-            <div className="mt-1 pt-2 border-t border-red-500/20 text-[11px] text-[#AAA] flex items-center justify-between gap-2">
-              <span className="truncate">Redirect URI: {currentCallbackUrl}</span>
+
+            {isCredentialsMissing && (
+              <div className="p-3 rounded-xl bg-[#0F0F0F] border border-[#2A2A2A] text-[11px] text-[#BBB] space-y-2">
+                <p className="font-bold text-[#C8874B]">خطوات التفعيل في استضافة Render (خلال دقيقة واحدة):</p>
+                <ol className="list-decimal list-inside space-y-1 text-[#AAA]">
+                  <li>افتح تبويب <span className="text-white font-semibold">prime-rp • Web Service • Render</span> المفتوح في متصفحك.</li>
+                  <li>اضغط على <span className="text-white font-semibold">Environment</span> من القائمة الجانبية.</li>
+                  <li>أضف <span className="text-white font-mono">DISCORD_CLIENT_ID</span> (معرف تطبيقك).</li>
+                  <li>أضف <span className="text-white font-mono">DISCORD_CLIENT_SECRET</span> (المفتاح السري).</li>
+                  <li>في Discord Developer Portal، ضع رابط الـ Redirect URI التالي:</li>
+                </ol>
+                <div className="pt-1 flex items-center justify-between gap-2 bg-black/50 p-2 rounded-lg border border-[#222]">
+                  <span className="font-mono text-[#8EA1FF] text-[10px] truncate">{currentCallbackUrl}</span>
+                  <button
+                    type="button"
+                    onClick={handleCopyCallback}
+                    className="shrink-0 px-2 py-1 rounded bg-[#1F1F1F] hover:bg-[#2A2A2A] text-white flex items-center gap-1 text-[10px]"
+                  >
+                    {copiedRedirect ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                    <span>{copiedRedirect ? 'تم النسخ' : 'نسخ'}</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Quick helper for developer redirect URI if not missing */}
+            {!isCredentialsMissing && (
+              <div className="mt-1 pt-2 border-t border-red-500/20 text-[11px] text-[#AAA] flex items-center justify-between gap-2">
+                <span className="truncate">Redirect URI: {currentCallbackUrl}</span>
+                <button
+                  type="button"
+                  onClick={handleCopyCallback}
+                  className="shrink-0 p-1 rounded bg-[#1A1A1A] hover:bg-[#252525] text-white flex items-center gap-1 text-[10px]"
+                  title="نسخ رابط الاسترجاع"
+                >
+                  {copiedRedirect ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  <span>{copiedRedirect ? 'تم النسخ' : 'نسخ'}</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Quick Instant Citizen Sign-in (Always available or when credentials missing) */}
+        {(showDirectDiscord || isCredentialsMissing) && (
+          <div className="mb-6 p-4 rounded-2xl bg-[#121217] border border-[#5865F2]/30 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>دخول سريع وفوري بحساب ديسكورد (كمواطن Citizen)</span>
+              </span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-[#5865F2]/20 text-[#8EA1FF] font-bold">
+                بدون مفاتيح API
+              </span>
+            </div>
+            <p className="text-[11px] text-[#888]">
+              اكتب اسم حسابك أو معرفك في ديسكورد لتسجيل الدخول فوراً برتبة مواطن عادي دون انتظار:
+            </p>
+            <form onSubmit={handleDirectDiscordSubmit} className="flex gap-2">
+              <input
+                type="text"
+                required
+                value={directDiscordName}
+                onChange={(e) => setDirectDiscordName(e.target.value)}
+                placeholder="مثال: Tariq أو Tariq_RP"
+                className="flex-1 bg-[#181820] border border-[#2D2D3D] focus:border-[#5865F2] rounded-xl px-3 py-2 text-xs text-white placeholder-[#555] focus:outline-none"
+              />
               <button
-                type="button"
-                onClick={handleCopyCallback}
-                className="shrink-0 p-1 rounded bg-[#1A1A1A] hover:bg-[#252525] text-white flex items-center gap-1 text-[10px]"
-                title="نسخ رابط الاسترجاع"
+                type="submit"
+                disabled={isSubmittingDirect}
+                className="px-4 py-2 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs shrink-0 transition-colors disabled:opacity-50"
               >
-                {copiedRedirect ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-                <span>{copiedRedirect ? 'تم النسخ' : 'نسخ'}</span>
+                {isSubmittingDirect ? 'جاري الدخول...' : 'دخول فوري'}
               </button>
-            </div>
+            </form>
           </div>
         )}
 
@@ -183,9 +284,21 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
             <span>
               {isRedirectingDiscord
                 ? (language === 'ar' ? 'جاري التحويل إلى ديسكورد...' : 'Connecting to Discord...')
-                : (language === 'ar' ? 'تسجيل الدخول الفعلي بحساب Discord' : 'Sign In with Discord Account')}
+                : (language === 'ar' ? 'تسجيل الدخول الفعلي بحساب Discord (OAuth)' : 'Sign In with Discord Account (OAuth)')}
             </span>
           </button>
+
+          {!showDirectDiscord && !isCredentialsMissing && (
+            <div className="text-center">
+              <button
+                type="button"
+                onClick={() => setShowDirectDiscord(true)}
+                className="text-[11px] text-[#777] hover:text-[#C8874B] underline transition-colors"
+              >
+                {language === 'ar' ? 'أو الدخول المباشر السريع باسم ديسكورد' : 'Or quick sign in by Discord username'}
+              </button>
+            </div>
+          )}
           
           <div className="p-3 rounded-xl bg-[#121212] border border-[#222] text-[11px] text-[#888] flex items-center gap-2">
             <ShieldAlert className="w-3.5 h-3.5 text-[#C8874B] shrink-0" />
