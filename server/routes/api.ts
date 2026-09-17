@@ -225,8 +225,12 @@ router.get('/admin/users', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserR
 });
 
 router.patch('/admin/users/:id/role', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]), (req: Request, res: Response) => {
-  const { role } = req.body;
-  const user = db.updateUserRole(req.params.id, role);
+  const { role, permissions } = req.body;
+  if (!role) {
+    return res.status(400).json({ error: 'Role is required' });
+  }
+
+  const user = db.updateUserRole(req.params.id, role, permissions);
   if (!user) {
     return res.status(404).json({ error: 'User not found' });
   }
@@ -242,6 +246,27 @@ router.patch('/admin/users/:id/role', requireAuth, requireRole([UserRole.SUPER_A
   });
 
   return res.json(user);
+});
+
+router.post('/admin/users/assign-role', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]), (req: Request, res: Response) => {
+  const { identifier, role, permissions } = req.body;
+  if (!identifier || !role) {
+    return res.status(400).json({ error: 'Identifier (Discord ID or Username) and Role are required' });
+  }
+
+  const user = db.assignUserRoleByIdentifier(identifier, role, permissions);
+
+  db.logAudit({
+    adminId: req.user!.id,
+    adminName: req.user!.globalName || req.user!.username,
+    action: 'USER_ROLE_ASSIGNED_BY_ADMIN',
+    entity: 'User',
+    entityId: user.id,
+    metadata: `Admin assigned role ${role} to ${identifier}`,
+    ip: req.ip || '127.0.0.1'
+  });
+
+  return res.json({ success: true, user });
 });
 
 router.patch('/admin/users/:id/status', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR]), (req: Request, res: Response) => {

@@ -25,33 +25,27 @@ export function getDiscordConfig(req?: Request) {
     currentHostRedirect = `${proto}://${host}/api/auth/discord/callback`;
   }
 
-  let redirectUri = currentHostRedirect;
-  if (process.env.DISCORD_REDIRECT_URI) {
-    const configuredUri = process.env.DISCORD_REDIRECT_URI;
-    if (req) {
-      const host = req.get('host') || '';
-      if (configuredUri.includes(host)) {
-        redirectUri = configuredUri;
-      } else {
-        redirectUri = currentHostRedirect || configuredUri;
-      }
-    } else {
-      redirectUri = configuredUri;
-    }
-  } else if (settings.discordRedirectUri) {
-    redirectUri = settings.discordRedirectUri;
-  } else if (!redirectUri) {
-    redirectUri = `${process.env.APP_URL || 'http://localhost:3000'}/api/auth/discord/callback`;
+  // Priority for redirect URI:
+  // 1. If explicit query parameter requests env/configured redirect
+  // 2. Default to current host redirect so user is returned to the exact domain they are browsing on
+  // 3. Fallback to DISCORD_REDIRECT_URI or settings
+  let redirectUri = '';
+  if (req && req.query && (req.query.use_env === 'true' || req.query.env_redirect === '1')) {
+    redirectUri = process.env.DISCORD_REDIRECT_URI || currentHostRedirect;
+  } else {
+    redirectUri = currentHostRedirect || process.env.DISCORD_REDIRECT_URI || settings.discordRedirectUri || 'http://localhost:3000/api/auth/discord/callback';
   }
 
-  return { clientId, clientSecret, redirectUri };
+  return { clientId, clientSecret, redirectUri, currentHostRedirect };
 }
 
 export function getAuthConfig(req: Request, res: Response) {
-  const { clientId } = getDiscordConfig(req);
+  const { clientId, currentHostRedirect } = getDiscordConfig(req);
   return res.json({
     hasDiscordOauth: Boolean(clientId),
-    oauthConfigured: Boolean(clientId)
+    oauthConfigured: Boolean(clientId),
+    currentRedirectUri: currentHostRedirect,
+    configuredRedirectUri: process.env.DISCORD_REDIRECT_URI || ''
   });
 }
 
@@ -59,20 +53,25 @@ export function handleDiscordLogin(req: Request, res: Response) {
   const { clientId, redirectUri } = getDiscordConfig(req);
 
   if (!clientId) {
-    // If Discord OAuth app credentials are not yet set in .env/settings,
-    // redirect smoothly to /login with prompt_discord=true so user can sign in instantly
-    return res.redirect('/login?prompt_discord=true&notice=discord_setup_required');
+    return res.redirect('/login?error=discord_credentials_missing');
   }
 
   const state = Math.random().toString(36).substring(7);
-  res.cookie('discord_oauth_state', state, { httpOnly: true, maxAge: 10 * 60 * 1000 });
+  const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
+  res.cookie('discord_oauth_state', state, {
+    httpOnly: true,
+    secure: isHttps,
+    sameSite: isHttps ? 'none' : 'lax',
+    maxAge: 10 * 60 * 1000
+  });
 
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: redirectUri,
     response_type: 'code',
     scope: 'identify email',
-    state
+    state,
+    prompt: 'consent'
   });
 
   res.redirect(`https://discord.com/api/oauth2/authorize?${params.toString()}`);
@@ -103,7 +102,9 @@ export async function handleDiscordCallback(req: Request, res: Response) {
     });
 
     if (!tokenResponse.ok) {
-      throw new Error(`Discord token exchange failed: ${tokenResponse.statusText}`);
+      const errBody = await tokenResponse.text();
+      console.error('Discord token exchange failed:', tokenResponse.status, errBody);
+      return res.redirect('/login?error=oauth_failed');
     }
 
     const tokenData = await tokenResponse.json();
@@ -124,13 +125,30 @@ export async function handleDiscordCallback(req: Request, res: Response) {
       ? `https://cdn.discordapp.com/avatars/${discordUser.id}/${discordUser.avatar}.png`
       : `https://cdn.discordapp.com/embed/avatars/${parseInt(discordUser.discriminator || '0', 10) % 5}.png`;
 
+    // STRICT USER DIRECTIVE:
+    // "بدي اي واحد يفوت يكون يوزر و الادارة بتقدر تعطي صلاحيات"
+    // Every user signing in via Discord is strictly a regular citizen (CITIZEN).
+    // If the administration has already granted a role to this user in the database, preserve it!
+    const existing = db.getUserById(discordUser.id) || db.getUsers().find((u) => u.discordId === discordUser.id);
+
+    let role = UserRole.CITIZEN;
+    let permissions = ['tickets.create', 'orders.create'];
+
+    if (existing) {
+      role = existing.role;
+      permissions = existing.permissions;
+    }
+
     // Upsert user into database
     const user = db.upsertUser({
       discordId: discordUser.id,
       username: discordUser.username,
       globalName: discordUser.global_name || discordUser.username,
       avatar: avatarUrl,
-      email: discordUser.email || undefined
+      email: discordUser.email || undefined,
+      role: role,
+      permissions: permissions,
+      status: existing ? existing.status : UserStatus.ACTIVE
     });
 
     // Set secure HTTP-only session cookie
@@ -144,9 +162,9 @@ export async function handleDiscordCallback(req: Request, res: Response) {
   }
 }
 
-// Discord Direct Instant Login (Seamless Discord identity authentication)
+// Discord Direct Instant Login (Fallback: Any user is strictly CITIZEN)
 export function handleDiscordDirectLogin(req: Request, res: Response) {
-  const { discordUsername = '', discordId, avatar, role } = req.body;
+  const { discordUsername = '', discordId, avatar } = req.body;
   const cleanUsername = String(discordUsername).trim();
 
   if (!cleanUsername) {
@@ -162,40 +180,18 @@ export function handleDiscordDirectLogin(req: Request, res: Response) {
   );
 
   if (!targetUser) {
-    const isOwner =
-      cleanUsername.toLowerCase().includes('owner') ||
-      cleanUsername.toLowerCase().includes('commander');
-    const isAdmin = cleanUsername.toLowerCase().includes('admin');
-    const isSupport = cleanUsername.toLowerCase().includes('support');
-
-    let assignedRole =
-      role ||
-      (isOwner
-        ? UserRole.SUPER_ADMIN
-        : isAdmin
-        ? UserRole.ADMIN
-        : isSupport
-        ? UserRole.SUPPORT
-        : UserRole.CITIZEN);
-
     const randomAvatarIdx = Math.floor(Math.random() * 5);
     const defaultAvatar = `https://cdn.discordapp.com/embed/avatars/${randomAvatarIdx}.png`;
 
+    // STRICT: Any new user is strictly CITIZEN. Administration grants roles.
     targetUser = db.upsertUser({
       discordId: discordId || `usr_discord_${Date.now()}`,
       username: cleanUsername,
       globalName: cleanUsername,
       avatar: avatar || defaultAvatar,
-      role: assignedRole,
+      role: UserRole.CITIZEN,
       status: UserStatus.ACTIVE,
-      permissions:
-        assignedRole === UserRole.SUPER_ADMIN
-          ? ['*']
-          : assignedRole === UserRole.ADMIN
-          ? ['users.view', 'users.edit', 'news.*', 'rules.*', 'jobs.*', 'tickets.*', 'audit.view']
-          : assignedRole === UserRole.SUPPORT
-          ? ['tickets.view', 'tickets.reply', 'tickets.close']
-          : ['tickets.create', 'orders.create']
+      permissions: ['tickets.create', 'orders.create']
     });
   }
 

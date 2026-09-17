@@ -149,11 +149,20 @@ export const apiClient = {
     return res.json();
   },
 
-  async updateUserRole(id: string, role: string) {
+  async updateUserRole(id: string, role: string, permissions?: string[]) {
     const res = await fetch(`/api/admin/users/${id}/role`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role })
+      body: JSON.stringify({ role, permissions })
+    });
+    return res.json();
+  },
+
+  async assignUserRole(identifier: string, role: string, permissions?: string[]) {
+    const res = await fetch('/api/admin/users/assign-role', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identifier, role, permissions })
     });
     return res.json();
   },

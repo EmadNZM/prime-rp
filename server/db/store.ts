@@ -194,11 +194,18 @@ class DatabaseStore {
   }
 
   upsertUser(userData: Partial<User> & { discordId: string }): User {
-    const existingIndex = this.data.users.findIndex((u) => u.discordId === userData.discordId);
+    const existingIndex = this.data.users.findIndex(
+      (u) => u.discordId === userData.discordId || (userData.id && u.id === userData.id)
+    );
     if (existingIndex >= 0) {
+      const existing = this.data.users[existingIndex];
       const updated = {
-        ...this.data.users[existingIndex],
+        ...existing,
         ...userData,
+        // Preserve admin-assigned role, status and permissions unless explicitly provided
+        role: userData.role !== undefined ? userData.role : existing.role,
+        permissions: userData.permissions !== undefined ? userData.permissions : existing.permissions,
+        status: userData.status !== undefined ? userData.status : existing.status,
         updatedAt: new Date().toISOString(),
         lastLogin: new Date().toISOString()
       };
@@ -206,16 +213,25 @@ class DatabaseStore {
       this.save();
       return updated as User;
     } else {
+      // STRICT REQUIREMENT: Any newly registered user is ALWAYS a standard CITIZEN!
+      // The administration grants elevated roles/permissions from the admin panel.
+      const newUserRole = userData.role || ('CITIZEN' as any);
+      const defaultPermissions = newUserRole === 'SUPER_ADMIN'
+        ? ['*']
+        : newUserRole === 'ADMIN'
+        ? ['users.view', 'users.edit', 'news.*', 'rules.*', 'jobs.*', 'tickets.*', 'audit.view']
+        : ['tickets.create', 'orders.create'];
+
       const newUser: User = {
         id: `usr_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
         discordId: userData.discordId,
         username: userData.username || 'Citizen',
-        globalName: userData.globalName,
+        globalName: userData.globalName || userData.username || 'Citizen',
         avatar: userData.avatar,
         email: userData.email,
-        role: userData.role || ('CITIZEN' as any),
+        role: newUserRole,
         status: userData.status || ('ACTIVE' as any),
-        permissions: userData.permissions || ['tickets.create', 'orders.create'],
+        permissions: userData.permissions || defaultPermissions,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
@@ -228,13 +244,65 @@ class DatabaseStore {
   }
 
   updateUserRole(userId: string, role: any, permissions?: string[]): User | null {
-    const user = this.data.users.find((u) => u.id === userId);
+    const user = this.data.users.find((u) => u.id === userId || u.discordId === userId);
     if (!user) return null;
     user.role = role;
-    if (permissions) user.permissions = permissions;
+    if (permissions && permissions.length > 0) {
+      user.permissions = permissions;
+    } else {
+      // Apply standard permissions matching the new role granted by administration
+      switch (role) {
+        case 'SUPER_ADMIN':
+          user.permissions = ['*'];
+          break;
+        case 'ADMIN':
+          user.permissions = ['users.view', 'users.edit', 'news.*', 'rules.*', 'jobs.*', 'tickets.*', 'audit.view', 'settings.edit'];
+          break;
+        case 'MODERATOR':
+          user.permissions = ['users.view', 'rules.edit', 'tickets.view', 'tickets.reply', 'audit.view'];
+          break;
+        case 'SUPPORT':
+          user.permissions = ['tickets.view', 'tickets.reply', 'tickets.close'];
+          break;
+        case 'EDITOR':
+          user.permissions = ['news.*', 'rules.edit'];
+          break;
+        case 'STORE_MANAGER':
+          user.permissions = ['products.*', 'orders.*'];
+          break;
+        case 'CITIZEN':
+        default:
+          user.permissions = ['tickets.create', 'orders.create'];
+          break;
+      }
+    }
     user.updatedAt = new Date().toISOString();
     this.save();
     return user;
+  }
+
+  assignUserRoleByIdentifier(identifier: string, role: any, permissions?: string[]): User {
+    const clean = String(identifier).trim().toLowerCase();
+    const existing = this.data.users.find(
+      (u) =>
+        u.id.toLowerCase() === clean ||
+        u.discordId.toLowerCase() === clean ||
+        u.username.toLowerCase() === clean ||
+        (u.globalName && u.globalName.toLowerCase() === clean)
+    );
+
+    if (existing) {
+      return this.updateUserRole(existing.id, role, permissions) || existing;
+    }
+
+    // Pre-create user placeholder with assigned role so when they log in via Discord later they get this role
+    return this.upsertUser({
+      discordId: identifier.startsWith('usr_') ? identifier : `discord_${identifier}`,
+      username: identifier,
+      globalName: identifier,
+      role: role,
+      permissions: permissions
+    });
   }
 
   updateUserStatus(userId: string, status: any): User | null {
