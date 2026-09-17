@@ -108,7 +108,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             </button>
 
             <a
-              href="https://discord.gg/primerp"
+              href={siteSettings?.discordUrl || 'https://discord.gg/primerp'}
               target="_blank"
               rel="noreferrer"
               className="w-full sm:w-auto flex items-center justify-center gap-3 px-8 py-4 rounded-xl bg-[#111] hover:bg-[#1A1A1A] border border-[#2B2B2B] hover:border-[#5865F2] text-white font-bold text-base transition-all hover:scale-[1.02]"

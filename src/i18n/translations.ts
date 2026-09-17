@@ -170,7 +170,7 @@ export const translations = {
       loading: 'جاري التحميل...',
       search: 'بحث...',
       emptyState: 'لا توجد بيانات متاحة حالياً',
-      devLoginNotice: 'وضع المطور: تسجيل دخول تجريبي سريع متوفر للاختبار دون الحاجة لـ Discord Bot.'
+      devLoginNotice: 'بوابة تسجيل الدخول المباشر لحسابات الإدارة والمواطنين.'
     }
   },
   en: {

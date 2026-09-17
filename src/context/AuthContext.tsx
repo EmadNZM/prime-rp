@@ -9,6 +9,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isStaff: boolean;
   loginWithDiscord: () => void;
+  portalLogin: (role?: string, username?: string) => Promise<void>;
   devLogin: (role?: string, username?: string) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -92,6 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAdmin,
         isStaff,
         loginWithDiscord,
+        portalLogin: devLogin,
         devLogin,
         logout,
         refreshUser

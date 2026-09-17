@@ -1,5 +1,6 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useSettings } from '../../context/SettingsContext';
 import { PrimeLogo } from '../common/PrimeLogo';
 import { Shield, MessageSquare, ExternalLink, Heart } from 'lucide-react';
 
@@ -9,6 +10,7 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
   const { t } = useLanguage();
+  const { settings } = useSettings();
 
   const handleNav = (tab: string) => {
     setCurrentTab(tab);
@@ -36,7 +38,7 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
             </p>
             <div className="pt-2 flex items-center gap-3">
               <a
-                href="https://discord.gg/primerp"
+                href={settings?.discordUrl || "https://discord.gg/primerp"}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-[#111] border border-[#222] hover:border-[#C8874B] text-xs font-semibold text-[#E5E5E5] transition-all"
