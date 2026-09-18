@@ -1,15 +1,16 @@
 @import "tailwindcss";
 
 @theme {
-  --color-copper: #c8874b;
-  --color-copper-light: #df9f64;
-  --color-copper-dark: #9e6331;
-  --color-dark-bg: #08090d;
-  --color-dark-card: #0d0f16;
-  --color-dark-surface: #131620;
-  --color-dark-border: #1d202d;
-  --color-silver: #969cad;
-  --color-silver-light: #f1f3f7;
+  --color-copper: #C8874B;
+  --color-copper-light: #DF9F64;
+  --color-copper-dark: #9E6331;
+  --color-prime-black: #070707;
+  --color-prime-obsidian: #0B0B0D;
+  --color-prime-card: #111114;
+  --color-prime-surface: #17171A;
+  --color-prime-border: #222225;
+  --color-prime-muted: #A1A1A1;
+  --color-prime-dim: #666666;
   --font-cairo: "Cairo", sans-serif;
   --font-montserrat: "Montserrat", sans-serif;
   --font-rajdhani: "Rajdhani", sans-serif;
@@ -21,15 +22,15 @@
 
 body {
   font-family: var(--font-cairo), var(--font-montserrat), system-ui, sans-serif;
-  background-color: #08090d;
-  color: #f1f3f7;
+  background-color: #070707;
+  color: #FFFFFF;
   overflow-x: hidden;
   margin: 0;
   padding: 0;
   background-image: 
-    radial-gradient(ellipse 90% 60% at 50% -10%, rgba(200, 135, 75, 0.12), transparent),
-    radial-gradient(circle at 85% 70%, rgba(200, 135, 75, 0.04), transparent 40%),
-    radial-gradient(circle at 15% 40%, rgba(200, 135, 75, 0.03), transparent 50%);
+    radial-gradient(ellipse 80% 50% at 50% -5%, rgba(200, 135, 75, 0.12), transparent),
+    radial-gradient(circle at 85% 70%, rgba(200, 135, 75, 0.03), transparent 45%),
+    radial-gradient(circle at 15% 40%, rgba(200, 135, 75, 0.02), transparent 50%);
   background-attachment: fixed;
 }
 
