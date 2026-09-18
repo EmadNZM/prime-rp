@@ -223,14 +223,16 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
                       className="w-full py-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-extrabold text-sm tracking-wide transition-all shadow-lg shadow-[#5865F2]/20 flex items-center justify-center gap-2"
                     >
                       <LogIn className="w-4 h-4" />
-                      <span>تسجيل الدخول عبر ديسكورد للتقديم على الوظيفة</span>
+                      <span>{language === 'ar' ? 'تسجيل الدخول عبر ديسكورد للتقديم على الوظيفة' : 'Sign In with Discord to Apply'}</span>
                     </button>
                   ) : activeApplication ? (
                     <div className="p-4 rounded-2xl bg-[#141414] border border-[#222] space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <FileCheck className="w-5 h-5 text-[#C8874B]" />
-                          <span className="text-sm font-bold text-white">لديك طلب مقدم لهذه الوظيفة</span>
+                          <span className="text-sm font-bold text-white">
+                            {language === 'ar' ? 'لديك طلب مقدم لهذه الوظيفة' : 'Active Application on File'}
+                          </span>
                         </div>
                         <span className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold ${
                           activeApplication.status === 'ACCEPTED' 
@@ -241,26 +243,26 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
                             ? 'bg-red-500/10 text-red-400 border border-red-500/20'
                             : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
                         }`}>
-                          {activeApplication.status === 'ACCEPTED' && 'تم القبول'}
-                          {activeApplication.status === 'UNDER_REVIEW' && 'قيد المراجعة'}
-                          {activeApplication.status === 'REJECTED' && 'تم الرفض'}
-                          {activeApplication.status === 'PENDING' && 'قيد الانتظار'}
+                          {activeApplication.status === 'ACCEPTED' && (language === 'ar' ? 'تم القبول' : 'Accepted')}
+                          {activeApplication.status === 'UNDER_REVIEW' && (language === 'ar' ? 'قيد المراجعة' : 'Under Review')}
+                          {activeApplication.status === 'REJECTED' && (language === 'ar' ? 'تم الرفض' : 'Rejected')}
+                          {activeApplication.status === 'PENDING' && (language === 'ar' ? 'قيد الانتظار' : 'Pending')}
                         </span>
                       </div>
                       <p className="text-xs text-[#888]">
-                        الشخصية: <span className="text-white font-bold">{activeApplication.characterName}</span> • تاريخ التقديم: {new Date(activeApplication.createdAt).toLocaleDateString('ar-SA')}
+                        {language === 'ar' ? 'الشخصية:' : 'Character:'} <span className="text-white font-bold">{activeApplication.characterName}</span> • {language === 'ar' ? 'تاريخ التقديم:' : 'Applied:'} {new Date(activeApplication.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
                       </p>
                       {activeApplication.reviewNotes && (
                         <div className="p-2.5 rounded-xl bg-[#1C1C1C] text-xs text-[#AAA]">
-                          <span className="font-bold text-[#C8874B]">ملاحظة الإدارة: </span>
+                          <span className="font-bold text-[#C8874B]">{language === 'ar' ? 'ملاحظة الإدارة: ' : 'Staff Note: '}</span>
                           <span>{activeApplication.reviewNotes}</span>
                         </div>
                       )}
                       <button
                         onClick={() => setCurrentTab('dashboard')}
-                        className="w-full py-2.5 rounded-xl bg-[#1F1F1F] hover:bg-[#2A2A2A] text-xs font-bold text-white transition-all text-center"
+                        className="w-full py-2.5 rounded-xl bg-[#1F1F1F] hover:bg-[#2A2A2A] text-xs font-bold text-white transition-all text-center cursor-pointer"
                       >
-                        عرض ومتابعة كافة طلباتي في لوحة التحكم
+                        {language === 'ar' ? 'عرض ومتابعة كافة طلباتي في لوحة التحكم' : 'View & Track Applications in Dashboard'}
                       </button>
                     </div>
                   ) : selectedJob.status === 'HIRING_CLOSED' ? (

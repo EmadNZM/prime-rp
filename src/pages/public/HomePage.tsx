@@ -52,9 +52,18 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
   }, []);
 
   const handlePlayNow = () => {
-    // Open FiveM connect or show connect instruction
-    const connectUrl = siteSettings?.fiveMConnectUrl || 'fivem://connect/play.prime-rp.com';
-    window.location.href = connectUrl;
+    // Open FiveM connect if configured, or navigate to players page with instructions
+    if (siteSettings?.fiveMConnectUrl) {
+      window.location.href = siteSettings.fiveMConnectUrl;
+      return;
+    }
+    const ip = siteSettings?.telemetry?.ip;
+    const port = siteSettings?.telemetry?.port;
+    if (ip && port && siteSettings?.telemetry?.error !== 'not_configured') {
+      window.location.href = `fivem://connect/${ip}:${port}`;
+      return;
+    }
+    setCurrentTab('players');
   };
 
   const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
@@ -126,7 +135,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <span>{t('hero.onlinePlayers')}</span>
               </div>
               <p className="text-2xl font-black text-white">
-                {siteSettings?.activePlayersCount || 184} <span className="text-xs font-normal text-[#666]">/ {siteSettings?.maxPlayersCount || 250}</span>
+                {siteSettings?.activePlayersCount ?? 0} <span className="text-xs font-normal text-[#666]">/ {siteSettings?.maxPlayersCount ?? 0}</span>
               </p>
             </div>
 
@@ -135,10 +144,22 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <Activity className="w-3.5 h-3.5 text-emerald-500" />
                 <span>{t('hero.serverStatus')}</span>
               </div>
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                {t('hero.online')}
-              </span>
+              {siteSettings?.serverStatus === 'ONLINE' ? (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  {t('hero.online')}
+                </span>
+              ) : siteSettings?.serverStatus === 'NOT_CONFIGURED' ? (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400" />
+                  {language === 'ar' ? 'غير مهيأ' : 'Setup Required'}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-red-400 bg-red-500/10 px-2.5 py-0.5 rounded-full border border-red-500/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+                  {language === 'ar' ? 'غير متصل' : 'Offline'}
+                </span>
+              )}
             </div>
 
             <div className="flex flex-col items-center justify-center p-3 border-r rtl:border-r-0 rtl:border-l border-[#1A1A1A] last:border-none">
@@ -146,7 +167,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <Briefcase className="w-3.5 h-3.5 text-[#C8874B]" />
                 <span>{t('hero.departments')}</span>
               </div>
-              <p className="text-2xl font-black text-white">12+</p>
+              <p className="text-2xl font-black text-white">{featuredJobs.length > 0 ? `${featuredJobs.length}+` : '8+'}</p>
             </div>
 
             <div className="flex flex-col items-center justify-center p-3">
@@ -154,7 +175,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <Shield className="w-3.5 h-3.5 text-[#DF9F64]" />
                 <span>{t('hero.uptime')}</span>
               </div>
-              <p className="text-2xl font-black text-white">99.8%</p>
+              <p className="text-2xl font-black text-white">{siteSettings?.serverStatus === 'ONLINE' ? '99.8%' : '-'}</p>
             </div>
           </div>
 

@@ -188,12 +188,17 @@ export const StorePage: React.FC<StorePageProps> = ({ setCurrentTab }) => {
               <div className="w-16 h-16 rounded-full bg-[#C8874B]/20 text-[#C8874B] flex items-center justify-center mx-auto mb-4 border border-[#C8874B]/40">
                 <Check className="w-8 h-8" />
               </div>
-              <h3 className="text-2xl font-black text-white mb-2">{t('store.checkoutSuccess')}</h3>
+              <h3 className="text-2xl font-black text-white mb-2">
+                {language === 'ar' ? 'تمت عملية الشراء بنجاح!' : 'Purchase Completed Successfully!'}
+              </h3>
               <p className="text-sm text-[#888] mb-4">
-                رقم الفاتورة: <span className="text-[#C8874B] font-bold">{checkoutSuccess.orderNumber}</span>
+                {language === 'ar' ? 'رقم الفاتورة:' : 'Invoice #:'}{' '}
+                <span className="text-[#C8874B] font-bold font-mono">{checkoutSuccess.orderNumber}</span>
               </p>
-              <p className="text-xs text-[#AAA] mb-6">
-                تم تفعيل المنتج وإرسال إشعار رسمي إلى حسابك. يمكنك مراجعة طلباتك عبر لوحة التحكم.
+              <p className="text-xs text-[#AAA] mb-6 leading-relaxed">
+                {language === 'ar'
+                  ? 'تم تفعيل المنتج وإرسال إشعار رسمي إلى حسابك. يمكنك مراجعة طلباتك ومشترياتك عبر لوحة التحكم.'
+                  : 'Your in-game amenities have been activated and logged. You can review all orders anytime from your dashboard.'}
               </p>
               <div className="flex gap-3">
                 <button
@@ -201,15 +206,15 @@ export const StorePage: React.FC<StorePageProps> = ({ setCurrentTab }) => {
                     setCheckoutSuccess(null);
                     setCurrentTab('orders');
                   }}
-                  className="flex-1 py-3 rounded-xl bg-[#C8874B] text-black font-extrabold text-xs"
+                  className="flex-1 py-3 rounded-xl bg-[#C8874B] hover:brightness-110 text-black font-extrabold text-xs transition-all cursor-pointer"
                 >
-                  عرض سجل الطلبات
+                  {language === 'ar' ? 'عرض سجل الطلبات' : 'View Orders'}
                 </button>
                 <button
                   onClick={() => setCheckoutSuccess(null)}
-                  className="px-5 py-3 rounded-xl bg-[#1A1A1A] text-white font-bold text-xs hover:bg-[#252525]"
+                  className="px-5 py-3 rounded-xl bg-[#1A1A1A] text-white font-bold text-xs hover:bg-[#252525] transition-all cursor-pointer"
                 >
-                  إغلاق
+                  {language === 'ar' ? 'إغلاق' : 'Close'}
                 </button>
               </div>
             </div>
@@ -222,7 +227,7 @@ export const StorePage: React.FC<StorePageProps> = ({ setCurrentTab }) => {
             <div className="bg-[#0B0B0B] border border-[#262626] rounded-3xl p-6 sm:p-8 max-w-lg w-full relative shadow-2xl">
               <button
                 onClick={() => setCartProduct(null)}
-                className="absolute top-5 right-5 rtl:right-auto rtl:left-5 text-[#888] hover:text-white"
+                className="absolute top-5 right-5 rtl:right-auto rtl:left-5 text-[#888] hover:text-white p-1 rounded-lg hover:bg-[#1C1C1C] transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -232,7 +237,9 @@ export const StorePage: React.FC<StorePageProps> = ({ setCurrentTab }) => {
                   <CreditCard className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-white">تأكيد عملية الشراء</h3>
+                  <h3 className="text-lg font-black text-white">
+                    {language === 'ar' ? 'تأكيد عملية الشراء' : 'Confirm Purchase'}
+                  </h3>
                   <p className="text-xs text-[#888]">Direct Roleplay Store Checkout</p>
                 </div>
               </div>
@@ -259,30 +266,36 @@ export const StorePage: React.FC<StorePageProps> = ({ setCurrentTab }) => {
               {!isAuthenticated ? (
                 <div className="text-center py-4">
                   <p className="text-xs text-[#BBB] mb-4">
-                    يتطلب الشراء تسجيل الدخول بحسابك في ديسكورد لربط المشتريات تلقائياً.
+                    {language === 'ar'
+                      ? 'يتطلب الشراء تسجيل الدخول بحسابك في ديسكورد لربط المشتريات وتفعيلها تلقائياً.'
+                      : 'Please authenticate with Discord to link purchases directly with your citizen profile.'}
                   </p>
                   <button
                     onClick={() => {
                       setCartProduct(null);
                       setCurrentTab('login');
                     }}
-                    className="w-full py-3.5 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs transition-all"
+                    className="w-full py-3.5 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-xs transition-all cursor-pointer"
                   >
-                    تسجيل الدخول عبر Discord للمتابعة
+                    {language === 'ar' ? 'تسجيل الدخول عبر Discord للمتابعة' : 'Sign in with Discord to Continue'}
                   </button>
                 </div>
               ) : (
                 <button
                   onClick={handleCheckout}
                   disabled={isProcessing}
-                  className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-extrabold text-sm hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2"
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-extrabold text-sm hover:brightness-110 active:scale-98 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                 >
                   {isProcessing ? (
-                    <span>جاري معالجة الطلب...</span>
+                    <span>{language === 'ar' ? 'جاري معالجة الطلب...' : 'Processing Transaction...'}</span>
                   ) : (
                     <>
                       <ShoppingBag className="w-4 h-4" />
-                      <span>إتمام الدفع (${cartProduct.price} USD)</span>
+                      <span>
+                        {language === 'ar' 
+                          ? `إتمام الدفع ($${cartProduct.price} USD)` 
+                          : `Complete Order ($${cartProduct.price} USD)`}
+                      </span>
                     </>
                   )}
                 </button>
