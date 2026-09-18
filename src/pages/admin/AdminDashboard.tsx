@@ -45,7 +45,7 @@ interface AdminDashboardProps {
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab }) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user, isStaff, isOwner } = useAuth();
   const { updateSettings: updateGlobalSettings } = useSettings();
 
@@ -431,7 +431,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
               {t('admin.title')}
             </h1>
             <p className="text-xs text-[#888]">
-              تسجيل الدخول الحالي: <span className="text-white font-semibold">{user?.globalName || user?.username}</span> ({user?.role})
+              {language === 'ar' ? 'تسجيل الدخول الحالي:' : 'Current Session:'}{' '}
+              <span className="text-white font-semibold">{user?.globalName || user?.username}</span> ({user?.role})
             </p>
           </div>
 
@@ -439,7 +440,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
             onClick={() => setCurrentTab('home')}
             className="px-4 py-2 rounded-xl bg-[#141414] hover:bg-[#202020] border border-[#2B2B2B] text-xs font-bold text-white transition-all self-start sm:self-auto"
           >
-            العودة للموقع
+            {language === 'ar' ? 'العودة للموقع' : 'Back to Website'}
           </button>
         </div>
 
@@ -448,7 +449,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
           {[
             { id: 'overview', label: t('admin.overview'), icon: LayoutDashboard },
             { id: 'users', label: t('admin.users'), icon: Users },
-            { id: 'reports', label: 'البلاغات والشكاوى', icon: AlertTriangle },
+            { id: 'reports', label: language === 'ar' ? 'البلاغات والشكاوى' : 'Reports & Violations', icon: AlertTriangle },
             { id: 'news', label: t('admin.news'), icon: Newspaper },
             { id: 'rules', label: t('admin.rules'), icon: BookOpen },
             { id: 'jobs', label: t('admin.jobs'), icon: Briefcase },
@@ -481,26 +482,36 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
           <div className="space-y-8">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div className="p-6 rounded-2xl bg-[#0B0B0B] border border-[#1C1C1C]">
-                <span className="text-xs text-[#777] block mb-1">المستخدمين المسجلين</span>
+                <span className="text-xs text-[#777] block mb-1">
+                  {language === 'ar' ? 'المستخدمين المسجلين' : 'Registered Citizens'}
+                </span>
                 <p className="text-3xl font-black text-white">{overviewMetrics?.totalUsers || 0}</p>
               </div>
               <div className="p-6 rounded-2xl bg-[#0B0B0B] border border-[#1C1C1C]">
-                <span className="text-xs text-[#777] block mb-1">التذاكر المفتوحة</span>
+                <span className="text-xs text-[#777] block mb-1">
+                  {language === 'ar' ? 'التذاكر المفتوحة' : 'Open Tickets'}
+                </span>
                 <p className="text-3xl font-black text-amber-400">{overviewMetrics?.openTickets || 0}</p>
               </div>
               <div className="p-6 rounded-2xl bg-[#0B0B0B] border border-[#1C1C1C]">
-                <span className="text-xs text-[#777] block mb-1">البلاغات المفتوحة</span>
+                <span className="text-xs text-[#777] block mb-1">
+                  {language === 'ar' ? 'البلاغات المفتوحة' : 'Pending Reports'}
+                </span>
                 <p className="text-3xl font-black text-blue-400">{overviewMetrics?.openReports || 0}</p>
               </div>
               <div className="p-6 rounded-2xl bg-[#0B0B0B] border border-[#1C1C1C]">
-                <span className="text-xs text-[#777] block mb-1">إجمالي المبيعات</span>
+                <span className="text-xs text-[#777] block mb-1">
+                  {language === 'ar' ? 'إجمالي المبيعات' : 'Total Revenue'}
+                </span>
                 <p className="text-3xl font-black text-emerald-400">${overviewMetrics?.totalRevenue || 0} USD</p>
               </div>
             </div>
 
             {/* Recent Audit Trail Preview */}
             <div className="rounded-3xl bg-[#0B0B0B] border border-[#1C1C1C] p-6">
-              <h3 className="text-base font-black text-white mb-4">آخر سجلات الأنشطة الإدارية (Audit Trail)</h3>
+              <h3 className="text-base font-black text-white mb-4">
+                {language === 'ar' ? 'آخر سجلات الأنشطة الإدارية (Audit Trail)' : 'Recent Administrative Audit Trail'}
+              </h3>
               <div className="space-y-2 text-xs">
                 {auditLogs.slice(0, 6).map((log) => (
                   <div key={log.id} className="p-3 rounded-xl bg-[#111] border border-[#1C1C1C] flex items-center justify-between">

@@ -360,10 +360,14 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             aria-hidden="true"
           />
           <h3 className="text-3xl sm:text-4xl font-black text-white mb-4">
-            انضم إلى مجتمع النخبة في سيرفر الديسكورد
+            {language === 'ar' 
+              ? 'انضم إلى مجتمع النخبة في سيرفر الديسكورد'
+              : 'Join the Elite Community on Discord'}
           </h3>
           <p className="text-[#999] max-w-xl mx-auto text-sm sm:text-base mb-8">
-            كن على تواصل مع أكثر من 15,000 لاعب، شارك في الفعاليات الأسبوعية، وتقدم للوظائف الرسمية.
+            {language === 'ar'
+              ? 'كن على تواصل مع اللاعبين، شارك في الفعاليات الأسبوعية، وتقدم للوظائف الرسمية.'
+              : 'Connect with fellow citizens, participate in weekly events, and apply for official positions.'}
           </p>
           <a
             href={siteSettings?.discordUrl || 'https://discord.gg/primerp'}
@@ -372,7 +376,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             className="inline-flex items-center gap-3 px-8 py-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-extrabold text-base transition-all shadow-xl shadow-[#5865F2]/25 hover:scale-105"
           >
             <MessageSquare className="w-5 h-5 fill-current" />
-            <span>Join Discord Community</span>
+            <span>{language === 'ar' ? 'الانضمام لسيرفر الديسكورد' : 'Join Discord Community'}</span>
           </a>
         </div>
       </section>
