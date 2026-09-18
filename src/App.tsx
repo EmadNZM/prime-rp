@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SettingsProvider } from './context/SettingsContext';
@@ -107,32 +108,42 @@ function MainApp() {
 
       {/* Main Content Area */}
       <main className="flex-grow">
-        {(currentTab === 'home' || currentTab === 'about') && (
-          <HomePage currentTab={currentTab} setCurrentTab={setCurrentTab} setSelectedNewsSlug={setSelectedNewsSlug} />
-        )}
-        {currentTab === 'rules' && <RulesPage />}
-        {currentTab === 'jobs' && <JobsPage setCurrentTab={setCurrentTab} />}
-        {currentTab === 'news' && (
-          <NewsPage setCurrentTab={setCurrentTab} setSelectedNewsSlug={setSelectedNewsSlug} />
-        )}
-        {currentTab === 'news-detail' && (
-          <NewsDetailPage slug={selectedNewsSlug} onBack={() => setCurrentTab('news')} />
-        )}
-        {currentTab === 'store' && <StorePage setCurrentTab={setCurrentTab} />}
-        {currentTab === 'players' && <PlayersPage />}
-        {currentTab === 'leaderboard' && <LeaderboardPage />}
-        {(currentTab === 'support' || currentTab === 'tickets') && <SupportPage setCurrentTab={setCurrentTab} />}
-        {currentTab === 'faq' && <FAQPage setCurrentTab={setCurrentTab} />}
-        {currentTab === 'login' && <LoginPage setCurrentTab={setCurrentTab} />}
-        {currentTab === 'dashboard' && <UserDashboard setCurrentTab={setCurrentTab} />}
-        {currentTab === 'orders' && <UserDashboard setCurrentTab={setCurrentTab} />}
-        {currentTab === 'admin' && <AdminDashboard setCurrentTab={setCurrentTab} />}
-        {currentTab === 'legal-terms' && (
-          <LegalPages type="terms" onBack={() => setCurrentTab('home')} />
-        )}
-        {currentTab === 'legal-privacy' && (
-          <LegalPages type="privacy" onBack={() => setCurrentTab('home')} />
-        )}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentTab === 'about' ? 'home' : currentTab}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {(currentTab === 'home' || currentTab === 'about') && (
+              <HomePage currentTab={currentTab} setCurrentTab={setCurrentTab} setSelectedNewsSlug={setSelectedNewsSlug} />
+            )}
+            {currentTab === 'rules' && <RulesPage />}
+            {currentTab === 'jobs' && <JobsPage setCurrentTab={setCurrentTab} />}
+            {currentTab === 'news' && (
+              <NewsPage setCurrentTab={setCurrentTab} setSelectedNewsSlug={setSelectedNewsSlug} />
+            )}
+            {currentTab === 'news-detail' && (
+              <NewsDetailPage slug={selectedNewsSlug} onBack={() => setCurrentTab('news')} />
+            )}
+            {currentTab === 'store' && <StorePage setCurrentTab={setCurrentTab} />}
+            {currentTab === 'players' && <PlayersPage />}
+            {currentTab === 'leaderboard' && <LeaderboardPage />}
+            {(currentTab === 'support' || currentTab === 'tickets') && <SupportPage setCurrentTab={setCurrentTab} />}
+            {currentTab === 'faq' && <FAQPage setCurrentTab={setCurrentTab} />}
+            {currentTab === 'login' && <LoginPage setCurrentTab={setCurrentTab} />}
+            {currentTab === 'dashboard' && <UserDashboard setCurrentTab={setCurrentTab} />}
+            {currentTab === 'orders' && <UserDashboard setCurrentTab={setCurrentTab} />}
+            {currentTab === 'admin' && <AdminDashboard setCurrentTab={setCurrentTab} />}
+            {currentTab === 'legal-terms' && (
+              <LegalPages type="terms" onBack={() => setCurrentTab('home')} />
+            )}
+            {currentTab === 'legal-privacy' && (
+              <LegalPages type="privacy" onBack={() => setCurrentTab('home')} />
+            )}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Footer */}

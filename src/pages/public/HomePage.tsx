@@ -35,7 +35,11 @@ import {
   Server,
   Layers,
   ChevronRight,
-  Headphones
+  Headphones,
+  Car,
+  Sparkles,
+  Award,
+  Globe2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -90,7 +94,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
           const featured = prods.filter((p: ProductItem) => p.featured);
           setFeaturedProducts(featured.length > 0 ? featured.slice(0, 4) : prods.slice(0, 4));
         }
-        if (Array.isArray(faqData)) setFaqs(faqData.slice(0, 5));
+        if (Array.isArray(faqData)) setFaqs(faqData.slice(0, 6));
       } catch (err) {
         console.error('Failed to load home page data:', err);
       }
@@ -133,7 +137,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
       badgeEn: 'Strict Chain of Command',
       icon: Shield,
       accent: '#38bdf8',
-      descAr: 'غرف عمليات تفاعلية، أجهزة MDT ذكية، دوريات شرطية وسيارات مطاردة مخصصة، مع بروتوكولات حقيقية للقبض والتحقيق.',
+      descAr: 'غرف عمليات تفاعلية، أجهزة MDT ذكية، دوريات شرطية وسيارات مطاردة مخصصة، مع بروتوكولات حقيقية للقبض والتحقيق ومحاكمات عادلة.',
       descEn: 'State-of-the-art MDT terminals, tactical pursuit interceptors, official dispatch channels, and SWAT crisis operations.',
       stats: [
         { labelAr: 'الرتب الرسمية', labelEn: 'Official Ranks', val: '12+ Ranks' },
@@ -152,7 +156,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
       badgeEn: '24/7 Trauma Response',
       icon: Activity,
       accent: '#f43f5e',
-      descAr: 'غرف إنعاش تفاعلية بمستشفى Pillbox Hill، طائرات إسعاف جوي لنقل الحالات الحرجة، ونظام علاجي متطور ومحاكاة للعمليات الجراحية.',
+      descAr: 'غرف إنعاش تفاعلية بمستشفى Pillbox Hill، طائرات إسعاف جوي لنقل الحالات الحرجة، ونظام علاجي متطور ومحاكاة للعمليات الجراحية الميدانية.',
       descEn: 'Interactive hospital surgeries, aerial Medevac helicopters, emergency triage units, and comprehensive clinical roleplay.',
       stats: [
         { labelAr: 'طواقم الطوارئ', labelEn: 'EMS Shifts', val: '24/7 On-Duty' },
@@ -171,7 +175,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
       badgeEn: 'Sovereign Player Economy',
       icon: DollarSign,
       accent: '#c8874b',
-      descAr: 'امتلك معارض سيارات حصرية، نوادي ليلية فاخرة، كراجات تعديل احترافية، أو قصوراً مطلة على شواطئ Vinewood Hills بحرية مالية مطلقة.',
+      descAr: 'امتلك معارض سيارات حصرية، نوادي ليلية فاخرة، كراجات تعديل احترافية، أو قصوراً مطلة على شواطئ Vinewood Hills بحرية مالية مطلقة واستثمار مستمر.',
       descEn: 'Player-owned luxury dealerships, mechanic workshops, nightclubs, fine-dining restaurants, and sovereign penthouses.',
       stats: [
         { labelAr: 'الأنشطة المتاحة', labelEn: 'Enterprises', val: '35+ Businesses' },
@@ -190,7 +194,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
       badgeEn: 'Territorial RP',
       icon: Flame,
       accent: '#a855f7',
-      descAr: 'حروب نفوذ على أراضي لوس سانتوس، تخطيط لسرقات كبرى للبنوك ومحلات المجوهرات، مع التزام تام بقوانين اللعب النظيف والرول بلاي الواقعي.',
+      descAr: 'حروب نفوذ على أراضي لوس سانتوس، تخطيط لسرقات كبرى للبنوك ومحلات المجوهرات، مع التزام تام بقوانين اللعب النظيف والرول بلاي الواقعي والنظام الداخلي.',
       descEn: 'Territorial turf control, intricate bank heists, underground street racing, and syndicate diplomacy governed by strict fair-play RP.',
       stats: [
         { labelAr: 'مناطق النفوذ', labelEn: 'Turf Regions', val: 'South LS & City' },
@@ -208,84 +212,88 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
   return (
     <div className="min-h-screen bg-[#08090d] text-[#f1f3f7] relative overflow-hidden">
       
-      {/* ATMOSPHERIC BACKGROUND (EchoRP & ONX Style) */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[700px] pointer-events-none opacity-50 z-0">
-        <div className="w-full h-full bg-radial-glow opacity-30" />
+      {/* ATMOSPHERIC BACKGROUND (Obsidian Canvas + Radial Copper Aurora) */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[850px] pointer-events-none z-0 overflow-hidden">
+        <div className="w-full h-full bg-copper-glow-radial opacity-70" />
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[700px] h-[450px] rounded-full bg-[#c8874b]/12 blur-[140px]" />
+        <div className="absolute top-64 right-10 w-[350px] h-[350px] rounded-full bg-[#df9f64]/8 blur-[120px]" />
       </div>
-      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-[#c8874b]/10 blur-[160px] pointer-events-none z-0" />
-      <div className="absolute top-96 right-10 w-[450px] h-[450px] rounded-full bg-[#c8874b]/5 blur-[150px] pointer-events-none z-0" />
+      
+      {/* Subtle Background Mesh Grid */}
+      <div className="absolute inset-0 bg-mesh-grid pointer-events-none opacity-30 z-0" />
 
-      {/* ================= HERO SECTION (EchoRP & ONX Aesthetic) ================= */}
+      {/* ================= HERO SECTION ================= */}
       <section className="relative z-10 pt-32 sm:pt-40 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
           
-          {/* LEFT: Cinematic Copy & High-impact CTAs (7 Cols) */}
+          {/* LEFT: Cinematic Copy & High-Impact CTAs (7 Cols) */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left lg:rtl:text-right">
             
-            {/* Live Server Telemetry Pill */}
+            {/* Live Server Telemetry Pill with Pulsing Signal */}
             <motion.div
-              initial={{ opacity: 0, y: -8 }}
+              initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex flex-wrap items-center gap-2.5 px-4 py-2 rounded-full bg-[#0d0f16]/90 border border-white/[0.08] text-xs shadow-lg backdrop-blur-md"
+              transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+              className="inline-flex flex-wrap items-center gap-2.5 px-4 py-2 rounded-full bg-[#0d0f16]/90 border border-white/[0.08] hover:border-[#c8874b]/40 text-xs shadow-lg backdrop-blur-xl transition-colors"
             >
               <span className="flex items-center gap-2 font-bold">
-                <span className={`relative flex h-2 w-2`}>
+                <span className="relative flex h-2.5 w-2.5">
                   <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                  <span className={`relative inline-flex rounded-full h-2 w-2 ${isOnline ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                  <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isOnline ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                 </span>
                 <span className={isOnline ? 'text-emerald-400' : 'text-amber-400'}>
                   {isOnline ? (language === 'ar' ? 'السيرفر متصل الآن' : 'SERVER ONLINE') : (language === 'ar' ? 'في وضع الاستعداد' : 'FIVEM STANDBY')}
                 </span>
               </span>
-              <span className="text-[#333]">•</span>
+              <span className="text-white/20">•</span>
               <span className="text-[#969cad] flex items-center gap-1.5 font-rajdhani">
                 <Users className="w-3.5 h-3.5 text-[#c8874b]" />
                 <strong className="text-white font-bold">{playersCount}</strong>
-                <span>/ {maxPlayers} {language === 'ar' ? 'لاعب نشط' : 'Players'}</span>
+                <span>/ {maxPlayers} {language === 'ar' ? 'مواطن' : 'Citizens'}</span>
               </span>
-              <span className="text-[#333] hidden sm:inline">•</span>
+              <span className="text-white/20 hidden sm:inline">•</span>
               <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-[#df9f64] font-mono">
                 <Zap className="w-3 h-3" />
                 <span>{telemetry?.pingMs || 24}ms</span>
               </span>
             </motion.div>
 
-            {/* Hero Main Headline (EchoRP & ONX benchmark) */}
+            {/* Hero Main Headline */}
             <motion.h1
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white uppercase leading-[1.08]"
+              transition={{ duration: 0.4, delay: 0.08 }}
+              className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white uppercase leading-[1.06]"
             >
               <span className="block text-white">
                 {language === 'ar' ? 'تجربة الرول بلاي' : 'THE PREMIER FIVEM'}
               </span>
-              <span className="block mt-1.5 copper-gradient-text drop-shadow-md">
+              <span className="block mt-1.5 copper-gradient-text drop-shadow-[0_4px_30px_rgba(200,135,75,0.25)]">
                 {language === 'ar' ? 'الواقعية الأقوى' : 'ROLEPLAY REALM'}
               </span>
             </motion.h1>
 
             {/* Hero Subtitle */}
             <motion.p
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
+              transition={{ duration: 0.4, delay: 0.16 }}
               className="text-base sm:text-lg text-[#969cad] max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal"
             >
               {language === 'ar'
-                ? 'مدينة حية متكاملة بُنيت خصيصاً لعشاق اللعب الواقعي. نظام اقتصادي متوازن، وظائف حكومية وقضائية رسمية، صوت ثلاثي الأبعاد محيطي، وأداء ثابت يضمن تجربة خالية من التعليق.'
-                : 'A living, breathing city built for authentic storylines, dedicated community, custom MDT systems, 3D spatial radio, and seamless 60 FPS netcode.'}
+                ? 'مدينة حية متكاملة بُنيت بعناية لعشاق اللعب الواقعي الجاد. نظام اقتصادي متوازن، وظائف رسمية بمحاكاة كاملة، صوت ثلاثي الأبعاد محيطي، وأداء ثابت يضمن تجربة خالية من التقطيع.'
+                : 'A living, breathing metropolis built for authentic storylines, dedicated community, custom MDT systems, 3D spatial radio, and seamless 60 FPS netcode.'}
             </motion.p>
 
-            {/* Action Buttons (EchoRP / ONX Style) */}
+            {/* Action Buttons */}
             <motion.div
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
+              transition={{ duration: 0.4, delay: 0.24 }}
               className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2"
             >
               <MagneticButton onClick={handlePlayNow}>
-                <div className="flex items-center gap-2.5 px-8 py-4 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black font-black text-sm uppercase tracking-wider active:scale-95 transition-all shadow-xl shadow-[#c8874b]/25 cursor-pointer">
+                <div className="flex items-center gap-2.5 px-8 py-4 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black font-black text-sm uppercase tracking-wider active:scale-95 transition-all shadow-[0_10px_30px_rgba(200,135,75,0.35)] cursor-pointer">
                   <Play className="w-4 h-4 fill-current" />
                   <span>{language === 'ar' ? 'دخول السيرفر الآن' : 'Connect to Server'}</span>
                 </div>
@@ -306,20 +314,20 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
             {/* Highlights Bar */}
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.32 }}
               className="grid grid-cols-3 gap-3 pt-4 max-w-lg mx-auto lg:mx-0 text-left rtl:text-right"
             >
-              <div className="p-3.5 rounded-xl bg-[#0d0f16] border border-white/[0.06]">
+              <div className="p-3.5 rounded-xl bg-[#0d0f16] border border-white/[0.06] hover:border-[#c8874b]/30 transition-colors">
                 <div className="text-[#c8874b] font-black text-lg font-rajdhani">60 FPS</div>
                 <div className="text-[11px] text-[#7a8091] uppercase font-bold">{language === 'ar' ? 'أداء فائق وثابت' : 'Ultra Performance'}</div>
               </div>
-              <div className="p-3.5 rounded-xl bg-[#0d0f16] border border-white/[0.06]">
+              <div className="p-3.5 rounded-xl bg-[#0d0f16] border border-white/[0.06] hover:border-[#c8874b]/30 transition-colors">
                 <div className="text-[#df9f64] font-black text-lg font-rajdhani">SaltyChat</div>
                 <div className="text-[11px] text-[#7a8091] uppercase font-bold">{language === 'ar' ? 'صوت ثلاثي الأبعاد' : '3D Spatial Audio'}</div>
               </div>
-              <div className="p-3.5 rounded-xl bg-[#0d0f16] border border-white/[0.06]">
+              <div className="p-3.5 rounded-xl bg-[#0d0f16] border border-white/[0.06] hover:border-emerald-500/30 transition-colors">
                 <div className="text-emerald-400 font-black text-lg font-rajdhani">ACTIVE V4</div>
                 <div className="text-[11px] text-[#7a8091] uppercase font-bold">{language === 'ar' ? 'حماية شاملة' : 'Anti-Cheat Shield'}</div>
               </div>
@@ -327,13 +335,13 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
           </div>
 
-          {/* RIGHT: Live FiveM Server Telemetry Hub (XRealm & FindYourCommunity style) */}
+          {/* RIGHT: Live FiveM Server Telemetry Hub */}
           <div className="lg:col-span-5">
             <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
+              initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5 }}
-              className="rounded-2xl bg-[#0d0f16] border border-white/[0.08] p-6 sm:p-7 shadow-2xl relative overflow-hidden"
+              transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+              className="rounded-2xl bg-[#0d0f16] border border-white/[0.08] hover:border-[#c8874b]/40 p-6 sm:p-7 shadow-2xl relative overflow-hidden transition-all duration-300"
             >
               {/* Header */}
               <div className="flex items-center justify-between pb-4 border-b border-white/[0.06] mb-5">
@@ -371,14 +379,16 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                   </span>
                 </div>
                 <div className="w-full h-2 rounded-full bg-[#131620] overflow-hidden">
-                  <div 
-                    className="h-full rounded-full bg-[#c8874b] transition-all duration-700 shadow-sm shadow-[#c8874b]"
-                    style={{ width: `${capacityPercent}%` }}
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    animate={{ width: `${capacityPercent}%` }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="h-full rounded-full bg-gradient-to-r from-[#9e6331] via-[#c8874b] to-[#df9f64] shadow-sm shadow-[#c8874b]"
                   />
                 </div>
               </div>
 
-              {/* F8 Console Command Box (XRealm & FindYourCommunity) */}
+              {/* F8 Console Command Box */}
               <div className="space-y-2 mt-4">
                 <label className="text-[11px] font-mono text-[#969cad] flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
@@ -426,7 +436,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         </div>
       </section>
 
-      {/* ================= ONBOARDING: HOW TO JOIN (EchoRP & ONX Guide) ================= */}
+      {/* ================= ONBOARDING: HOW TO JOIN (3 STEPS) ================= */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
         <div className="text-center max-w-2xl mx-auto mb-14">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c8874b]/10 text-[#df9f64] text-xs font-bold mb-3 uppercase tracking-wider border border-[#c8874b]/20">
@@ -525,7 +535,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         </div>
       </section>
 
-      {/* ================= CITY SECTORS & DESTINY (ONX Style) ================= */}
+      {/* ================= CITY SECTORS & DESTINY ================= */}
       <section id="about" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10 scroll-mt-24">
         
         {/* Section Header */}
@@ -544,8 +554,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
           </p>
         </div>
 
-        {/* Sector Navigation Tabs */}
-        <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+        {/* Sector Navigation Tabs with Spring Motion */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-8 bg-[#0d0f16]/60 p-1.5 rounded-2xl border border-white/[0.06] max-w-2xl mx-auto">
           {citySectors.map((sector) => {
             const active = activeTabSector === sector.id;
             const Icon = sector.icon;
@@ -553,94 +563,108 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               <button
                 key={sector.id}
                 onClick={() => setActiveTabSector(sector.id)}
-                className={`flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                  active
-                    ? 'bg-[#131620] text-white border border-[#c8874b] shadow-md shadow-[#c8874b]/15'
-                    : 'bg-[#0d0f16] text-[#7a8091] hover:text-white border border-white/[0.06] hover:border-white/[0.15]'
+                className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                  active ? 'text-white' : 'text-[#7a8091] hover:text-white'
                 }`}
               >
-                <Icon className="w-4 h-4" style={{ color: active ? sector.accent : undefined }} />
-                <span>{language === 'ar' ? sector.titleAr.split('(')[0] : sector.titleEn.split('&')[0]}</span>
+                {active && (
+                  <motion.span
+                    layoutId="activeSectorPill"
+                    className="absolute inset-0 bg-[#131620] border border-[#c8874b] rounded-xl shadow-md shadow-[#c8874b]/15"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
+                <Icon className="w-4 h-4 relative z-10" style={{ color: active ? sector.accent : undefined }} />
+                <span className="relative z-10">{language === 'ar' ? sector.titleAr.split('(')[0] : sector.titleEn.split('&')[0]}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Active Sector Showcase Card */}
-        <div className="rounded-2xl bg-[#0d0f16] border border-white/[0.08] p-6 sm:p-10 shadow-2xl relative overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            
-            <div className="lg:col-span-8 space-y-6">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider border"
-                style={{ 
-                  backgroundColor: `${currentSector.accent}15`, 
-                  borderColor: `${currentSector.accent}40`,
-                  color: currentSector.accent 
-                }}
-              >
-                <span>{language === 'ar' ? currentSector.badgeAr : currentSector.badgeEn}</span>
-              </div>
-
-              <h3 className="text-2xl sm:text-4xl font-black text-white">
-                {language === 'ar' ? currentSector.titleAr : currentSector.titleEn}
-              </h3>
-
-              <p className="text-sm sm:text-base text-[#969cad] leading-relaxed max-w-2xl">
-                {language === 'ar' ? currentSector.descAr : currentSector.descEn}
-              </p>
-
-              {/* Stats bento */}
-              <div className="grid grid-cols-3 gap-4 pt-2">
-                {currentSector.stats.map((stat, i) => (
-                  <div key={i} className="p-3.5 rounded-xl bg-[#08090d] border border-white/[0.05]">
-                    <div className="text-[11px] text-[#7a8091] uppercase font-bold mb-1">
-                      {language === 'ar' ? stat.labelAr : stat.labelEn}
-                    </div>
-                    <div className="text-sm sm:text-base font-black text-white font-rajdhani">
-                      {stat.val}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-2">
-                <button
-                  onClick={() => setCurrentTab(currentSector.actionTab)}
-                  className="px-6 py-3.5 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-[#c8874b]/20 flex items-center gap-2 cursor-pointer"
+        {/* Active Sector Showcase Card with Fluid AnimatePresence */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={currentSector.id}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -12 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="rounded-2xl bg-[#0d0f16] border border-white/[0.08] p-6 sm:p-10 shadow-2xl relative overflow-hidden"
+          >
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+              
+              <div className="lg:col-span-8 space-y-6">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider border"
+                  style={{ 
+                    backgroundColor: `${currentSector.accent}15`, 
+                    borderColor: `${currentSector.accent}40`,
+                    color: currentSector.accent 
+                  }}
                 >
-                  <span>{language === 'ar' ? currentSector.actionLabelAr : currentSector.actionLabelEn}</span>
-                  <ArrowIcon className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </div>
+                  <span>{language === 'ar' ? currentSector.badgeAr : currentSector.badgeEn}</span>
+                </div>
 
-            <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 rounded-xl bg-[#08090d] border border-white/[0.06] text-center">
-              <div 
-                className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border"
-                style={{ 
-                  backgroundColor: `${currentSector.accent}15`, 
-                  borderColor: `${currentSector.accent}40`,
-                  color: currentSector.accent 
-                }}
-              >
-                <currentSector.icon className="w-8 h-8" />
-              </div>
-              <h4 className="text-base font-bold text-white mb-1">
-                {language === 'ar' ? 'نظام احترافي موثق' : 'Certified Gameplay'}
-              </h4>
-              <p className="text-xs text-[#7a8091] leading-relaxed">
-                {language === 'ar' 
-                  ? 'تم فحص وبرمجة هذا القطاع لضمان تجربة واقعية دون أخطاء أو قلتشات تؤثر على مجريات اللعب.'
-                  : 'Engineered with deep scripting, custom MLOs, and vetted by community moderators.'}
-              </p>
-            </div>
+                <h3 className="text-2xl sm:text-4xl font-black text-white">
+                  {language === 'ar' ? currentSector.titleAr : currentSector.titleEn}
+                </h3>
 
-          </div>
-        </div>
+                <p className="text-sm sm:text-base text-[#969cad] leading-relaxed max-w-2xl">
+                  {language === 'ar' ? currentSector.descAr : currentSector.descEn}
+                </p>
+
+                {/* Stats bento */}
+                <div className="grid grid-cols-3 gap-4 pt-2">
+                  {currentSector.stats.map((stat, i) => (
+                    <div key={i} className="p-3.5 rounded-xl bg-[#08090d] border border-white/[0.05]">
+                      <div className="text-[11px] text-[#7a8091] uppercase font-bold mb-1">
+                        {language === 'ar' ? stat.labelAr : stat.labelEn}
+                      </div>
+                      <div className="text-sm sm:text-base font-black text-white font-rajdhani">
+                        {stat.val}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    onClick={() => setCurrentTab(currentSector.actionTab)}
+                    className="px-6 py-3.5 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-[#c8874b]/20 flex items-center gap-2 cursor-pointer"
+                  >
+                    <span>{language === 'ar' ? currentSector.actionLabelAr : currentSector.actionLabelEn}</span>
+                    <ArrowIcon className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 rounded-xl bg-[#08090d] border border-white/[0.06] text-center">
+                <div 
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 border shadow-xl"
+                  style={{ 
+                    backgroundColor: `${currentSector.accent}15`, 
+                    borderColor: `${currentSector.accent}40`,
+                    color: currentSector.accent 
+                  }}
+                >
+                  <currentSector.icon className="w-8 h-8" />
+                </div>
+                <h4 className="text-base font-bold text-white mb-1">
+                  {language === 'ar' ? 'نظام احترافي موثق' : 'Certified Gameplay'}
+                </h4>
+                <p className="text-xs text-[#7a8091] leading-relaxed">
+                  {language === 'ar' 
+                    ? 'تم فحص وبرمجة هذا القطاع لضمان تجربة واقعية دون أخطاء أو قلتشات تؤثر على مجريات اللعب.'
+                    : 'Engineered with deep scripting, custom MLOs, and vetted by community moderators.'}
+                </p>
+              </div>
+
+            </div>
+          </motion.div>
+        </AnimatePresence>
 
       </section>
 
-      {/* ================= TEBEX STORE SHOWCASE (Dusa Dev Style: dusadev.tebex.io) ================= */}
+      {/* ================= TEBEX STORE SHOWCASE ================= */}
       {featuredProducts.length > 0 && (
         <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
@@ -784,7 +808,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06]">
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-rose-500/30 transition-colors">
             <div className="flex items-center gap-2 text-rose-400 font-black text-sm mb-3">
               <XCircle className="w-4 h-4" />
               <span>{language === 'ar' ? 'ممنوع RDM / VDM' : 'No RDM / VDM'}</span>
@@ -799,7 +823,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06]">
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-amber-500/30 transition-colors">
             <div className="flex items-center gap-2 text-amber-400 font-black text-sm mb-3">
               <ShieldAlert className="w-4 h-4" />
               <span>{language === 'ar' ? 'قيمة الحياة (FearRP)' : 'Fear RP & Value of Life'}</span>
@@ -814,7 +838,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06]">
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-purple-500/30 transition-colors">
             <div className="flex items-center gap-2 text-purple-400 font-black text-sm mb-3">
               <Cpu className="w-4 h-4" />
               <span>{language === 'ar' ? 'ممنوع الميتا والباور' : 'No Metagaming & Powergaming'}</span>
@@ -959,7 +983,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                         className="overflow-hidden"
                       >
                         <div className="p-5 pt-0 text-xs text-[#969cad] leading-relaxed border-t border-white/[0.06]">
@@ -987,7 +1011,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
       {/* ================= COMMUNITY DISCORD CITADEL ================= */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
-        <div className="rounded-2xl bg-[#0d0f16] border border-white/[0.08] p-8 sm:p-14 text-center relative overflow-hidden shadow-2xl">
+        <div className="rounded-2xl bg-[#0d0f16] border border-white/[0.08] hover:border-[#c8874b]/30 p-8 sm:p-14 text-center relative overflow-hidden shadow-2xl transition-colors">
           <div className="absolute top-0 right-0 w-96 h-96 bg-[#5865F2]/10 blur-[120px] pointer-events-none rounded-full" />
           <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#c8874b]/10 blur-[120px] pointer-events-none rounded-full" />
 
@@ -1028,7 +1052,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         </div>
       </section>
 
-      {/* ================= FINAL LAUNCH COMMAND CALL TO ACTION ================= */}
+      {/* ================= FINAL LAUNCH CALL TO ACTION ================= */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center relative z-10">
         <h2 className="text-3xl sm:text-6xl font-black text-white mb-6 uppercase tracking-tight">
           {language === 'ar' ? 'ابدأ رحلتك في مدينة PRIME RP' : 'Your Journey Begins in PRIME'}

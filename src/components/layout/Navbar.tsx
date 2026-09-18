@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'motion/react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -145,23 +146,27 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
           </div>
 
           {/* DESKTOP NAVIGATION LINKS */}
-          <nav className="hidden xl:flex items-center gap-1" aria-label="Main Navigation">
+          <nav className="hidden xl:flex items-center gap-1 bg-[#08090d]/60 p-1 rounded-2xl border border-white/[0.04]" aria-label="Main Navigation">
             {navLinks.map((link) => {
               const active = currentTab === link.id;
               return (
                 <button
                   key={link.id}
                   onClick={() => handleNavClick(link.id)}
-                  className={`relative px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
+                  className={`relative px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer ${
                     active
-                      ? 'text-[#df9f64] bg-[#c8874b]/15 border border-[#c8874b]/40 shadow-sm'
-                      : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
+                      ? 'text-[#df9f64]'
+                      : 'text-[#969cad] hover:text-white'
                   }`}
                 >
-                  {link.label}
                   {active && (
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-[2px] bg-[#c8874b] rounded-full shadow-sm shadow-[#c8874b]" />
+                    <motion.span
+                      layoutId="activeNavbarPill"
+                      className="absolute inset-0 bg-[#c8874b]/15 border border-[#c8874b]/40 rounded-xl shadow-[0_0_15px_rgba(200,135,75,0.2)]"
+                      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    />
                   )}
+                  <span className="relative z-10">{link.label}</span>
                 </button>
               );
             })}
