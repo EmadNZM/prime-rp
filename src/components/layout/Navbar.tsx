@@ -23,17 +23,25 @@ import {
 interface NavbarProps {
   currentTab: string;
   setCurrentTab: (tab: string) => void;
-  setIsCartOpen: (open: boolean) => void;
+  setIsCartOpen?: (open: boolean) => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIsCartOpen }) => {
   const { t, language, setLanguage } = useLanguage();
   const { user, isAuthenticated, logout, isStaff } = useAuth();
-  const { totalItems } = useCart();
+  const { totalItems, setIsCartOpen: setCartOpenContext } = useCart();
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
   const [telemetry, setTelemetry] = useState<FiveMTelemetry | null>(null);
+
+  const handleOpenCart = () => {
+    if (setIsCartOpen) {
+      setIsCartOpen(true);
+    } else {
+      setCartOpenContext(true);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -179,7 +187,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
 
             {/* Store Shopping Cart (DusaDev Style) */}
             <button
-              onClick={() => setIsCartOpen(true)}
+              onClick={handleOpenCart}
               className="relative p-2.5 rounded-xl bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b]/60 text-[#969cad] hover:text-[#df9f64] transition-all cursor-pointer group shadow-sm"
               title={language === 'ar' ? 'سلة المشتريات' : 'Shopping Cart'}
               aria-label="Shopping Cart"

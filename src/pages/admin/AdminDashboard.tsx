@@ -402,13 +402,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
   }
 
   return (
-    <div className="min-h-screen bg-[#070707] text-[#E5E5E5] pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#08090d] text-[#f1f3f7] pt-28 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Ambient background glow */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-6xl h-96 bg-[#C8874B]/5 blur-[140px] pointer-events-none rounded-full" />
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[500px] bg-[#c8874b]/5 blur-[160px] pointer-events-none rounded-full" />
       
       {/* Toast Notification */}
       {notificationMsg && (
-        <div className="fixed bottom-6 right-6 rtl:right-auto rtl:left-6 z-50 px-5 py-3 rounded-2xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-black text-xs uppercase tracking-wider shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed bottom-6 right-6 rtl:right-auto rtl:left-6 z-50 px-5 py-3 rounded-xl bg-[#c8874b] text-black font-black text-xs uppercase tracking-wider shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4">
           <Check className="w-4 h-4" />
           <span>{notificationMsg}</span>
         </div>
@@ -417,22 +417,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
       <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Admin Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#222226]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-white/[0.08]">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/15 text-[#C8874B] text-[10px] font-black uppercase tracking-wider mb-2 border border-[#C8874B]/30">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Staff Administration Suite</span>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c8874b]/15 text-[#df9f64] text-[10px] font-black uppercase tracking-wider mb-2 border border-[#c8874b]/30">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#c8874b]" />
+              <span className="font-mono">Staff Administration Suite</span>
               {isOwner && (
-                <span className="inline-flex items-center gap-1 bg-[#C8874B] text-black px-2 py-0.5 rounded-full text-[10px] font-black">
+                <span className="inline-flex items-center gap-1 bg-[#c8874b] text-black px-2 py-0.5 rounded-full text-[10px] font-black font-mono">
                   <Crown className="w-3 h-3" />
                   <span>Server Owner</span>
                 </span>
               )}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight font-rajdhani">
               {t('admin.title')}
             </h1>
-            <p className="text-xs text-[#888] mt-1">
+            <p className="text-xs text-[#7a8091] mt-1">
               {language === 'ar' ? 'تسجيل الدخول الحالي:' : 'Current Session:'}{' '}
               <span className="text-white font-semibold">{user?.globalName || user?.username}</span> ({user?.role})
             </p>
@@ -440,14 +440,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
 
           <button
             onClick={() => setCurrentTab('home')}
-            className="px-5 py-2.5 rounded-2xl bg-[#151518] hover:bg-[#1E1E22] border border-[#252528] text-xs font-bold uppercase tracking-wider text-white transition-all self-start sm:self-auto cursor-pointer"
+            className="px-5 py-2.5 rounded-xl bg-[#131620] hover:bg-[#1a1e2d] border border-white/[0.08] hover:border-white/[0.15] text-xs font-bold uppercase tracking-wider text-white transition-all self-start sm:self-auto cursor-pointer"
           >
             {language === 'ar' ? 'العودة للموقع' : 'Back to Website'}
           </button>
         </div>
 
         {/* Horizontal Navigation Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 border-b border-[#1E1E22]">
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 border-b border-white/[0.06]">
           {[
             { id: 'overview', label: t('admin.overview'), icon: LayoutDashboard },
             { id: 'users', label: t('admin.users'), icon: Users },
@@ -466,10 +466,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
               <button
                 key={item.id}
                 onClick={() => setActiveAdminTab(item.id as any)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                   active
-                    ? 'bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black shadow-lg shadow-[#C8874B]/20 font-black uppercase tracking-wider'
-                    : 'bg-[#0D0D0F] text-[#888] hover:text-white hover:bg-[#151518] border border-[#222226]'
+                    ? 'bg-[#c8874b] text-black shadow-lg shadow-[#c8874b]/20 font-black uppercase tracking-wider'
+                    : 'bg-[#0d0f16] text-[#969cad] hover:text-white hover:bg-[#131620] border border-white/[0.06]'
                 }`}
               >
                 <Icon className="w-4 h-4" />

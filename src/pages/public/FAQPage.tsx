@@ -73,40 +73,44 @@ export const FAQPage: React.FC<FAQPageProps> = ({ setCurrentTab }) => {
   const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
 
   return (
-    <div className="min-h-screen bg-[#070707] text-[#E5E5E5] pt-28 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#08090d] text-[#f1f3f7] pt-32 pb-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      
       {/* Ambient background glow */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-4xl h-96 bg-[#C8874B]/5 blur-[120px] pointer-events-none rounded-full" />
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[500px] bg-[#c8874b]/5 blur-[160px] pointer-events-none rounded-full" />
 
       <div className="max-w-4xl mx-auto relative z-10">
         
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-10">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#C8874B]/10 border border-[#C8874B]/25 text-[#C8874B] text-[10px] font-black uppercase tracking-wider mb-4">
-            <HelpCircle className="w-3.5 h-3.5" />
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#c8874b]/10 border border-[#c8874b]/30 text-[#df9f64] text-xs font-black uppercase tracking-wider mb-4 shadow-sm">
+            <HelpCircle className="w-3.5 h-3.5 text-[#c8874b]" />
             <span>{language === 'ar' ? 'مركز المعرفة والاستفسارات' : 'Knowledge Base & FAQ'}</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight mb-4">
-            {t('faq.title')}
+          <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white uppercase tracking-tight mb-4">
+            <span className="block text-white">{t('faq.title')}</span>
+            <span className="block mt-1 copper-gradient-text">
+              {language === 'ar' ? 'دليلك الشامل لمدينة برايم' : 'FREQUENTLY ASKED'}
+            </span>
           </h1>
-          <p className="text-[#888] text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
+          <p className="text-[#969cad] text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
             {t('faq.subtitle')}
           </p>
         </div>
 
         {/* Live Search Bar */}
         <div className="relative max-w-2xl mx-auto mb-8">
-          <Search className="absolute left-4 rtl:left-auto rtl:right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666]" />
+          <Search className="absolute left-4 rtl:left-auto rtl:right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#7a8091]" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder={language === 'ar' ? 'ابحث في الأسئلة الشائعة، القوانين، طريقة الاتصال...' : 'Search questions, rules, connection guide...'}
-            className="w-full pl-12 pr-12 rtl:pl-12 rtl:pr-12 py-4 rounded-2xl bg-[#0D0D0F] border border-[#222226] focus:border-[#C8874B] text-sm text-white placeholder-[#666] outline-none transition-all shadow-xl"
+            className="w-full pl-12 pr-12 rtl:pl-12 rtl:pr-12 py-4 rounded-xl bg-[#0d0f16] border border-white/[0.08] focus:border-[#c8874b] text-sm text-white placeholder-[#666] outline-none transition-all shadow-xl"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-4 rtl:right-auto rtl:left-4 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-white/10 text-[#888] hover:text-white"
+              className="absolute right-4 rtl:right-auto rtl:left-4 top-1/2 -translate-y-1/2 p-1.5 rounded-lg hover:bg-white/10 text-[#7a8091] hover:text-white"
             >
               <X className="w-4 h-4" />
             </button>
@@ -126,8 +130,8 @@ export const FAQPage: React.FC<FAQPageProps> = ({ setCurrentTab }) => {
                 }}
                 className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   active
-                    ? 'bg-[#C8874B] text-black shadow-lg shadow-[#C8874B]/20'
-                    : 'bg-[#0D0D0F] text-[#888] hover:text-white border border-[#222226] hover:border-[#333]'
+                    ? 'bg-[#c8874b] text-black shadow-md shadow-[#c8874b]/20 font-black'
+                    : 'bg-[#0d0f16] text-[#969cad] hover:text-white border border-white/[0.06] hover:border-white/[0.12]'
                 }`}
               >
                 {language === 'ar' ? cat.labelAr : cat.labelEn}
@@ -137,23 +141,23 @@ export const FAQPage: React.FC<FAQPageProps> = ({ setCurrentTab }) => {
         </div>
 
         {isLoading ? (
-          <div className="text-center py-20 text-[#888] flex flex-col items-center justify-center gap-3">
-            <div className="w-8 h-8 rounded-full border-2 border-[#C8874B] border-t-transparent animate-spin" />
-            <span className="text-xs uppercase tracking-wider">{t('common.loading')}</span>
+          <div className="text-center py-20 text-[#969cad] flex flex-col items-center justify-center gap-3">
+            <div className="w-8 h-8 rounded-full border-2 border-[#c8874b] border-t-transparent animate-spin" />
+            <span className="text-xs uppercase tracking-wider font-bold">{t('common.loading')}</span>
           </div>
         ) : filteredFaqs.length === 0 ? (
-          <div className="text-center py-16 p-8 rounded-3xl bg-[#0D0D0F] border border-[#222226]">
+          <div className="text-center py-16 p-8 rounded-2xl bg-[#0d0f16] border border-white/[0.08]">
             <HelpCircle className="w-10 h-10 text-[#555] mx-auto mb-3" />
-            <p className="text-sm font-bold text-white mb-2">
+            <p className="text-sm font-bold text-white mb-2 uppercase tracking-wide">
               {language === 'ar' ? 'لم يتم العثور على نتائج مطابقة' : 'No matching questions found'}
             </p>
-            <p className="text-xs text-[#777] mb-6">
+            <p className="text-xs text-[#7a8091] mb-6">
               {language === 'ar' ? 'جرب البحث بكلمات مختلفة أو تواصل مع فريق الدعم مباشرة.' : 'Try a different search term or reach out to our support team directly.'}
             </p>
             {setCurrentTab && (
               <button
                 onClick={() => setCurrentTab('support')}
-                className="px-6 py-2.5 rounded-xl bg-[#151518] hover:bg-[#1E1E22] border border-[#C8874B]/40 text-[#C8874B] text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-2"
+                className="px-6 py-2.5 rounded-xl bg-[#131620] hover:bg-[#1a1e2d] border border-[#c8874b]/40 text-[#df9f64] text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-2"
               >
                 <Ticket className="w-4 h-4" />
                 <span>{language === 'ar' ? 'فتح تذكرة دعم فني' : 'Open Support Ticket'}</span>
@@ -168,10 +172,10 @@ export const FAQPage: React.FC<FAQPageProps> = ({ setCurrentTab }) => {
               return (
                 <div
                   key={item.id}
-                  className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                  className={`rounded-xl border transition-all duration-200 overflow-hidden ${
                     isOpen 
-                      ? 'bg-[#0D0D0F] border-[#C8874B]/40 shadow-xl shadow-[#C8874B]/5' 
-                      : 'bg-[#0D0D0F] border-[#222226] hover:border-[#333]'
+                      ? 'bg-[#0d0f16] border-[#c8874b]/50 shadow-xl shadow-[#c8874b]/5' 
+                      : 'bg-[#0d0f16] border-white/[0.06] hover:border-white/[0.12]'
                   }`}
                 >
                   <button
@@ -179,13 +183,13 @@ export const FAQPage: React.FC<FAQPageProps> = ({ setCurrentTab }) => {
                     className="w-full text-left rtl:text-right p-5 sm:p-6 flex items-center justify-between gap-4 focus:outline-none cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
-                      <span className={`w-2 h-2 rounded-full transition-colors shrink-0 ${isOpen ? 'bg-[#C8874B]' : 'bg-[#333]'}`} />
+                      <span className={`w-2 h-2 rounded-full transition-colors shrink-0 ${isOpen ? 'bg-[#c8874b]' : 'bg-[#333]'}`} />
                       <span className="text-sm sm:text-base font-bold text-white leading-snug">
                         {trans.question}
                       </span>
                     </div>
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all shrink-0 ${
-                      isOpen ? 'bg-[#C8874B]/15 text-[#C8874B]' : 'bg-[#151518] text-[#777]'
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all shrink-0 ${
+                      isOpen ? 'bg-[#c8874b]/20 text-[#df9f64]' : 'bg-[#131620] text-[#7a8091]'
                     }`}>
                       {isOpen ? (
                         <ChevronUp className="w-4 h-4" />
@@ -204,7 +208,7 @@ export const FAQPage: React.FC<FAQPageProps> = ({ setCurrentTab }) => {
                         transition={{ duration: 0.25 }}
                         className="overflow-hidden"
                       >
-                        <div className="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-[#AAA] leading-relaxed border-t border-[#1C1C20] pt-4">
+                        <div className="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-[#969cad] leading-relaxed border-t border-white/[0.06] pt-4">
                           {trans.answer}
                         </div>
                       </motion.div>
@@ -217,12 +221,12 @@ export const FAQPage: React.FC<FAQPageProps> = ({ setCurrentTab }) => {
         )}
 
         {/* Need More Help Box */}
-        <div className="mt-14 p-6 sm:p-8 rounded-3xl bg-[#0D0D0F] border border-[#222226] flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
+        <div className="mt-14 p-6 sm:p-8 rounded-2xl bg-[#0d0f16] border border-white/[0.08] flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
           <div className="text-center sm:text-left sm:rtl:text-right">
             <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight mb-1">
               {language === 'ar' ? 'هل لا تزال لديك استفسارات إضافية؟' : 'Still have unanswered questions?'}
             </h3>
-            <p className="text-xs text-[#777]">
+            <p className="text-xs text-[#7a8091]">
               {language === 'ar' 
                 ? 'فريق الدعم الفني وإدارة السيرفر جاهزون لمساعدتك على مدار الساعة.' 
                 : 'Our support team is available 24/7 to assist with tickets, reports, and onboarding.'}
@@ -235,7 +239,7 @@ export const FAQPage: React.FC<FAQPageProps> = ({ setCurrentTab }) => {
                   setCurrentTab('support');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-                className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-black text-xs uppercase tracking-wider hover:brightness-110 active:scale-98 transition-all shadow-xl shadow-[#C8874B]/20 shrink-0 cursor-pointer flex items-center gap-2"
+                className="px-5 py-3 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black font-black text-xs uppercase tracking-wider active:scale-98 transition-all shadow-lg shadow-[#c8874b]/20 shrink-0 cursor-pointer flex items-center gap-2"
               >
                 <Ticket className="w-4 h-4" />
                 <span>{language === 'ar' ? 'فتح تذكرة دعم' : 'Open Support Ticket'}</span>
@@ -245,7 +249,7 @@ export const FAQPage: React.FC<FAQPageProps> = ({ setCurrentTab }) => {
               href={settings?.discordUrl || "https://discord.gg/primerp"}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-5 py-3 rounded-xl bg-[#151518] hover:bg-[#1E1E22] border border-[#252528] hover:border-[#5865F2]/50 text-white font-bold text-xs uppercase tracking-wider transition-all shrink-0 flex items-center gap-2"
+              className="px-5 py-3 rounded-xl bg-[#131620] hover:bg-[#1a1e2d] border border-white/[0.08] hover:border-[#5865F2]/50 text-white font-bold text-xs uppercase tracking-wider transition-all shrink-0 flex items-center gap-2"
             >
               <MessageSquare className="w-4 h-4 text-[#5865F2]" />
               <span>{language === 'ar' ? 'ديسكورد الدعم' : 'Discord Support'}</span>

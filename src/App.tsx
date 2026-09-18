@@ -6,6 +6,7 @@ import { CartProvider } from './context/CartContext';
 import { CustomCursor } from './components/common/CustomCursor';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
+import { CartDrawer } from './components/store/CartDrawer';
 import { HomePage } from './pages/public/HomePage';
 import { RulesPage } from './pages/public/RulesPage';
 import { JobsPage } from './pages/public/JobsPage';
@@ -91,12 +92,18 @@ function MainApp() {
   }, []);
 
   return (
-    <div className={`min-h-screen bg-[#070707] text-[#E5E5E5] flex flex-col font-sans selection:bg-[#C8874B] selection:text-black ${isRtl ? 'font-cairo' : 'font-montserrat'}`}>
+    <div className={`min-h-screen bg-[#08090d] text-[#f1f3f7] flex flex-col font-sans selection:bg-[#c8874b] selection:text-black ${isRtl ? 'font-cairo' : 'font-montserrat'}`}>
       {/* High-Performance Luxury Custom Cursor */}
       <CustomCursor />
 
       {/* Top Navigation */}
       <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} />
+
+      {/* Global Tebex Cart Drawer */}
+      <CartDrawer 
+        setCurrentTab={setCurrentTab}
+        onCheckoutSuccess={() => setCurrentTab('orders')}
+      />
 
       {/* Main Content Area */}
       <main className="flex-grow">

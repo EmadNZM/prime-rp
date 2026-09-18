@@ -111,19 +111,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft;
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center py-16 px-4 sm:px-6 relative overflow-hidden">
+    <div className="min-h-[90vh] bg-[#08090d] flex items-center justify-center py-20 px-4 sm:px-6 relative overflow-hidden">
+      
       {/* Background ambient lighting */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#C8874B]/5 rounded-full blur-[140px] pointer-events-none" />
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#5865F2]/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] bg-[#c8874b]/5 rounded-full blur-[160px] pointer-events-none" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#5865F2]/5 rounded-full blur-[140px] pointer-events-none" />
 
-      <div className="w-full max-w-md bg-[#0D0D0F] border border-[#222226] rounded-3xl p-6 sm:p-9 relative shadow-2xl overflow-hidden">
+      <div className="w-full max-w-md bg-[#0d0f16] border border-white/[0.08] rounded-3xl p-6 sm:p-9 relative shadow-2xl overflow-hidden z-10">
         {/* Top copper ambient glow bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C8874B] to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#c8874b] to-transparent" />
 
         {/* Back Button */}
         <button
           onClick={() => setCurrentTab('home')}
-          className="inline-flex items-center gap-1.5 text-xs text-[#888] hover:text-[#C8874B] transition-colors mb-6 relative z-10 cursor-pointer"
+          className="inline-flex items-center gap-1.5 text-xs text-[#969cad] hover:text-[#df9f64] transition-colors mb-6 relative z-10 cursor-pointer"
         >
           <BackIcon className="w-3.5 h-3.5" />
           <span>{language === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}</span>
@@ -134,14 +135,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
           <div className="flex justify-center mb-4">
             <PrimeLogo size="lg" variant="login" showText={false} withGlow={true} />
           </div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C8874B]/10 border border-[#C8874B]/20 text-[#C8874B] text-[10px] font-black uppercase tracking-wider mb-2">
-            <Fingerprint className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#c8874b]/10 border border-[#c8874b]/30 text-[#df9f64] text-[10px] font-black uppercase tracking-wider mb-2">
+            <Fingerprint className="w-3.5 h-3.5 text-[#c8874b]" />
             <span>{language === 'ar' ? 'بوابة التحقق الرسمية' : 'Official Authentication Gate'}</span>
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight uppercase mb-1.5">
-            {language === 'ar' ? 'تسجيل الدخول' : 'Citizen Portal Access'}
+          <h1 className="text-2xl font-black text-white tracking-tight uppercase mb-1.5 font-rajdhani">
+            {language === 'ar' ? 'تسجيل الدخول للمواطنين' : 'Citizen Portal Access'}
           </h1>
-          <p className="text-xs text-[#888] leading-relaxed">
+          <p className="text-xs text-[#7a8091] leading-relaxed">
             {language === 'ar' 
               ? 'المنصة الرسمية وسيرفر اللعب الواقعي PRIME RP FiveM'
               : 'PRIME RP FiveM Official Platform & Community Portal'}
@@ -156,7 +157,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
               <div className="space-y-1">
                 <p className="font-bold leading-relaxed">{errorMsg}</p>
                 {isCredentialsMissing && (
-                  <p className="text-[11px] text-[#CCC] leading-relaxed">
+                  <p className="text-[11px] text-[#ccc] leading-relaxed">
                     يرجى ضبط مفاتيح Discord OAuth في إعدادات البيئة بالخادم لتفعيل تسجيل الدخول.
                   </p>
                 )}
@@ -164,14 +165,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
             </div>
 
             {isCredentialsMissing && (
-              <div className="p-3 rounded-xl bg-[#151518] border border-[#252528] text-[11px] text-[#BBB] space-y-2">
-                <p className="font-bold text-[#C8874B]">رابط الاسترجاع المطلوب في Discord Developer Portal:</p>
-                <div className="pt-1 flex items-center justify-between gap-2 bg-black/50 p-2.5 rounded-xl border border-[#222226]">
+              <div className="p-3 rounded-xl bg-[#08090d] border border-white/[0.06] text-[11px] text-[#bbb] space-y-2">
+                <p className="font-bold text-[#df9f64]">رابط الاسترجاع المطلوب في Discord Developer Portal:</p>
+                <div className="pt-1 flex items-center justify-between gap-2 bg-black/60 p-2.5 rounded-xl border border-white/[0.08]">
                   <span className="font-mono text-[#8EA1FF] text-[10px] truncate">{currentCallbackUrl}</span>
                   <button
                     type="button"
                     onClick={handleCopyCallback}
-                    className="shrink-0 px-2.5 py-1 rounded-lg bg-[#222226] hover:bg-[#333] text-white flex items-center gap-1 text-[10px] cursor-pointer transition-colors"
+                    className="shrink-0 px-2.5 py-1 rounded-lg bg-[#131620] hover:bg-[#1a1e2d] text-white flex items-center gap-1 text-[10px] cursor-pointer transition-colors border border-white/[0.08]"
                   >
                     {copiedRedirect ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                     <span>{copiedRedirect ? 'تم النسخ' : 'نسخ'}</span>
@@ -210,16 +211,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
 
           {/* Quick Demo Preview Login (Development & Preview Only) */}
           {authConfig?.isDemoAllowed && (
-            <div className="pt-3 border-t border-[#1E1E22]">
-              <p className="text-[11px] text-[#777] text-center mb-3">
-                {language === 'ar' ? 'أو تجربة المنصة ببيئة المعاينة:' : 'Or test in preview mode:'}
+            <div className="pt-4 border-t border-white/[0.06]">
+              <p className="text-[11px] text-[#7a8091] text-center mb-3">
+                {language === 'ar' ? 'أو تجربة المنصة ببيئة المعاينة السريعة:' : 'Or test in quick sandbox mode:'}
               </p>
               <div className="grid grid-cols-2 gap-2.5">
                 <button
                   type="button"
                   onClick={() => handleDemoClick('admin')}
                   disabled={Boolean(isLoggingInDemo)}
-                  className="py-2.5 px-3 rounded-xl bg-[#C8874B]/10 hover:bg-[#C8874B]/20 border border-[#C8874B]/30 text-[#DF9F64] text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  className="py-2.5 px-3 rounded-xl bg-[#c8874b]/15 hover:bg-[#c8874b]/25 border border-[#c8874b]/30 text-[#df9f64] text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                 >
                   <span>{isLoggingInDemo === 'admin' ? (language === 'ar' ? 'جاري الدخول...' : 'Logging in...') : (language === 'ar' ? 'دخول كمسؤول' : 'Admin Demo')}</span>
                 </button>
@@ -227,7 +228,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
                   type="button"
                   onClick={() => handleDemoClick('citizen')}
                   disabled={Boolean(isLoggingInDemo)}
-                  className="py-2.5 px-3 rounded-xl bg-[#151518] hover:bg-[#1E1E22] border border-[#252528] text-[#CCC] hover:text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  className="py-2.5 px-3 rounded-xl bg-[#131620] hover:bg-[#1a1e2d] border border-white/[0.08] text-[#f1f3f7] hover:text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                 >
                   <span>{isLoggingInDemo === 'citizen' ? (language === 'ar' ? 'جاري الدخول...' : 'Logging in...') : (language === 'ar' ? 'دخول كمواطن' : 'Citizen Demo')}</span>
                 </button>
@@ -237,9 +238,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
         </div>
 
         {/* Security & Authentication Info Box */}
-        <div className="p-4 rounded-2xl bg-[#151518] border border-[#222226] text-[11px] text-[#888] space-y-2">
+        <div className="p-4 rounded-2xl bg-[#08090d] border border-white/[0.06] text-[11px] text-[#7a8091] space-y-2">
           <div className="flex items-center gap-2 text-white font-bold text-xs">
-            <ShieldCheck className="w-4 h-4 text-[#C8874B]" />
+            <ShieldCheck className="w-4 h-4 text-[#c8874b]" />
             <span>{language === 'ar' ? 'نظام المصادقة المشفر' : 'Encrypted Authentication'}</span>
           </div>
           <p className="leading-relaxed">
@@ -250,9 +251,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
         </div>
 
         {/* Footer Security Badges */}
-        <div className="mt-6 pt-4 border-t border-[#1E1E22] flex items-center justify-between text-[10px] text-[#666]">
+        <div className="mt-6 pt-4 border-t border-white/[0.06] flex items-center justify-between text-[10px] text-[#7a8091]">
           <div className="flex items-center gap-1.5">
-            <Lock className="w-3 h-3 text-[#C8874B]" />
+            <Lock className="w-3 h-3 text-[#c8874b]" />
             <span>SSL / TLS 256-Bit</span>
           </div>
           <div className="flex items-center gap-1">

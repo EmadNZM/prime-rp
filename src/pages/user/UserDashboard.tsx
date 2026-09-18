@@ -71,38 +71,40 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[#070707] text-[#E5E5E5] pt-28 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#08090d] text-[#f1f3f7] pt-32 pb-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background ambient lighting */}
-      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-5xl h-96 bg-[#C8874B]/5 blur-[120px] pointer-events-none rounded-full" />
+      <div className="absolute top-10 left-1/2 -translate-x-1/2 w-full max-w-6xl h-[500px] bg-[#c8874b]/5 blur-[160px] pointer-events-none rounded-full" />
 
       <div className="max-w-6xl mx-auto space-y-8 relative z-10">
         
-        {/* Profile Card Header */}
-        <div className="rounded-3xl bg-[#0D0D0F] border border-[#222226] p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 shadow-2xl relative overflow-hidden">
-          <div 
-            className="absolute top-0 right-0 w-64 h-64 bg-[#C8874B]/5 blur-3xl pointer-events-none rounded-full" 
-            aria-hidden="true"
-          />
+        {/* Profile Card Header (ONX & EchoRP Style) */}
+        <div className="rounded-2xl bg-[#0d0f16] border border-white/[0.08] p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 shadow-2xl relative overflow-hidden">
+          {/* Top copper accent */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#c8874b] to-transparent" />
 
           <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10 text-center sm:text-left sm:rtl:text-right">
-            <img
-              src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120'}
-              alt={user.username}
-              className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-[#C8874B] shadow-xl"
-            />
+            <div className="relative">
+              <img
+                src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120'}
+                alt={user.username}
+                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-[#c8874b] shadow-xl"
+              />
+              <span className="absolute bottom-0 right-0 rtl:right-auto rtl:left-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#0d0f16]" />
+            </div>
+
             <div>
               <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">
+                <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight font-rajdhani">
                   {user.globalName || user.username}
                 </h1>
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#C8874B]/20 text-[#C8874B] border border-[#C8874B]/40 uppercase tracking-wider">
+                <span className="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-[#c8874b]/15 text-[#df9f64] border border-[#c8874b]/30 uppercase tracking-wider font-mono">
                   {user.role}
                 </span>
               </div>
-              <p className="text-xs text-[#777] font-mono mb-3">Discord ID: {user.discordId}</p>
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-[#AAA]">
+              <p className="text-xs text-[#7a8091] font-mono mb-3">Discord ID: {user.discordId}</p>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-[#969cad]">
                 <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-[#C8874B]" />
+                  <Calendar className="w-3.5 h-3.5 text-[#c8874b]" />
                   <span>
                     {language === 'ar' ? 'انضم:' : 'Joined:'}{' '}
                     {new Date(user.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
@@ -119,14 +121,14 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
           <div className="flex items-center gap-3 relative z-10">
             <button
               onClick={() => setCurrentTab('jobs')}
-              className="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] hover:brightness-110 text-black font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-[#C8874B]/20 flex items-center gap-1.5 cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#c8874b]/20 flex items-center gap-1.5 cursor-pointer"
             >
               <Briefcase className="w-3.5 h-3.5" />
               <span>{language === 'ar' ? 'تقديم على وظيفة' : 'Apply for Job'}</span>
             </button>
             <button
               onClick={() => setCurrentTab('support')}
-              className="px-5 py-2.5 rounded-2xl bg-[#151518] hover:bg-[#1E1E22] text-white border border-[#252528] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+              className="px-5 py-2.5 rounded-xl bg-[#131620] hover:bg-[#1a1e2d] text-white border border-white/[0.08] text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
             >
               {language === 'ar' ? 'فتح تذكرة' : 'Open Ticket'}
             </button>
@@ -135,44 +137,44 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
 
         {/* Quick Metrics */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 sm:gap-6">
-          <div className="p-6 rounded-3xl bg-[#0D0D0F] border border-[#222226] flex items-center gap-4 shadow-xl">
-            <div className="w-12 h-12 rounded-2xl bg-[#C8874B]/10 border border-[#C8874B]/20 flex items-center justify-center text-[#C8874B]">
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.08] flex items-center gap-4 shadow-xl card-hover-lift">
+            <div className="w-12 h-12 rounded-xl bg-[#c8874b]/10 border border-[#c8874b]/30 flex items-center justify-center text-[#df9f64]">
               <Briefcase className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs text-[#777] block font-bold uppercase tracking-wider">
+              <span className="text-xs text-[#7a8091] block font-bold uppercase tracking-wider">
                 {language === 'ar' ? 'طلبات التوظيف' : 'Job Applications'}
               </span>
               <p className="text-2xl font-black text-white font-rajdhani">{jobApplications.length}</p>
             </div>
           </div>
 
-          <div className="p-6 rounded-3xl bg-[#0D0D0F] border border-[#222226] flex items-center gap-4 shadow-xl">
-            <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.08] flex items-center gap-4 shadow-xl card-hover-lift">
+            <div className="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
               <Ticket className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs text-[#777] block font-bold uppercase tracking-wider">{t('userDashboard.openTickets')}</span>
+              <span className="text-xs text-[#7a8091] block font-bold uppercase tracking-wider">{t('userDashboard.openTickets')}</span>
               <p className="text-2xl font-black text-white font-rajdhani">{tickets.length}</p>
             </div>
           </div>
 
-          <div className="p-6 rounded-3xl bg-[#0D0D0F] border border-[#222226] flex items-center gap-4 shadow-xl">
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.08] flex items-center gap-4 shadow-xl card-hover-lift">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
               <ShoppingBag className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs text-[#777] block font-bold uppercase tracking-wider">{t('userDashboard.totalOrders')}</span>
+              <span className="text-xs text-[#7a8091] block font-bold uppercase tracking-wider">{t('userDashboard.totalOrders')}</span>
               <p className="text-2xl font-black text-white font-rajdhani">{orders.length}</p>
             </div>
           </div>
 
-          <div className="p-6 rounded-3xl bg-[#0D0D0F] border border-[#222226] flex items-center gap-4 shadow-xl">
-            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.08] flex items-center gap-4 shadow-xl card-hover-lift">
+            <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
               <Bell className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-xs text-[#777] block font-bold uppercase tracking-wider">{t('userDashboard.notifications')}</span>
+              <span className="text-xs text-[#7a8091] block font-bold uppercase tracking-wider">{t('userDashboard.notifications')}</span>
               <p className="text-2xl font-black text-white font-rajdhani">
                 {notifications.filter((n) => !n.read).length}
               </p>
@@ -181,16 +183,16 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
         </div>
 
         {/* My Job Applications Section */}
-        <div className="bg-[#0D0D0F] border border-[#222226] rounded-3xl p-6 sm:p-8 shadow-2xl">
-          <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#222226]">
+        <div className="bg-[#0d0f16] border border-white/[0.08] rounded-2xl p-6 sm:p-8 shadow-2xl">
+          <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/[0.06]">
             <div>
-              <h2 className="text-lg font-black text-white flex items-center gap-2 uppercase tracking-tight">
-                <Briefcase className="w-5 h-5 text-[#C8874B]" />
+              <h2 className="text-lg font-black text-white flex items-center gap-2 uppercase tracking-tight font-rajdhani">
+                <Briefcase className="w-5 h-5 text-[#c8874b]" />
                 <span>
                   {language === 'ar' ? 'طلبات التوظيف الخاصة بي' : 'My Job Applications'}
                 </span>
               </h2>
-              <p className="text-xs text-[#777] mt-0.5">
+              <p className="text-xs text-[#7a8091] mt-0.5">
                 {language === 'ar'
                   ? 'متابعة حالة ترشيحك وانضمامك للقطاعات الحكومية والخاصة في Prime RP'
                   : 'Track your application status and enrollment in public & private sectors in Prime RP'}
@@ -198,7 +200,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
             </div>
             <button
               onClick={() => setCurrentTab('jobs')}
-              className="text-xs text-[#C8874B] font-bold hover:text-[#DF9F64] transition-colors flex items-center gap-1 cursor-pointer"
+              className="text-xs text-[#df9f64] font-bold hover:text-white transition-colors flex items-center gap-1 cursor-pointer"
             >
               <span>{language === 'ar' ? 'استعراض الوظائف الشاغرة' : 'Browse Open Jobs'}</span>
               <ArrowIcon className="w-3.5 h-3.5" />
@@ -206,19 +208,19 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
           </div>
 
           {jobApplications.length === 0 ? (
-            <div className="text-center py-12 px-4 rounded-3xl bg-[#151518] border border-dashed border-[#252528]">
+            <div className="text-center py-12 px-4 rounded-2xl bg-[#08090d] border border-dashed border-white/[0.08]">
               <Briefcase className="w-10 h-10 text-[#444] mx-auto mb-3" />
-              <p className="text-sm font-black text-white mb-1">
+              <p className="text-sm font-black text-white mb-1 uppercase tracking-wider">
                 {language === 'ar' ? 'لم تقم بتقديم أي طلب توظيف حتى الآن' : 'No job applications submitted yet'}
               </p>
-              <p className="text-xs text-[#777] max-w-sm mx-auto mb-4 leading-relaxed">
+              <p className="text-xs text-[#7a8091] max-w-sm mx-auto mb-4 leading-relaxed">
                 {language === 'ar'
                   ? 'تصفح القطاعات المتاحة مثل الشرطة، الإسعاف، الميكانيكا أو الشركات وقدم طلبك مباشرة.'
                   : 'Explore available departments such as Police, EMS, Mechanics, or Businesses and submit your application directly.'}
               </p>
               <button
                 onClick={() => setCurrentTab('jobs')}
-                className="px-6 py-2.5 rounded-2xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-black text-xs uppercase tracking-wider hover:brightness-110 transition-all cursor-pointer shadow-lg shadow-[#C8874B]/20"
+                className="px-6 py-2.5 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black font-black text-xs uppercase tracking-wider transition-all cursor-pointer shadow-md"
               >
                 {language === 'ar' ? 'تصفح وتقديم الآن' : 'Browse & Apply Now'}
               </button>
@@ -228,7 +230,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
               {jobApplications.map((app) => {
                 const statusStyles = {
                   ACCEPTED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-                  UNDER_REVIEW: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+                  UNDER_REVIEW: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
                   REJECTED: 'bg-rose-500/10 text-rose-400 border-rose-500/20',
                   PENDING: 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                 }[app.status] || 'bg-gray-500/10 text-gray-400 border-gray-500/20';
@@ -243,12 +245,12 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
                 return (
                   <div
                     key={app.id}
-                    className="p-5 rounded-3xl bg-[#151518] border border-[#222226] hover:border-[#333] transition-all flex flex-col justify-between space-y-4 shadow-sm"
+                    className="p-5 rounded-2xl bg-[#08090d] border border-white/[0.08] hover:border-[#c8874b]/40 transition-all flex flex-col justify-between space-y-4 shadow-sm"
                   >
                     <div>
                       <div className="flex items-start justify-between gap-2 mb-2">
                         <div>
-                          <span className="text-[10px] font-black uppercase tracking-widest text-[#C8874B] block">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-[#df9f64] block font-mono">
                             {app.jobCategory || (language === 'ar' ? 'القطاع' : 'Department')}
                           </span>
                           <h3 className="text-base font-bold text-white mt-0.5">
@@ -260,7 +262,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
                         </span>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2 text-xs text-[#888] py-2.5 border-y border-[#222226] my-2">
+                      <div className="grid grid-cols-2 gap-2 text-xs text-[#7a8091] py-2.5 border-y border-white/[0.06] my-2">
                         <div>
                           <span className="block text-[10px] text-[#555]">
                             {language === 'ar' ? 'الشخصية:' : 'Character:'}
@@ -278,24 +280,24 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
                       </div>
 
                       {app.reviewNotes && (
-                        <div className="mt-2 p-3 rounded-2xl bg-[#0D0D0F] border border-[#222226] text-xs">
-                          <span className="font-bold text-[#C8874B] block mb-0.5">
+                        <div className="mt-2 p-3 rounded-xl bg-[#0d0f16] border border-white/[0.06] text-xs">
+                          <span className="font-bold text-[#df9f64] block mb-0.5">
                             {language === 'ar' ? 'ملاحظات لجنة التوظيف:' : 'Recruitment Review Notes:'}
                           </span>
-                          <span className="text-[#AAA] leading-relaxed">{app.reviewNotes}</span>
+                          <span className="text-[#969cad] leading-relaxed">{app.reviewNotes}</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between pt-2">
-                      <span className="text-[11px] text-[#666]">
+                    <div className="flex items-center justify-between pt-2 border-t border-white/[0.06]">
+                      <span className="text-[11px] text-[#7a8091] font-mono">
                         {new Date(app.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
                       </span>
                       <button
                         onClick={() => setSelectedApplication(app)}
-                        className="px-4 py-2 rounded-xl bg-[#222226] hover:bg-[#2A2A2E] text-xs font-bold text-white transition-all flex items-center gap-1.5 cursor-pointer border border-[#2C2C30]"
+                        className="px-4 py-2 rounded-xl bg-[#131620] hover:bg-[#1a1e2d] text-xs font-bold text-white transition-all flex items-center gap-1.5 cursor-pointer border border-white/[0.08]"
                       >
-                        <Eye className="w-3.5 h-3.5 text-[#C8874B]" />
+                        <Eye className="w-3.5 h-3.5 text-[#c8874b]" />
                         <span>{language === 'ar' ? 'تفاصيل الاستمارة' : 'View Application'}</span>
                       </button>
                     </div>
@@ -310,22 +312,22 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Recent Orders List */}
-          <div className="lg:col-span-7 bg-[#0D0D0F] border border-[#222226] rounded-3xl p-6 sm:p-8 shadow-2xl">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#222226]">
-              <h2 className="text-lg font-black text-white flex items-center gap-2 uppercase tracking-tight">
-                <ShoppingBag className="w-5 h-5 text-[#C8874B]" />
+          <div className="lg:col-span-7 bg-[#0d0f16] border border-white/[0.08] rounded-2xl p-6 sm:p-8 shadow-2xl">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/[0.06]">
+              <h2 className="text-lg font-black text-white flex items-center gap-2 uppercase tracking-tight font-rajdhani">
+                <ShoppingBag className="w-5 h-5 text-[#c8874b]" />
                 <span>{t('userDashboard.recentOrders')}</span>
               </h2>
               <button
                 onClick={() => setCurrentTab('store')}
-                className="text-xs text-[#C8874B] font-bold hover:text-[#DF9F64] transition-colors cursor-pointer"
+                className="text-xs text-[#df9f64] font-bold hover:text-white transition-colors cursor-pointer"
               >
                 {language === 'ar' ? 'تسوّق الآن' : 'Shop Now'}
               </button>
             </div>
 
             {orders.length === 0 ? (
-              <p className="text-xs text-[#666] text-center py-10">
+              <p className="text-xs text-[#7a8091] text-center py-10">
                 {language === 'ar' ? 'لا توجد طلبات سابقة حتى الآن.' : 'No previous orders found.'}
               </p>
             ) : (
@@ -333,16 +335,16 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
                 {orders.map((ord) => (
                   <div
                     key={ord.id}
-                    className="p-4 rounded-2xl bg-[#151518] border border-[#222226] flex items-center justify-between shadow-sm"
+                    className="p-4 rounded-xl bg-[#08090d] border border-white/[0.06] flex items-center justify-between shadow-sm"
                   >
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-mono font-bold text-[#C8874B]">
+                        <span className="text-xs font-mono font-bold text-[#df9f64]">
                           #{ord.orderNumber}
                         </span>
                         <span className="text-xs font-bold text-white">{ord.productName}</span>
                       </div>
-                      <span className="text-[11px] text-[#777]">
+                      <span className="text-[11px] text-[#7a8091] font-mono">
                         {new Date(ord.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
                       </span>
                     </div>
@@ -360,19 +362,19 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
           </div>
 
           {/* Notifications List */}
-          <div className="lg:col-span-5 bg-[#0D0D0F] border border-[#222226] rounded-3xl p-6 sm:p-8 shadow-2xl">
-            <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#222226]">
-              <h2 className="text-lg font-black text-white flex items-center gap-2 uppercase tracking-tight">
-                <Bell className="w-5 h-5 text-[#C8874B]" />
+          <div className="lg:col-span-5 bg-[#0d0f16] border border-white/[0.08] rounded-2xl p-6 sm:p-8 shadow-2xl">
+            <div className="flex items-center justify-between mb-6 pb-4 border-b border-white/[0.06]">
+              <h2 className="text-lg font-black text-white flex items-center gap-2 uppercase tracking-tight font-rajdhani">
+                <Bell className="w-5 h-5 text-[#c8874b]" />
                 <span>{t('userDashboard.notifications')}</span>
               </h2>
-              <span className="text-xs text-[#666]">
+              <span className="text-xs text-[#7a8091] font-mono">
                 {notifications.length} {language === 'ar' ? 'إشعار' : 'Notifications'}
               </span>
             </div>
 
             {notifications.length === 0 ? (
-              <p className="text-xs text-[#666] text-center py-10">
+              <p className="text-xs text-[#7a8091] text-center py-10">
                 {language === 'ar' ? 'لا توجد إشعارات حالياً.' : 'No notifications yet.'}
               </p>
             ) : (
@@ -380,10 +382,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
                 {notifications.map((notif) => (
                   <div
                     key={notif.id}
-                    className={`p-4 rounded-2xl border transition-all ${
+                    className={`p-4 rounded-xl border transition-all ${
                       notif.read
-                        ? 'bg-[#121214] border-[#1C1C20] opacity-70'
-                        : 'bg-[#151518] border-[#C8874B]/30'
+                        ? 'bg-[#08090d] border-white/[0.04] opacity-70'
+                        : 'bg-[#131620] border-[#c8874b]/30'
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2 mb-1">
@@ -391,15 +393,15 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
                       {!notif.read && (
                         <button
                           onClick={() => handleMarkRead(notif.id)}
-                          className="text-[10px] text-[#C8874B] hover:underline flex items-center gap-1 cursor-pointer"
+                          className="text-[10px] text-[#df9f64] hover:underline flex items-center gap-1 cursor-pointer"
                         >
                           <Check className="w-3 h-3" />
                           <span>{language === 'ar' ? 'تحديد كمقروء' : 'Mark Read'}</span>
                         </button>
                       )}
                     </div>
-                    <p className="text-xs text-[#888] leading-relaxed mb-2">{notif.message}</p>
-                    <span className="text-[10px] text-[#555] block">
+                    <p className="text-xs text-[#969cad] leading-relaxed mb-2">{notif.message}</p>
+                    <span className="text-[10px] text-[#7a8091] block font-mono">
                       {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
@@ -413,66 +415,66 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
         {/* Application Details Modal */}
         {selectedApplication && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
-            <div className="relative w-full max-w-xl bg-[#0D0D0F] border border-[#222226] rounded-3xl p-6 sm:p-8 shadow-2xl my-8 text-right rtl:text-right ltr:text-left">
+            <div className="relative w-full max-w-xl bg-[#0d0f16] border border-white/[0.08] rounded-2xl p-6 sm:p-8 shadow-2xl my-8 text-right rtl:text-right ltr:text-left">
               <button
                 onClick={() => setSelectedApplication(null)}
-                className="absolute top-5 left-5 rtl:left-5 rtl:right-auto p-2 rounded-xl bg-[#151518] hover:bg-[#1E1E22] text-[#888] hover:text-white transition-colors border border-[#252528] cursor-pointer"
+                className="absolute top-5 left-5 rtl:left-5 rtl:right-auto p-2 rounded-xl bg-[#131620] hover:bg-[#1a1e2d] text-[#969cad] hover:text-white transition-colors border border-white/[0.08] cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
 
-              <div className="mb-6 pb-4 border-b border-[#222226]">
-                <span className="text-[10px] font-black uppercase tracking-widest text-[#C8874B] block mb-1">
+              <div className="mb-6 pb-4 border-b border-white/[0.06]">
+                <span className="text-[10px] font-black uppercase tracking-widest text-[#df9f64] block mb-1 font-mono">
                   {language === 'ar' ? 'تفاصيل استمارة التوظيف' : 'Job Application Details'}
                 </span>
-                <h3 className="text-xl font-black text-white">
+                <h3 className="text-xl font-black text-white uppercase tracking-tight">
                   {selectedApplication.jobTitle || (language === 'ar' ? 'وظيفة في السيرفر' : 'Server Job Position')}
                 </h3>
-                <p className="text-xs text-[#777] font-mono mt-0.5">
+                <p className="text-xs text-[#7a8091] font-mono mt-0.5">
                   {language === 'ar' ? 'المرجع:' : 'Ref ID:'} {selectedApplication.id}
                 </p>
               </div>
 
               <div className="space-y-4 text-xs">
-                <div className="p-4 rounded-2xl bg-[#151518] border border-[#222226] space-y-2">
+                <div className="p-4 rounded-xl bg-[#08090d] border border-white/[0.06] space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-[#777]">{language === 'ar' ? 'اسم الشخصية:' : 'Character Name:'}</span>
+                    <span className="text-[#7a8091]">{language === 'ar' ? 'اسم الشخصية:' : 'Character Name:'}</span>
                     <span className="text-white font-bold">{selectedApplication.characterName}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#777]">{language === 'ar' ? 'عمر الشخصية:' : 'Character Age:'}</span>
+                    <span className="text-[#7a8091]">{language === 'ar' ? 'عمر الشخصية:' : 'Character Age:'}</span>
                     <span className="text-white font-bold">{selectedApplication.characterAge} {language === 'ar' ? 'عاماً' : 'years'}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#777]">{language === 'ar' ? 'التواجد اليومي:' : 'Daily Availability:'}</span>
+                    <span className="text-[#7a8091]">{language === 'ar' ? 'التواجد اليومي:' : 'Daily Availability:'}</span>
                     <span className="text-white font-bold">{selectedApplication.dailyAvailability}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#777]">{language === 'ar' ? 'تاريخ التقديم:' : 'Applied Date:'}</span>
-                    <span className="text-white font-bold">
+                    <span className="text-[#7a8091]">{language === 'ar' ? 'تاريخ التقديم:' : 'Applied Date:'}</span>
+                    <span className="text-white font-bold font-mono">
                       {new Date(selectedApplication.createdAt).toLocaleString(language === 'ar' ? 'ar-SA' : 'en-US')}
                     </span>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="font-bold text-[#C8874B] mb-1">
+                  <h4 className="font-bold text-[#df9f64] mb-1">
                     {language === 'ar' ? 'الخبرات والنبذة المقدمة:' : 'Experience & Summary:'}
                   </h4>
-                  <p className="p-4 rounded-2xl bg-[#151518] border border-[#222226] text-[#BBB] leading-relaxed whitespace-pre-wrap">
+                  <p className="p-4 rounded-xl bg-[#08090d] border border-white/[0.06] text-[#d1d5db] leading-relaxed whitespace-pre-wrap">
                     {selectedApplication.experience}
                   </p>
                 </div>
 
                 {selectedApplication.answers && Object.keys(selectedApplication.answers).length > 0 && (
                   <div>
-                    <h4 className="font-bold text-[#C8874B] mb-1">
+                    <h4 className="font-bold text-[#df9f64] mb-1">
                       {language === 'ar' ? 'إجابات سيناريوهات الـ RP:' : 'RP Scenario Answers:'}
                     </h4>
-                    <div className="p-4 rounded-2xl bg-[#151518] border border-[#222226] text-[#BBB] space-y-2">
+                    <div className="p-4 rounded-xl bg-[#08090d] border border-white/[0.06] text-[#d1d5db] space-y-2">
                       {Object.entries(selectedApplication.answers).map(([key, val]) => (
                         <div key={key}>
-                          <span className="text-[10px] text-[#777] block">{key}:</span>
+                          <span className="text-[10px] text-[#7a8091] block">{key}:</span>
                           <p className="text-white">{String(val)}</p>
                         </div>
                       ))}
@@ -481,7 +483,7 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
                 )}
 
                 {selectedApplication.reviewNotes && (
-                  <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-200">
+                  <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200">
                     <span className="font-bold block mb-1">
                       {language === 'ar' ? 'ملاحظة مسؤولي التوظيف:' : 'Recruiter Feedback:'}
                     </span>
@@ -490,10 +492,10 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
                 )}
               </div>
 
-              <div className="pt-6 mt-6 border-t border-[#222226] flex justify-end">
+              <div className="pt-6 mt-6 border-t border-white/[0.06] flex justify-end">
                 <button
                   onClick={() => setSelectedApplication(null)}
-                  className="px-6 py-2.5 rounded-xl bg-[#151518] text-white font-bold text-xs hover:bg-[#1E1E22] transition-all border border-[#252528] cursor-pointer"
+                  className="px-6 py-2.5 rounded-xl bg-[#131620] text-white font-bold text-xs hover:bg-[#1a1e2d] transition-all border border-white/[0.08] cursor-pointer"
                 >
                   {language === 'ar' ? 'إغلاق' : 'Close'}
                 </button>
