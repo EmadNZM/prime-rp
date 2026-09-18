@@ -1,15 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-copper: #C8874B;
-  --color-copper-light: #DF9F64;
-  --color-copper-dark: #9E6533;
-  --color-dark-bg: #070707;
-  --color-dark-card: #0D0D0F;
-  --color-dark-surface: #151518;
-  --color-dark-border: #222226;
-  --color-silver: #9A9A9A;
-  --color-silver-light: #E5E5E5;
+  --color-copper: #E6AA38;
+  --color-copper-light: #FFC857;
+  --color-copper-dark: #B37D14;
+  --color-dark-bg: #050508;
+  --color-dark-card: #0A0A0F;
+  --color-dark-surface: #111218;
+  --color-dark-border: #1E2029;
+  --color-silver: #9EA3B0;
+  --color-silver-light: #F1F3F7;
+  --color-cyan-glow: #00F0FF;
+  --color-gold-glow: #FFB800;
   --font-cairo: "Cairo", sans-serif;
   --font-montserrat: "Montserrat", sans-serif;
   --font-rajdhani: "Rajdhani", sans-serif;
@@ -21,89 +23,175 @@
 
 body {
   font-family: var(--font-cairo), var(--font-montserrat), system-ui, sans-serif;
-  background-color: #070707;
-  color: #E5E5E5;
+  background-color: #050508;
+  color: #F1F3F7;
   overflow-x: hidden;
   margin: 0;
   padding: 0;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(230, 170, 56, 0.12), transparent),
+    radial-gradient(circle at 100% 60%, rgba(0, 240, 255, 0.03), transparent 50%),
+    radial-gradient(circle at 0% 40%, rgba(230, 170, 56, 0.04), transparent 50%);
+  background-attachment: fixed;
 }
 
 [dir="ltr"] body {
   font-family: var(--font-montserrat), var(--font-cairo), system-ui, sans-serif;
 }
 
-/* Custom prime scrollbar */
+/* Custom prime futuristic scrollbar */
 ::-webkit-scrollbar {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #070707;
+  background: #050508;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1C1C20;
+  background: #1E2029;
   border-radius: 9999px;
-  border: 1px solid #121214;
+  border: 1px solid #111218;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #C8874B;
+  background: #E6AA38;
 }
 
-/* Glassmorphism & Atmospheric Lighting */
+/* Futuristic HUD Grid & Hex Pattern */
+.bg-hud-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+}
+
+.bg-scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.03),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.03)
+  );
+  background-size: 100% 3px, 6px 100%;
+}
+
+/* Glassmorphism & High-Tech HUD Panels */
 .glass-panel {
-  background: rgba(13, 13, 15, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: rgba(10, 10, 15, 0.72);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .glass-panel-elevated {
-  background: rgba(21, 21, 24, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(200, 135, 75, 0.18);
+  background: rgba(17, 18, 24, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(230, 170, 56, 0.25);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7), 0 0 30px -10px rgba(230, 170, 56, 0.15);
 }
 
-/* Copper Glow & Metallic Gradients */
-.copper-glow {
-  box-shadow: 0 0 30px -5px rgba(200, 135, 75, 0.35);
+.hud-card {
+  background: linear-gradient(135deg, rgba(14, 15, 22, 0.9) 0%, rgba(8, 8, 13, 0.95) 100%);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  position: relative;
 }
 
-.copper-glow-sm {
-  box-shadow: 0 0 15px -3px rgba(200, 135, 75, 0.25);
+.hud-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(230, 170, 56, 0.4), transparent);
+  pointer-events: none;
 }
 
-.copper-glow-hover:hover {
-  box-shadow: 0 0 25px -4px rgba(200, 135, 75, 0.38);
+/* Neon & Metallic Glows */
+.gold-glow {
+  box-shadow: 0 0 35px -5px rgba(230, 170, 56, 0.45);
 }
 
-.copper-border-gradient {
-  border-image: linear-gradient(to bottom, #C8874B, rgba(200, 135, 75, 0.1), transparent) 1;
+.gold-glow-sm {
+  box-shadow: 0 0 18px -3px rgba(230, 170, 56, 0.3);
 }
 
-.bg-radial-mesh {
-  background-image: 
-    radial-gradient(circle at 50% -10%, rgba(200, 135, 75, 0.14), transparent 60%),
-    radial-gradient(circle at 100% 100%, rgba(200, 135, 75, 0.04), transparent 45%),
-    radial-gradient(circle at 0% 50%, rgba(223, 159, 100, 0.03), transparent 35%);
+.cyan-glow {
+  box-shadow: 0 0 25px -4px rgba(0, 240, 255, 0.4);
 }
 
-.bg-radial-glow {
-  background-image: radial-gradient(circle at 50% 50%, rgba(200, 135, 75, 0.12) 0%, transparent 70%);
+.gold-gradient-text {
+  background: linear-gradient(135deg, #FFF6E0 0%, #FFC857 50%, #D97706 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-/* Card lift and smooth hover states */
+.titanium-gradient-text {
+  background: linear-gradient(135deg, #FFFFFF 0%, #D4D8E2 50%, #7E8494 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Card hover lift & holographic transition */
 .card-hover-lift {
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.35s ease, box-shadow 0.35s ease;
 }
 .card-hover-lift:hover {
-  transform: translateY(-4px);
-  border-color: rgba(200, 135, 75, 0.45);
-  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.7), 0 0 20px -5px rgba(200, 135, 75, 0.18);
+  transform: translateY(-5px);
+  border-color: rgba(230, 170, 56, 0.5);
+  box-shadow: 0 22px 48px -12px rgba(0, 0, 0, 0.8), 0 0 30px -8px rgba(230, 170, 56, 0.25);
+}
+
+/* Cyber corner accents */
+.cyber-corners {
+  position: relative;
+}
+.cyber-corners::before {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: -1px;
+  width: 8px;
+  height: 8px;
+  border-top: 2px solid #E6AA38;
+  border-left: 2px solid #E6AA38;
+  pointer-events: none;
+}
+.cyber-corners::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 8px;
+  height: 8px;
+  border-bottom: 2px solid #E6AA38;
+  border-right: 2px solid #E6AA38;
+  pointer-events: none;
 }
 
 /* Selection */
 ::selection {
-  background-color: #C8874B;
+  background-color: #E6AA38;
   color: #000000;
+}
+
+/* Keyframes for breathing pulse */
+@keyframes beacon {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0.2;
+  }
+}
+.animate-beacon {
+  animation: beacon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

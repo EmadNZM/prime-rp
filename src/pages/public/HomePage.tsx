@@ -16,22 +16,24 @@ import {
   ArrowRight, 
   ArrowLeft,
   Crown,
-  CheckCircle2,
   ExternalLink,
-  ChevronRight,
-  ChevronLeft,
   Sparkles,
-  Server,
   Copy,
   Check,
   ChevronDown,
   ShoppingBag,
   HelpCircle,
   Radio,
-  WifiOff,
   Flame,
   Building2,
-  Award
+  Terminal,
+  Volume2,
+  CheckCircle2,
+  XCircle,
+  Compass,
+  Cpu,
+  ShieldAlert,
+  Car
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -51,6 +53,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [copiedConnect, setCopiedConnect] = useState<boolean>(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+  const [activeTabSector, setActiveTabSector] = useState<string>('police');
 
   // Auto-scroll to About section if requested
   useEffect(() => {
@@ -84,7 +87,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
           const featured = prods.filter((p: ProductItem) => p.featured);
           setFeaturedProducts(featured.length > 0 ? featured.slice(0, 3) : prods.slice(0, 3));
         }
-        if (Array.isArray(faqData)) setFaqs(faqData.slice(0, 4));
+        if (Array.isArray(faqData)) setFaqs(faqData.slice(0, 5));
       } catch (err) {
         console.error('Failed to load home page data:', err);
       }
@@ -97,6 +100,9 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
     siteSettings?.fiveMConnectUrl
   );
   const isOnline = Boolean(telemetry?.isOnline);
+  const playersCount = isOnline ? (telemetry?.playersCount ?? 0) : 0;
+  const maxPlayers = telemetry?.maxPlayers || 150;
+  const capacityPercent = Math.min(100, Math.round((playersCount / maxPlayers) * 100)) || 10;
 
   const connectCommand = telemetry?.ip && telemetry?.port 
     ? `connect ${telemetry.ip}:${telemetry.port}`
@@ -124,397 +130,578 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
   const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
 
+  const citySectors = [
+    {
+      id: 'police',
+      titleAr: 'قطاع الأمن والعدالة (LSPD & SWAT)',
+      titleEn: 'Law Enforcement & Tactical SWAT',
+      badgeAr: 'انضباط ونظام صارم',
+      badgeEn: 'Strict Chain of Command',
+      icon: Shield,
+      accent: '#38BDF8',
+      descAr: 'غرف عمليات تفاعلية، أجهزة MDT ذكية، دوريات شرطية وسيارات مطاردة مخصصة، مع بروتوكولات حقيقية للقبض والتحقيق.',
+      descEn: 'State-of-the-art MDT terminals, tactical pursuit interceptors, official dispatch channels, and SWAT crisis operations.',
+      stats: [
+        { labelAr: 'الرتب الرسمية', labelEn: 'Official Ranks', val: '12+ Ranks' },
+        { labelAr: 'مركبات مخصصة', labelEn: 'Tactical Fleet', val: '24+ Cruisers' },
+        { labelAr: 'الحالة الحالية', labelEn: 'Active Status', val: 'Patrol Armed' }
+      ],
+      actionTab: 'jobs',
+      actionLabelAr: 'التقديم على سلك الشرطة',
+      actionLabelEn: 'Apply for Police Cadet'
+    },
+    {
+      id: 'ems',
+      titleAr: 'الخدمات الطبية والإسعاف الجوي (EMS)',
+      titleEn: 'Emergency & Air Rescue Services',
+      badgeAr: 'حفظ الأرواح 24/7',
+      badgeEn: '24/7 Trauma Response',
+      icon: Activity,
+      accent: '#F43F5E',
+      descAr: 'غرف إنعاش تفاعلية بمستشفى Pillbox Hill، طائرات إسعاف جوي لنقل الحالات الحرجة، ونظام علاجي متطور ومحاكاة للعمليات الجراحية.',
+      descEn: 'Interactive hospital surgeries, aerial Medevac helicopters, emergency triage units, and comprehensive clinical roleplay.',
+      stats: [
+        { labelAr: 'طواقم الطوارئ', labelEn: 'EMS Shifts', val: '24/7 On-Duty' },
+        { labelAr: 'مستشفيات مجهزة', labelEn: 'Medical Hubs', val: 'Pillbox Central' },
+        { labelAr: 'الإنقاذ الجوي', labelEn: 'Air Medevac', val: 'Swift Response' }
+      ],
+      actionTab: 'jobs',
+      actionLabelAr: 'التقديم على الإسعاف',
+      actionLabelEn: 'Join Emergency Squad'
+    },
+    {
+      id: 'business',
+      titleAr: 'الشركات والاستثمار الحر',
+      titleEn: 'Commerce, Real Estate & Holdings',
+      badgeAr: 'اقتصاد حر متكامل',
+      badgeEn: 'Sovereign Player Economy',
+      icon: DollarSign,
+      accent: '#E6AA38',
+      descAr: 'امتلك معارض سيارات حصرية، نوادي ليلية فاخرة، كراجات تعديل احترافية، أو قصوراً مطلة على شواطئ Vinewood Hills بحرية مالية مطلقة.',
+      descEn: 'Player-owned luxury dealerships, mechanic workshops, nightclubs, fine-dining restaurants, and sovereign penthouses.',
+      stats: [
+        { labelAr: 'الأنشطة المتاحة', labelEn: 'Enterprises', val: '35+ Businesses' },
+        { labelAr: 'نظام العقارات', labelEn: 'Real Estate', val: 'Custom Interiors' },
+        { labelAr: 'سوق العمل', labelEn: 'Trade Volume', val: '100% Player Run' }
+      ],
+      actionTab: 'store',
+      actionLabelAr: 'باقات الأعمال والمتجر',
+      actionLabelEn: 'Explore VIP Business'
+    },
+    {
+      id: 'gangs',
+      titleAr: 'الجريمة المنظمة وعصابات الشوارع',
+      titleEn: 'Syndicates & Underworld Crews',
+      badgeAr: 'صراع النفوذ والسيطرة',
+      badgeEn: 'Territorial RP',
+      icon: Flame,
+      accent: '#A855F7',
+      descAr: 'حروب نفوذ على أراضي لوس سانتوس، تخطيط لسرقات كبرى للبنوك ومحلات المجوهرات، مع التزام تام بقوانين اللعب النظيف والرول بلاي الواقعي.',
+      descEn: 'Territorial turf control, intricate bank heists, underground street racing, and syndicate diplomacy governed by strict fair-play RP.',
+      stats: [
+        { labelAr: 'مناطق النفوذ', labelEn: 'Turf Regions', val: 'South LS & City' },
+        { labelAr: 'عمليات السطو', labelEn: 'Major Heists', val: 'Pacific & Vaults' },
+        { labelAr: 'قواعد الرول بلاي', labelEn: 'Fair-Play Rules', val: 'Strict NLR / FearRP' }
+      ],
+      actionTab: 'rules',
+      actionLabelAr: 'قوانين العصابات والسرقات',
+      actionLabelEn: 'Review Underworld Rules'
+    }
+  ];
+
+  const currentSector = citySectors.find(s => s.id === activeTabSector) || citySectors[0];
+
   return (
-    <div className="min-h-screen bg-[#070707] text-[#E5E5E5] relative overflow-hidden">
+    <div className="min-h-screen bg-[#050508] text-[#F1F3F7] relative overflow-hidden bg-hud-grid">
       
-      {/* ATMOSPHERIC BACKGROUND MESH */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[800px] bg-radial-mesh pointer-events-none opacity-60 z-0" />
-      <div className="absolute top-28 left-1/4 w-[500px] h-[500px] rounded-full bg-[#C8874B]/10 blur-[140px] pointer-events-none z-0" />
-      <div className="absolute top-96 right-1/4 w-[420px] h-[420px] rounded-full bg-[#151518]/40 blur-[150px] pointer-events-none z-0" />
+      {/* ATMOSPHERIC GLOWS */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[700px] pointer-events-none opacity-40 z-0 bg-radial-glow" />
+      <div className="absolute top-24 left-1/3 w-[600px] h-[600px] rounded-full bg-[#E6AA38]/10 blur-[160px] pointer-events-none z-0" />
+      <div className="absolute top-96 right-1/4 w-[450px] h-[450px] rounded-full bg-[#00F0FF]/5 blur-[170px] pointer-events-none z-0" />
 
-      {/* ================= HERO SECTION ================= */}
-      <section className="relative z-10 min-h-[92vh] flex flex-col justify-center items-center px-4 sm:px-6 lg:px-8 pt-32 pb-16">
-        <div className="max-w-5xl mx-auto text-center flex flex-col items-center">
+      {/* ================= BREAKING CITY WIRE TICKER ================= */}
+      <div className="relative z-20 pt-24 sm:pt-28 pb-3 border-b border-[#1E2029]/80 bg-[#08080C]/80 backdrop-blur-md">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-3 overflow-hidden text-xs">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#E6AA38] text-black font-black uppercase text-[10px] tracking-wider shrink-0 shadow-sm shadow-[#E6AA38]/30">
+            <Radio className="w-3 h-3 animate-pulse" />
+            <span>{language === 'ar' ? 'بث مباشر' : 'CITY WIRE'}</span>
+          </div>
+          <div className="overflow-hidden whitespace-nowrap text-[#9EA3B0] text-xs">
+            <span className="inline-block animate-marquee">
+              {language === 'ar'
+                ? '⚡ افتتاح دفعة التقديم الجديدة لأكاديمية شرطة LSPD • نظام صوتي ثلاثي الأبعاد SaltyChat مفعّل • باقات VIP الجديدة أصبحت متاحة بالمتجر • بطولات سباقات الشوارع الرسمية هذا المساء • مرحباً بكم في مجتمع PRIME RP FiveM'
+                : '⚡ LSPD Police Academy Batch #14 Now Open • SaltyChat 3.1 Spatial Voice Engine Active • New 2026 VIP Tier Packages Available • Welcome to PRIME RP FiveM Community'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ================= HERO SECTION (RADICAL REDESIGN) ================= */}
+      <section className="relative z-10 pt-10 pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
           
-          {/* Live FiveM Status Pill */}
-          <motion.div
-            initial={{ opacity: 0, y: -15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-[#0D0D0F]/90 border border-[#222226] hover:border-[#C8874B]/40 backdrop-blur-md mb-8 shadow-xl"
-          >
-            <span className={`flex items-center gap-1.5 font-bold text-xs ${isOnline ? 'text-emerald-400' : isConfigured ? 'text-rose-400' : 'text-amber-400'}`}>
-              <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : isConfigured ? 'bg-rose-400' : 'bg-amber-400'}`} />
-              {isOnline 
-                ? (language === 'ar' ? 'السيرفر متصل الآن' : 'FIVEM ONLINE') 
-                : !isConfigured 
-                  ? (language === 'ar' ? 'بانتظار تهيئة السيرفر' : 'CONFIG PENDING') 
-                  : (language === 'ar' ? 'السيرفر غير متصل' : 'SERVER OFFLINE')}
-            </span>
-            <span className="text-[#333]">•</span>
-            <span className="text-[#9A9A9A] text-xs flex items-center gap-1.5">
-              <Users className="w-3.5 h-3.5 text-[#C8874B]" />
-              <strong className="text-white font-mono">
-                {isOnline ? (telemetry?.playersCount ?? 0) : 0}
-              </strong>
-              {isOnline && telemetry?.maxPlayers ? ` / ${telemetry.maxPlayers}` : ''}{' '}
-              {language === 'ar' ? 'مواطن متصل' : 'Citizens Online'}
-            </span>
-          </motion.div>
-
-          {/* PRIME RP LOGO */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.7, delay: 0.1 }}
-            className="mb-8 transform hover:scale-[1.02] transition-transform duration-500"
-          >
-            <PrimeLogo size="hero" variant="hero" showText={false} withGlow={true} />
-          </motion.div>
-
-          {/* HERO HEADLINE */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white mb-6 uppercase leading-[1.1]"
-          >
-            <span className="text-transparent bg-clip-text bg-gradient-to-b from-[#FFFFFF] via-[#E5E5E5] to-[#8E8E8E]">
-              {t('hero.title')}{' '}
-            </span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#C8874B] via-[#DF9F64] to-[#E5A93C]">
-              PRIME RP
-            </span>
-          </motion.h1>
-
-          {/* HERO SUBTITLE */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            className="text-base sm:text-lg md:text-xl text-[#9A9A9A] max-w-2xl mb-10 leading-relaxed font-normal"
-          >
-            {t('hero.description')}
-          </motion.p>
-
-          {/* HERO CTAS WITH MAGNETIC BUTTONS */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.4 }}
-            className="flex flex-wrap items-center justify-center gap-4 w-full sm:w-auto mb-8"
-          >
-            <MagneticButton onClick={handlePlayNow}>
-              <div className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#C8874B] via-[#DF9F64] to-[#C8874B] text-black font-black text-sm uppercase tracking-wider hover:brightness-110 active:scale-98 transition-all shadow-xl shadow-[#C8874B]/25 cursor-pointer">
-                <Play className="w-4 h-4 fill-current" />
-                <span>{t('hero.playNow')}</span>
-              </div>
-            </MagneticButton>
-
-            <MagneticButton>
-              <a
-                href={siteSettings?.discordUrl || 'https://discord.gg/primerp'}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-[#0D0D0F] hover:bg-[#151518] border border-[#222226] hover:border-[#5865F2]/80 text-white font-bold text-sm uppercase tracking-wider transition-all shadow-lg cursor-pointer"
-              >
-                <MessageSquare className="w-4 h-4 text-[#5865F2]" />
-                <span>{t('hero.joinDiscord')}</span>
-              </a>
-            </MagneticButton>
-          </motion.div>
-
-          {/* QUICK CONNECT CONSOLE COMMAND */}
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.45 }}
-            className="mb-14 flex items-center gap-2 p-1.5 pr-3 rtl:pr-1.5 rtl:pl-3 rounded-2xl bg-[#0D0D0F] border border-[#222226] max-w-md mx-auto"
-          >
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#151518] text-[#9A9A9A] font-mono text-xs select-all">
-              <span className="text-[#C8874B] font-bold">F8:</span>
-              <span className="text-[#DDD]">{connectCommand}</span>
-            </div>
-            <button
-              onClick={handleCopyConnect}
-              className="p-2 rounded-xl bg-[#151518] hover:bg-[#202025] text-[#AAA] hover:text-white border border-[#252528] transition-all cursor-pointer shrink-0 flex items-center gap-1.5 text-xs font-bold"
-              title="Copy F8 connect command"
+          {/* LEFT: Cinematic Copy & CTAs (7 Cols) */}
+          <div className="lg:col-span-7 space-y-6 text-center lg:text-left lg:rtl:text-right">
+            
+            {/* Status Pill with Capacity Meter */}
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="inline-flex flex-wrap items-center gap-3 px-3.5 py-1.5 rounded-full bg-[#0A0A0F] border border-[#1E2029] text-xs shadow-xl"
             >
-              {copiedConnect ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-emerald-400 text-[11px]">{language === 'ar' ? 'تم النسخ' : 'Copied'}</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5 text-[#C8874B]" />
-                  <span className="text-[#C8874B] text-[11px]">{language === 'ar' ? 'نسخ' : 'Copy'}</span>
-                </>
-              )}
-            </button>
-          </motion.div>
-
-          {/* LIVE TELEMETRY STATS HUD */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.5 }}
-            className="w-full max-w-4xl grid grid-cols-2 md:grid-cols-4 gap-4 p-4 rounded-3xl bg-[#0D0D0F]/80 backdrop-blur-xl border border-[#222226] shadow-2xl"
-          >
-            <div className="flex flex-col items-center justify-center p-3 border-r rtl:border-r-0 rtl:border-l border-[#1C1C20] last:border-none">
-              <div className="flex items-center gap-1.5 text-xs text-[#777] mb-1">
-                <Users className="w-3.5 h-3.5 text-[#C8874B]" />
-                <span>{t('hero.onlinePlayers')}</span>
-              </div>
-              <p className="text-2xl font-black text-white font-rajdhani">
-                {isOnline ? (telemetry?.playersCount ?? 0) : 0}{' '}
-                <span className="text-xs font-normal text-[#666]">
-                  {isOnline && telemetry?.maxPlayers ? `/ ${telemetry.maxPlayers}` : ''}
+              <span className="flex items-center gap-1.5 font-bold">
+                <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+                <span className={isOnline ? 'text-emerald-400' : 'text-amber-400'}>
+                  {isOnline ? (language === 'ar' ? 'سيرفر FiveM متصل' : 'FIVEM ONLINE') : (language === 'ar' ? 'في وضع الاستعداد' : 'FIVEM STANDBY')}
                 </span>
-              </p>
-            </div>
-
-            <div className="flex flex-col items-center justify-center p-3 border-r rtl:border-r-0 rtl:border-l border-[#1C1C20] last:border-none">
-              <div className="flex items-center gap-1.5 text-xs text-[#777] mb-1">
-                <Activity className={`w-3.5 h-3.5 ${isOnline ? 'text-emerald-400' : 'text-rose-400'}`} />
-                <span>{t('hero.serverStatus')}</span>
-              </div>
-              <span className={`inline-flex items-center gap-1.5 text-xs font-black px-2.5 py-0.5 rounded-full border ${
-                isOnline 
-                  ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' 
-                  : isConfigured 
-                    ? 'text-rose-400 bg-rose-500/10 border-rose-500/20' 
-                    : 'text-amber-400 bg-amber-500/10 border-amber-500/20'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : isConfigured ? 'bg-rose-400' : 'bg-amber-400'}`} />
-                {isOnline ? t('hero.online') : isConfigured ? (language === 'ar' ? 'غير متصل' : 'Offline') : (language === 'ar' ? 'قيد التهيئة' : 'Setup')}
               </span>
-            </div>
+              <span className="text-[#333]">•</span>
+              <span className="text-[#9EA3B0] flex items-center gap-1.5 font-rajdhani">
+                <Users className="w-3.5 h-3.5 text-[#E6AA38]" />
+                <strong className="text-white">{playersCount}</strong>
+                <span>/ {maxPlayers} {language === 'ar' ? 'مواطن' : 'Citizens'}</span>
+              </span>
+              <span className="text-[#333] hidden sm:inline">•</span>
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-[#38BDF8] font-mono">
+                <Zap className="w-3 h-3" />
+                <span>{telemetry?.pingMs || 25}ms</span>
+              </span>
+            </motion.div>
 
-            <div className="flex flex-col items-center justify-center p-3 border-r rtl:border-r-0 rtl:border-l border-[#1C1C20] last:border-none">
-              <div className="flex items-center gap-1.5 text-xs text-[#777] mb-1">
-                <Briefcase className="w-3.5 h-3.5 text-[#C8874B]" />
-                <span>{t('hero.departments')}</span>
-              </div>
-              <p className="text-2xl font-black text-white font-rajdhani">
-                {featuredJobs.length > 0 ? `${featuredJobs.length}+` : '6+'}
-              </p>
-            </div>
+            {/* Hero Main Headline */}
+            <motion.h1
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="text-4xl sm:text-6xl md:text-7xl font-black tracking-tight text-white uppercase leading-[1.08]"
+            >
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-white via-[#E1E4EC] to-[#9EA3B0]">
+                {language === 'ar' ? 'عالم اللعب الواقعي' : 'THE NEXT LEVEL OF'}
+              </span>
+              <span className="block mt-1 gold-gradient-text drop-shadow-md">
+                PRIME ROLEPLAY
+              </span>
+            </motion.h1>
 
-            <div className="flex flex-col items-center justify-center p-3">
-              <div className="flex items-center gap-1.5 text-xs text-[#777] mb-1">
-                <Zap className="w-3.5 h-3.5 text-[#DF9F64]" />
-                <span>{language === 'ar' ? 'سرعة الاستجابة' : 'Network Ping'}</span>
+            {/* Hero Subtitle */}
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="text-base sm:text-lg text-[#9EA3B0] max-w-2xl mx-auto lg:mx-0 leading-relaxed"
+            >
+              {language === 'ar'
+                ? 'المنصة الرسمية لسيرفر PRIME RP FiveM. مدينة متكاملة بأنظمة اقتصاد واقعية، وظائف حكومية بتسلسل رسمي، صوت محيطي ثلاثي الأبعاد، وحماية متطورة تضمن أعلى معايير العدالة والتنافس.'
+                : 'Experience premier GTA V Roleplay engineered with custom 60-tick netcode, player-owned corporations, sovereign law enforcement, and zero compromise on performance.'}
+            </motion.p>
+
+            {/* Action Buttons */}
+            <motion.div
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-wrap items-center justify-center lg:justify-start gap-4 pt-2"
+            >
+              <MagneticButton onClick={handlePlayNow}>
+                <div className="flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#E6AA38] via-[#FFC857] to-[#E6AA38] text-black font-black text-sm uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-[#E6AA38]/30 cursor-pointer">
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>{language === 'ar' ? 'دخول السيرفر الآن' : 'Connect to FiveM'}</span>
+                </div>
+              </MagneticButton>
+
+              <MagneticButton>
+                <a
+                  href={siteSettings?.discordUrl || 'https://discord.gg/primerp'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2.5 px-7 py-4 rounded-2xl bg-[#0F1017] hover:bg-[#161822] border border-[#1E2029] hover:border-[#5865F2]/80 text-white font-bold text-sm uppercase tracking-wider transition-all shadow-lg cursor-pointer"
+                >
+                  <MessageSquare className="w-4 h-4 text-[#5865F2]" />
+                  <span>{language === 'ar' ? 'سيرفر الديسكورد' : 'Join Discord'}</span>
+                </a>
+              </MagneticButton>
+            </motion.div>
+
+            {/* Highlights Chips */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+              className="grid grid-cols-3 gap-3 pt-4 max-w-lg mx-auto lg:mx-0 text-left rtl:text-right"
+            >
+              <div className="p-3 rounded-xl bg-[#0B0C10] border border-[#1E2029]/80">
+                <div className="text-[#E6AA38] font-black text-lg font-rajdhani">60 FPS</div>
+                <div className="text-[11px] text-[#777] uppercase font-bold">{language === 'ar' ? 'أداء فائق وثابت' : 'Synced Netcode'}</div>
               </div>
-              <p className="text-2xl font-black text-[#C8874B] font-rajdhani">
-                {isOnline ? `${telemetry?.pingMs || telemetry?.ping || 35} ms` : '-'}
-              </p>
-            </div>
-          </motion.div>
+              <div className="p-3 rounded-xl bg-[#0B0C10] border border-[#1E2029]/80">
+                <div className="text-[#38BDF8] font-black text-lg font-rajdhani">SaltyChat</div>
+                <div className="text-[11px] text-[#777] uppercase font-bold">{language === 'ar' ? 'صوت ثلاثي الأبعاد' : '3D Spatial Audio'}</div>
+              </div>
+              <div className="p-3 rounded-xl bg-[#0B0C10] border border-[#1E2029]/80">
+                <div className="text-emerald-400 font-black text-lg font-rajdhani">ANTI-CHEAT</div>
+                <div className="text-[11px] text-[#777] uppercase font-bold">{language === 'ar' ? 'حماية شاملة V4' : 'Active Defense'}</div>
+              </div>
+            </motion.div>
+
+          </div>
+
+          {/* RIGHT: Live FiveM Terminal & Console Simulator (5 Cols) */}
+          <div className="lg:col-span-5">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.6 }}
+              className="rounded-3xl bg-gradient-to-b from-[#0D0E14] via-[#090A0E] to-[#07070A] border border-[#1E2029] p-6 shadow-2xl relative cyber-corners"
+            >
+              {/* Terminal Title Bar */}
+              <div className="flex items-center justify-between pb-4 border-b border-[#181A22] mb-5">
+                <div className="flex items-center gap-2">
+                  <div className="flex gap-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-500/80" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500/80" />
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/80" />
+                  </div>
+                  <span className="text-[11px] font-mono font-bold text-[#888] ml-2 rtl:ml-0 rtl:mr-2">
+                    PRIME-HUD://TERMINAL.v4
+                  </span>
+                </div>
+                <span className="px-2 py-0.5 rounded text-[10px] font-black bg-[#E6AA38]/15 text-[#FFC857] border border-[#E6AA38]/30 font-rajdhani uppercase">
+                  FIVE-M LIVE
+                </span>
+              </div>
+
+              {/* Server Logo & Identity */}
+              <div className="text-center py-4 flex flex-col items-center">
+                <PrimeLogo size="md" variant="hero" showText={false} withGlow={true} />
+                <h3 className="text-lg font-black text-white mt-3 font-rajdhani tracking-wider">
+                  PRIME ROLEPLAY CITIZEN PORTAL
+                </h3>
+                <p className="text-xs text-[#777] mt-0.5">
+                  LOS SANTOS OFFICIAL GATEWAY
+                </p>
+              </div>
+
+              {/* Citizen Population Capacity Progress Bar */}
+              <div className="my-4 p-4 rounded-2xl bg-[#060609] border border-[#181A22]">
+                <div className="flex justify-between items-center text-xs mb-2">
+                  <span className="text-[#888] flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-[#E6AA38]" />
+                    <span>{language === 'ar' ? 'سعة السيرفر اللحظية' : 'Live Capacity Load'}</span>
+                  </span>
+                  <span className="font-mono font-bold text-white">
+                    {playersCount} / {maxPlayers} ({capacityPercent}%)
+                  </span>
+                </div>
+                <div className="w-full h-2 rounded-full bg-[#15151C] overflow-hidden">
+                  <div 
+                    className="h-full rounded-full bg-gradient-to-r from-[#E6AA38] to-[#FFC857] transition-all duration-700 shadow-sm shadow-[#E6AA38]"
+                    style={{ width: `${capacityPercent}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Live F8 Console Direct Connect Command */}
+              <div className="space-y-2 mt-4">
+                <label className="text-[11px] font-mono text-[#888] flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Terminal className="w-3 h-3 text-[#E6AA38]" />
+                    <span>{language === 'ar' ? 'أمر الاتصال عبر كونسول F8:' : 'FiveM F8 Console Launcher:'}</span>
+                  </span>
+                  <span className="text-[#555] text-[10px]">Press F8 in FiveM</span>
+                </label>
+
+                <div className="flex items-center gap-2 p-2 rounded-xl bg-[#060609] border border-[#181A22]">
+                  <code className="text-xs text-[#E1E4EC] font-mono px-2 py-1 flex-grow select-all truncate">
+                    {connectCommand}
+                  </code>
+                  <button
+                    onClick={handleCopyConnect}
+                    className="px-3 py-1.5 rounded-lg bg-[#111218] hover:bg-[#181A22] text-[#9EA3B0] hover:text-white border border-[#222] transition-all cursor-pointer shrink-0 flex items-center gap-1 text-xs font-bold"
+                  >
+                    {copiedConnect ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="text-emerald-400">{language === 'ar' ? 'تم' : 'Done'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5 text-[#E6AA38]" />
+                        <span className="text-[#FFC857]">{language === 'ar' ? 'نسخ' : 'Copy'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Instant Protocol Launch Button */}
+              <button
+                onClick={handlePlayNow}
+                className="w-full mt-4 py-3 rounded-xl bg-[#151620] hover:bg-[#E6AA38] text-[#FFC857] hover:text-black border border-[#E6AA38]/30 hover:border-[#E6AA38] font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+              >
+                <Play className="w-3.5 h-3.5 fill-current" />
+                <span>{language === 'ar' ? 'تشغيل FiveM والانضمام مباشرة' : 'Launch Client & Connect'}</span>
+              </button>
+
+            </motion.div>
+          </div>
 
         </div>
       </section>
 
-      {/* ================= WHY PRIME RP PILLARS (ABOUT) ================= */}
-      <section id="about" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#151518] relative z-10 scroll-mt-20">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/10 text-[#C8874B] text-xs font-bold mb-3 uppercase tracking-wider">
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>{language === 'ar' ? 'المعايير القياسية • من نحن' : 'Standard Architecture • About Us'}</span>
+      {/* ================= INTERACTIVE BENTO MATRIX: CITY SECTORS ================= */}
+      <section id="about" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#181A22] relative z-10 scroll-mt-24">
+        
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-14">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E6AA38]/10 text-[#FFC857] text-xs font-bold mb-3 uppercase tracking-wider border border-[#E6AA38]/20">
+            <Compass className="w-3.5 h-3.5" />
+            <span>{language === 'ar' ? 'اختر مسارك • قطاعات المدينة' : 'Choose Your Path • City Sectors'}</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-black text-white mb-4 uppercase tracking-tight">
+            {language === 'ar' ? 'عالم واسع بمصائر متعددة' : 'Forge Your Destiny in PRIME'}
+          </h2>
+          <p className="text-[#9EA3B0] text-sm sm:text-base leading-relaxed">
+            {language === 'ar'
+              ? 'تعتمد مدينة PRIME RP على التوازن الواقعي بين السلطة، والخدمات الإنسانية، والتجارة الحرة، وصراع العصابات.'
+              : 'Our city features dedicated infrastructure, custom MDTs, and deep career ladders across every walk of life.'}
+          </p>
+        </div>
+
+        {/* Sector Navigation Tabs */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+          {citySectors.map((sector) => {
+            const active = activeTabSector === sector.id;
+            const Icon = sector.icon;
+            return (
+              <button
+                key={sector.id}
+                onClick={() => setActiveTabSector(sector.id)}
+                className={`flex items-center gap-2 px-5 py-3 rounded-2xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                  active
+                    ? 'bg-[#111218] text-white border border-[#E6AA38] shadow-lg shadow-[#E6AA38]/15'
+                    : 'bg-[#08080C] text-[#888] hover:text-white border border-[#181A22] hover:border-[#282A35]'
+                }`}
+              >
+                <Icon className="w-4 h-4" style={{ color: active ? sector.accent : undefined }} />
+                <span>{language === 'ar' ? sector.titleAr.split('(')[0] : sector.titleEn.split('&')[0]}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Active Sector Showcase Card */}
+        <div className="rounded-3xl bg-gradient-to-b from-[#0C0D13] to-[#07070A] border border-[#1E2029] p-6 sm:p-10 shadow-2xl relative overflow-hidden cyber-corners">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+            
+            <div className="lg:col-span-8 space-y-6">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider border"
+                style={{ 
+                  backgroundColor: `${currentSector.accent}15`, 
+                  borderColor: `${currentSector.accent}40`,
+                  color: currentSector.accent 
+                }}
+              >
+                <span>{language === 'ar' ? currentSector.badgeAr : currentSector.badgeEn}</span>
+              </div>
+
+              <h3 className="text-2xl sm:text-4xl font-black text-white">
+                {language === 'ar' ? currentSector.titleAr : currentSector.titleEn}
+              </h3>
+
+              <p className="text-sm sm:text-base text-[#9EA3B0] leading-relaxed max-w-2xl">
+                {language === 'ar' ? currentSector.descAr : currentSector.descEn}
+              </p>
+
+              {/* Stats bento */}
+              <div className="grid grid-cols-3 gap-4 pt-2">
+                {currentSector.stats.map((stat, i) => (
+                  <div key={i} className="p-3.5 rounded-2xl bg-[#060609] border border-[#181A22]">
+                    <div className="text-[11px] text-[#777] uppercase font-bold mb-1">
+                      {language === 'ar' ? stat.labelAr : stat.labelEn}
+                    </div>
+                    <div className="text-sm sm:text-base font-black text-white font-rajdhani">
+                      {stat.val}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-2">
+                <button
+                  onClick={() => setCurrentTab(currentSector.actionTab)}
+                  className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#E6AA38] to-[#FFC857] hover:brightness-110 text-black font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#E6AA38]/20 flex items-center gap-2 cursor-pointer"
+                >
+                  <span>{language === 'ar' ? currentSector.actionLabelAr : currentSector.actionLabelEn}</span>
+                  <ArrowIcon className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 rounded-2xl bg-[#060609]/70 border border-[#181A22] text-center">
+              <div 
+                className="w-20 h-20 rounded-3xl flex items-center justify-center mb-4 border"
+                style={{ 
+                  backgroundColor: `${currentSector.accent}15`, 
+                  borderColor: `${currentSector.accent}40`,
+                  color: currentSector.accent 
+                }}
+              >
+                <currentSector.icon className="w-10 h-10" />
+              </div>
+              <h4 className="text-base font-bold text-white mb-1">
+                {language === 'ar' ? 'نظام احترافي موثق' : 'Certified Gameplay'}
+              </h4>
+              <p className="text-xs text-[#777] leading-relaxed">
+                {language === 'ar' 
+                  ? 'تم فحص وبرمجة هذا القطاع لضمان تجربة واقعية دون أخطاء أو قلتشات تؤثر على مجريات اللعب.'
+                  : 'Engineered with deep scripting, custom MLOs, and vetted by community moderators.'}
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+      </section>
+
+      {/* ================= ARCHITECTURE PILLARS (STANDARDS) ================= */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#181A22] relative z-10">
+        <div className="text-center max-w-2xl mx-auto mb-12">
+          <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight">
             {t('features.title')}
           </h2>
-          <p className="text-[#9A9A9A] text-sm sm:text-base leading-relaxed">
+          <p className="text-[#9EA3B0] text-xs sm:text-sm mt-2">
             {t('features.subtitle')}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-7 rounded-3xl bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B]/50 transition-all card-hover-lift group">
-            <div className="w-12 h-12 rounded-2xl bg-[#C8874B]/10 border border-[#C8874B]/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform text-[#C8874B]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div className="p-6 rounded-2xl bg-[#090A0E] border border-[#1A1C24] hover:border-[#E6AA38]/50 transition-all card-hover-lift group">
+            <div className="w-12 h-12 rounded-xl bg-[#E6AA38]/10 border border-[#E6AA38]/20 flex items-center justify-center mb-4 text-[#FFC857] group-hover:scale-110 transition-transform">
               <DollarSign className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-black text-white mb-2">{t('features.economy')}</h3>
+            <h3 className="text-base font-black text-white mb-1.5">{t('features.economy')}</h3>
             <p className="text-xs text-[#888] leading-relaxed">{t('features.economyDesc')}</p>
           </div>
 
-          <div className="p-7 rounded-3xl bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B]/50 transition-all card-hover-lift group">
-            <div className="w-12 h-12 rounded-2xl bg-[#C8874B]/10 border border-[#C8874B]/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform text-[#C8874B]">
+          <div className="p-6 rounded-2xl bg-[#090A0E] border border-[#1A1C24] hover:border-[#E6AA38]/50 transition-all card-hover-lift group">
+            <div className="w-12 h-12 rounded-xl bg-[#E6AA38]/10 border border-[#E6AA38]/20 flex items-center justify-center mb-4 text-[#FFC857] group-hover:scale-110 transition-transform">
               <Briefcase className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-black text-white mb-2">{t('features.jobs')}</h3>
+            <h3 className="text-base font-black text-white mb-1.5">{t('features.jobs')}</h3>
             <p className="text-xs text-[#888] leading-relaxed">{t('features.jobsDesc')}</p>
           </div>
 
-          <div className="p-7 rounded-3xl bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B]/50 transition-all card-hover-lift group">
-            <div className="w-12 h-12 rounded-2xl bg-[#C8874B]/10 border border-[#C8874B]/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform text-[#C8874B]">
+          <div className="p-6 rounded-2xl bg-[#090A0E] border border-[#1A1C24] hover:border-[#E6AA38]/50 transition-all card-hover-lift group">
+            <div className="w-12 h-12 rounded-xl bg-[#E6AA38]/10 border border-[#E6AA38]/20 flex items-center justify-center mb-4 text-[#FFC857] group-hover:scale-110 transition-transform">
               <Shield className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-black text-white mb-2">{t('features.security')}</h3>
+            <h3 className="text-base font-black text-white mb-1.5">{t('features.security')}</h3>
             <p className="text-xs text-[#888] leading-relaxed">{t('features.securityDesc')}</p>
           </div>
 
-          <div className="p-7 rounded-3xl bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B]/50 transition-all card-hover-lift group">
-            <div className="w-12 h-12 rounded-2xl bg-[#C8874B]/10 border border-[#C8874B]/20 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform text-[#C8874B]">
+          <div className="p-6 rounded-2xl bg-[#090A0E] border border-[#1A1C24] hover:border-[#E6AA38]/50 transition-all card-hover-lift group">
+            <div className="w-12 h-12 rounded-xl bg-[#E6AA38]/10 border border-[#E6AA38]/20 flex items-center justify-center mb-4 text-[#FFC857] group-hover:scale-110 transition-transform">
               <Zap className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-black text-white mb-2">{t('features.performance')}</h3>
+            <h3 className="text-base font-black text-white mb-1.5">{t('features.performance')}</h3>
             <p className="text-xs text-[#888] leading-relaxed">{t('features.performanceDesc')}</p>
           </div>
         </div>
       </section>
 
-      {/* ================= CITY EXPERIENCE / GAMEPLAY SECTORS ================= */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#151518] relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/10 text-[#C8874B] text-xs font-bold mb-3 uppercase tracking-wider">
-            <Building2 className="w-3.5 h-3.5" />
-            <span>{language === 'ar' ? 'بيئة اللعب والمدينة' : 'Immersive City Life'}</span>
+      {/* ================= GOLDEN ROLEPLAY DIRECTIVES & FAIR PLAY ================= */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#181A22] relative z-10">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold mb-3 uppercase tracking-wider border border-emerald-500/20">
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            <span>{language === 'ar' ? 'مبادئ اللعب النظيف' : 'Roleplay Integrity & Code'}</span>
           </div>
-          <h2 className="text-3xl sm:text-5xl font-black text-white mb-4 uppercase tracking-tight">
-            {language === 'ar' ? 'اختر مسارك في عالم PRIME' : 'Forge Your Destiny in PRIME RP'}
+          <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight">
+            {language === 'ar' ? 'القواعد الذهبية لتجربة رول بلاي نقية' : 'The Golden Pillars of Serious RP'}
           </h2>
-          <p className="text-[#9A9A9A] text-sm sm:text-base leading-relaxed">
+          <p className="text-[#9EA3B0] text-xs sm:text-sm mt-2">
             {language === 'ar'
-              ? 'صُممت مدينة PRIME RP لتمنح كل مواطن حرية مطلقة في بناء إمبراطوريته، سواء في تطبيق القانون أو قيادة المؤسسات أو خوض مغامرات الجريمة المنظمة.'
-              : 'Every district is engineered with custom scripts and living systems to support deep, uninterrupted storylines.'}
+              ? 'نحرص في PRIME RP على بيئة لعب تحترم السيناريوهات الدرامية وتبتعد تماماً عن الفوضى.'
+              : 'Fair-play standards ensure every interaction develops into memorable, character-driven storylines.'}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-3xl bg-gradient-to-b from-[#0D0D0F] to-[#09090B] border border-[#222226] hover:border-[#58A6FF]/50 transition-all card-hover-lift group flex flex-col justify-between">
-            <div>
-              <div className="w-12 h-12 rounded-2xl bg-[#58A6FF]/10 border border-[#58A6FF]/30 flex items-center justify-center mb-5 text-[#58A6FF]">
-                <Shield className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-black text-white mb-2">
-                {language === 'ar' ? 'قطاع الأمن والعدالة' : 'Law Enforcement & SWAT'}
-              </h3>
-              <p className="text-xs text-[#888] leading-relaxed mb-4">
-                {language === 'ar'
-                  ? 'مراكز شرطة متطورة، رادارات حديثة، تدريبات تكتيكية، ودوريات لحماية المواطنين وفرض النظام.'
-                  : 'Advanced dispatch radios, MDT terminals, pursuit vehicles, and tactical crisis response.'}
-              </p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="p-6 rounded-2xl bg-[#090A0E] border border-[#1A1C24]">
+            <div className="flex items-center gap-2 text-rose-400 font-black text-sm mb-3">
+              <XCircle className="w-4 h-4" />
+              <span>{language === 'ar' ? 'ممنوع RDM / VDM' : 'No RDM / VDM'}</span>
             </div>
-            <div className="pt-4 border-t border-[#1C1C20] flex items-center justify-between">
-              <span className="text-[11px] font-bold text-[#58A6FF] uppercase tracking-wider">
-                {language === 'ar' ? 'رتب وانضباط' : 'Official Ranks'}
-              </span>
-              <button
-                onClick={() => setCurrentTab('jobs')}
-                className="inline-flex items-center gap-1 text-xs font-bold text-white hover:text-[#58A6FF] transition-colors cursor-pointer"
-              >
-                <span>{language === 'ar' ? 'التوظيف' : 'Careers'}</span>
-                <ArrowIcon className="w-3.5 h-3.5" />
-              </button>
+            <p className="text-xs text-[#888] leading-relaxed mb-4">
+              {language === 'ar'
+                ? 'يُحظر منعاً باتاً قتل أي لاعب أو صدمه بالمركبة دون وجود دافع درامي وسيناريو مسبق ومبرر كامل.'
+                : 'Killing or running over citizens without prior verbal interaction and legitimate storyline context is strictly forbidden.'}
+            </p>
+            <div className="p-2.5 rounded-lg bg-[#060609] border border-[#181A22] text-[11px] text-emerald-400 font-bold">
+              ✓ {language === 'ar' ? 'الواجب: التحاور وبدء السيناريو أولاً' : 'Requirement: Verbal RP interaction first'}
             </div>
           </div>
 
-          <div className="p-6 rounded-3xl bg-gradient-to-b from-[#0D0D0F] to-[#09090B] border border-[#222226] hover:border-rose-500/50 transition-all card-hover-lift group flex flex-col justify-between">
-            <div>
-              <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mb-5 text-rose-400">
-                <Activity className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-black text-white mb-2">
-                {language === 'ar' ? 'الخدمات الطبية والإنقاذ' : 'Emergency & Medical Services'}
-              </h3>
-              <p className="text-xs text-[#888] leading-relaxed mb-4">
-                {language === 'ar'
-                  ? 'غرف عمليات تفاعلية، إسعاف جوي سريع، وعلاج ميداني فوري للحفاظ على أرواح المصابين.'
-                  : 'Field triage, interactive trauma surgeries, air medical evacuation, and disaster management.'}
-              </p>
+          <div className="p-6 rounded-2xl bg-[#090A0E] border border-[#1A1C24]">
+            <div className="flex items-center gap-2 text-amber-400 font-black text-sm mb-3">
+              <ShieldAlert className="w-4 h-4" />
+              <span>{language === 'ar' ? 'قيمة الحياة (FearRP)' : 'Fear RP & Value of Life'}</span>
             </div>
-            <div className="pt-4 border-t border-[#1C1C20] flex items-center justify-between">
-              <span className="text-[11px] font-bold text-rose-400 uppercase tracking-wider">
-                {language === 'ar' ? 'إنقاذ 24/7' : '24/7 Response'}
-              </span>
-              <button
-                onClick={() => setCurrentTab('jobs')}
-                className="inline-flex items-center gap-1 text-xs font-bold text-white hover:text-rose-400 transition-colors cursor-pointer"
-              >
-                <span>{language === 'ar' ? 'التوظيف' : 'Careers'}</span>
-                <ArrowIcon className="w-3.5 h-3.5" />
-              </button>
+            <p className="text-xs text-[#888] leading-relaxed mb-4">
+              {language === 'ar'
+                ? 'عندما يتم تهديدك بسلاح من قبل عدة أشخاص، يجب أن تظهر الخوف على حياة شخصيتك وتستجيب للأوامر.'
+                : 'When faced with superior armed threats, you must fear for your character\'s survival and comply with directives.'}
+            </p>
+            <div className="p-2.5 rounded-lg bg-[#060609] border border-[#181A22] text-[11px] text-emerald-400 font-bold">
+              ✓ {language === 'ar' ? 'الواجب: الحفاظ على حياتك كأولوية' : 'Requirement: Value your life above pride'}
             </div>
           </div>
 
-          <div className="p-6 rounded-3xl bg-gradient-to-b from-[#0D0D0F] to-[#09090B] border border-[#222226] hover:border-[#C8874B]/50 transition-all card-hover-lift group flex flex-col justify-between">
-            <div>
-              <div className="w-12 h-12 rounded-2xl bg-[#C8874B]/10 border border-[#C8874B]/30 flex items-center justify-center mb-5 text-[#C8874B]">
-                <DollarSign className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-black text-white mb-2">
-                {language === 'ar' ? 'الشركات والاستثمار' : 'Commerce & Real Estate'}
-              </h3>
-              <p className="text-xs text-[#888] leading-relaxed mb-4">
-                {language === 'ar'
-                  ? 'امتلك معرض سياراتك، أو أدِر مطعماً راقياً، أو استثمر في العقارات والقصور الفاخرة.'
-                  : 'Player-owned dealerships, mechanic garages, luxury penthouses, and sovereign corporations.'}
-              </p>
+          <div className="p-6 rounded-2xl bg-[#090A0E] border border-[#1A1C24]">
+            <div className="flex items-center gap-2 text-purple-400 font-black text-sm mb-3">
+              <Cpu className="w-4 h-4" />
+              <span>{language === 'ar' ? 'ممنوع الميتا والباور' : 'No Metagaming & Powergaming'}</span>
             </div>
-            <div className="pt-4 border-t border-[#1C1C20] flex items-center justify-between">
-              <span className="text-[11px] font-bold text-[#C8874B] uppercase tracking-wider">
-                {language === 'ar' ? 'حرية مالية' : 'Sovereign Wealth'}
-              </span>
-              <button
-                onClick={() => setCurrentTab('store')}
-                className="inline-flex items-center gap-1 text-xs font-bold text-[#C8874B] hover:text-[#DF9F64] transition-colors cursor-pointer"
-              >
-                <span>{language === 'ar' ? 'المتجر' : 'Store'}</span>
-                <ArrowIcon className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          </div>
-
-          <div className="p-6 rounded-3xl bg-gradient-to-b from-[#0D0D0F] to-[#09090B] border border-[#222226] hover:border-purple-500/50 transition-all card-hover-lift group flex flex-col justify-between">
-            <div>
-              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mb-5 text-purple-400">
-                <Flame className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-black text-white mb-2">
-                {language === 'ar' ? 'الجريمة المنظمة والعصابات' : 'Syndicates & Underworld'}
-              </h3>
-              <p className="text-xs text-[#888] leading-relaxed mb-4">
-                {language === 'ar'
-                  ? 'حروب نفوذ، خطط سرقات كبرى، وتجارة سرية بموجب قوانين رول بلاي دقيقة تحمي اللعب النظيف.'
-                  : 'Turf wars, bank heists, smuggling networks, and territorial influence under strict RP rule.'}
-              </p>
-            </div>
-            <div className="pt-4 border-t border-[#1C1C20] flex items-center justify-between">
-              <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">
-                {language === 'ar' ? 'نفوذ وسيطرة' : 'Territory Control'}
-              </span>
-              <button
-                onClick={() => setCurrentTab('rules')}
-                className="inline-flex items-center gap-1 text-xs font-bold text-white hover:text-purple-400 transition-colors cursor-pointer"
-              >
-                <span>{language === 'ar' ? 'القوانين' : 'Rules'}</span>
-                <ArrowIcon className="w-3.5 h-3.5" />
-              </button>
+            <p className="text-xs text-[#888] leading-relaxed mb-4">
+              {language === 'ar'
+                ? 'استخدام معلومات الديسكورد داخل اللعبة أو فرض أفعال خارقة لا يمكن للطرف الآخر التفاعل معها ممنوع قطعياً.'
+                : 'Using out-of-game knowledge or forcing unrealistic actions that give opponents no counter-play is prohibited.'}
+            </p>
+            <div className="p-2.5 rounded-lg bg-[#060609] border border-[#181A22] text-[11px] text-emerald-400 font-bold">
+              ✓ {language === 'ar' ? 'الواجب: الفصل التام بين الشخصية والواقع' : 'Requirement: Strict IC vs OOC separation'}
             </div>
           </div>
         </div>
+
+        <div className="text-center mt-8">
+          <button
+            onClick={() => setCurrentTab('rules')}
+            className="inline-flex items-center gap-2 text-xs font-bold text-[#E6AA38] hover:text-[#FFC857] transition-colors cursor-pointer"
+          >
+            <span>{language === 'ar' ? 'الاطلاع على كتاب القوانين الكامل (Rules Book)' : 'Read Full City Rules & Directives'}</span>
+            <ArrowIcon className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </section>
 
-      {/* ================= STORE VIP SHOWCASE ================= */}
+      {/* ================= STORE VIP PACKAGES SPOTLIGHT ================= */}
       {featuredProducts.length > 0 && (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#151518] relative z-10">
+        <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#181A22] relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/10 text-[#C8874B] text-xs font-bold mb-2 uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E6AA38]/10 text-[#FFC857] text-xs font-bold mb-2 uppercase tracking-wider border border-[#E6AA38]/20">
                 <Crown className="w-3.5 h-3.5" />
                 <span>{language === 'ar' ? 'المتجر الرسمي' : 'Official Store'}</span>
               </div>
               <h2 className="text-3xl font-black text-white">
-                {language === 'ar' ? 'باقات وحزم النخبة (VIP & Perks)' : 'Featured VIP & Vehicle Packages'}
+                {language === 'ar' ? 'باقات النخبة والمركبات الحصرية' : 'Featured VIP Packages'}
               </h2>
             </div>
             <button
               onClick={() => setCurrentTab('store')}
-              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#C8874B] hover:text-[#DF9F64] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#E6AA38] hover:text-[#FFC857] transition-colors cursor-pointer"
             >
-              <span>{language === 'ar' ? 'زيارة المتجر بالكامل' : 'Explore Full Store'}</span>
+              <span>{language === 'ar' ? 'تصفح المتجر بالكامل' : 'Explore Entire Store'}</span>
               <ArrowIcon className="w-4 h-4" />
             </button>
           </div>
@@ -526,21 +713,21 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <div
                   key={product.id}
                   onClick={() => setCurrentTab('store')}
-                  className="rounded-3xl bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B]/60 p-6 flex flex-col justify-between transition-all card-hover-lift group cursor-pointer"
+                  className="rounded-3xl bg-[#0A0A0F] border border-[#1E2029] hover:border-[#E6AA38]/70 p-6 flex flex-col justify-between transition-all card-hover-lift group cursor-pointer shadow-xl relative cyber-corners"
                 >
                   <div>
-                    <div className="h-44 rounded-2xl overflow-hidden mb-4 relative bg-[#151518]">
+                    <div className="h-48 rounded-2xl overflow-hidden mb-5 relative bg-[#111218]">
                       <img
                         src={product.image}
                         alt={trans.name}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      <div className="absolute top-3 right-3 rtl:right-auto rtl:left-3 px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-md text-[#DF9F64] text-[10px] font-bold uppercase tracking-wider border border-white/10">
+                      <div className="absolute top-3 right-3 rtl:right-auto rtl:left-3 px-2.5 py-1 rounded-lg bg-black/85 backdrop-blur-md text-[#FFC857] text-[10px] font-bold uppercase tracking-wider border border-white/10">
                         {product.category}
                       </div>
                     </div>
 
-                    <h3 className="text-xl font-black text-white group-hover:text-[#DF9F64] transition-colors mb-2">
+                    <h3 className="text-xl font-black text-white group-hover:text-[#FFC857] transition-colors mb-2">
                       {trans.name}
                     </h3>
                     <p className="text-xs text-[#888] line-clamp-2 leading-relaxed mb-4">
@@ -548,12 +735,12 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                     </p>
                   </div>
 
-                  <div className="pt-4 border-t border-[#1C1C20] flex items-center justify-between">
+                  <div className="pt-4 border-t border-[#181A22] flex items-center justify-between">
                     <div>
                       <span className="text-[10px] text-[#666] block font-bold uppercase tracking-wider">
                         {language === 'ar' ? 'السعر' : 'Price'}
                       </span>
-                      <span className="text-xl font-black text-[#C8874B] font-rajdhani">
+                      <span className="text-2xl font-black text-[#FFC857] font-rajdhani">
                         ${product.price} <span className="text-xs font-normal text-[#888]">{product.currency}</span>
                       </span>
                     </div>
@@ -563,7 +750,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                         e.stopPropagation();
                         setCurrentTab('store');
                       }}
-                      className="px-4 py-2.5 rounded-xl bg-[#151518] hover:bg-[#C8874B] text-[#C8874B] hover:text-black text-xs font-bold uppercase tracking-wider transition-all border border-[#252528] hover:border-[#C8874B] flex items-center gap-1.5 cursor-pointer"
+                      className="px-4 py-2.5 rounded-xl bg-[#111218] hover:bg-[#E6AA38] text-[#FFC857] hover:text-black text-xs font-bold uppercase tracking-wider transition-all border border-[#222] hover:border-[#E6AA38] flex items-center gap-1.5 cursor-pointer shadow-md"
                     >
                       <ShoppingBag className="w-3.5 h-3.5" />
                       <span>{language === 'ar' ? 'عرض الحزمة' : 'View Package'}</span>
@@ -576,22 +763,22 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         </section>
       )}
 
-      {/* ================= PRIME CAREERS PREVIEW ================= */}
+      {/* ================= CAREERS / VACANCIES PREVIEW ================= */}
       {featuredJobs.length > 0 && (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#151518] relative z-10">
+        <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#181A22] relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/10 text-[#C8874B] text-xs font-bold mb-2 uppercase tracking-wider">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E6AA38]/10 text-[#FFC857] text-xs font-bold mb-2 uppercase tracking-wider border border-[#E6AA38]/20">
                 <Briefcase className="w-3.5 h-3.5" />
-                <span>Careers & Roles</span>
+                <span>Careers & Recruitment</span>
               </div>
               <h2 className="text-3xl font-black text-white">{t('jobs.title')}</h2>
             </div>
             <button
               onClick={() => setCurrentTab('jobs')}
-              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#C8874B] hover:text-[#DF9F64] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#E6AA38] hover:text-[#FFC857] transition-colors cursor-pointer"
             >
-              <span>{language === 'ar' ? 'عرض كافة الوظائف المتاحة' : 'View All Opportunities'}</span>
+              <span>{language === 'ar' ? 'استعراض كافة الوظائف الشاغرة' : 'View All Opportunities'}</span>
               <ArrowIcon className="w-4 h-4" />
             </button>
           </div>
@@ -602,23 +789,23 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               return (
                 <div
                   key={job.id}
-                  className="rounded-3xl bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B]/50 p-6 flex flex-col justify-between transition-all card-hover-lift group"
+                  className="rounded-3xl bg-[#0A0A0F] border border-[#1E2029] hover:border-[#E6AA38]/60 p-6 flex flex-col justify-between transition-all card-hover-lift group"
                 >
                   <div className="space-y-4">
                     <div className="flex justify-between items-start">
-                      <span className="px-2.5 py-1 rounded-lg bg-[#151518] text-[#C8874B] text-[10px] font-bold uppercase tracking-wider border border-[#252528]">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#111218] text-[#FFC857] text-[10px] font-bold uppercase tracking-wider border border-[#222]">
                         {job.category}
                       </span>
                       <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                         job.status === 'HIRING_OPEN'
                           ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-[#1E1E22] text-[#888]'
+                          : 'bg-[#181A22] text-[#888]'
                       }`}>
                         {job.status === 'HIRING_OPEN' ? (language === 'ar' ? 'التقديم متاح' : 'Hiring Active') : (language === 'ar' ? 'مغلق مؤقتاً' : 'Closed')}
                       </span>
                     </div>
 
-                    <h3 className="text-xl font-black text-white group-hover:text-[#DF9F64] transition-colors">
+                    <h3 className="text-xl font-black text-white group-hover:text-[#FFC857] transition-colors">
                       {trans.name}
                     </h3>
 
@@ -628,20 +815,20 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
                     <div className="pt-2">
                       <span className="text-xs text-[#666] block mb-0.5">
-                        {language === 'ar' ? 'الراتب التقريبي:' : 'Estimated Salary:'}
+                        {language === 'ar' ? 'الراتب التقديري:' : 'Hourly Wage:'}
                       </span>
-                      <span className="text-base font-black text-[#C8874B] font-rajdhani">
+                      <span className="text-lg font-black text-[#FFC857] font-rajdhani">
                         ${job.salaryMin} - ${job.salaryMax} / hr
                       </span>
                     </div>
                   </div>
 
-                  <div className="pt-6 border-t border-[#1C1C20] mt-4">
+                  <div className="pt-6 border-t border-[#181A22] mt-4">
                     <button
                       onClick={() => setCurrentTab('jobs')}
-                      className="w-full py-3 rounded-xl bg-[#151518] hover:bg-[#1E1E22] text-white text-xs font-bold uppercase tracking-wider transition-all border border-[#252528] hover:border-[#C8874B] cursor-pointer flex items-center justify-center gap-2"
+                      className="w-full py-3 rounded-xl bg-[#111218] hover:bg-[#181A22] text-white text-xs font-bold uppercase tracking-wider transition-all border border-[#222] hover:border-[#E6AA38] cursor-pointer flex items-center justify-center gap-2"
                     >
-                      <span>{language === 'ar' ? 'تفاصيل التقديم' : 'Application Details'}</span>
+                      <span>{language === 'ar' ? 'تفاصيل التقديم' : 'Application Portal'}</span>
                       <ArrowIcon className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -652,86 +839,21 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         </section>
       )}
 
-      {/* ================= LATEST BULLETINS & NEWS ================= */}
-      {featuredNews.length > 0 && (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#151518] relative z-10">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/10 text-[#C8874B] text-xs font-bold mb-2 uppercase tracking-wider">
-                <span>Directives & News</span>
-              </div>
-              <h2 className="text-3xl font-black text-white">{t('news.title')}</h2>
-            </div>
-            <button
-              onClick={() => setCurrentTab('news')}
-              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#C8874B] hover:text-[#DF9F64] transition-colors cursor-pointer"
-            >
-              <span>{t('news.latestUpdates')}</span>
-              <ArrowIcon className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {featuredNews.map((news) => {
-              const trans = news.translations[language] || news.translations.ar || news.translations.en;
-              return (
-                <div
-                  key={news.id}
-                  onClick={() => {
-                    setSelectedNewsSlug(news.slug);
-                    setCurrentTab('news-detail');
-                  }}
-                  className="rounded-3xl bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B]/50 transition-all overflow-hidden cursor-pointer group card-hover-lift flex flex-col justify-between"
-                >
-                  <div>
-                    <div className="h-48 overflow-hidden relative">
-                      <img
-                        src={news.image}
-                        alt={trans.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                      <div className="absolute top-3 right-3 rtl:right-auto rtl:left-3 px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-md text-[#DF9F64] text-[10px] font-bold uppercase tracking-wider border border-white/10">
-                        {news.category}
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <h3 className="text-lg font-black text-white group-hover:text-[#DF9F64] transition-colors mb-2 line-clamp-2">
-                        {trans.title}
-                      </h3>
-                      <p className="text-xs text-[#888] line-clamp-2 leading-relaxed">
-                        {trans.excerpt}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="p-6 pt-0 flex items-center justify-between text-xs text-[#666] border-t border-[#151518] mt-2">
-                    <span>{new Date(news.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
-                    <span className="text-[#C8874B] font-bold group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform flex items-center gap-1">
-                      <span>{language === 'ar' ? 'قراءة' : 'Read'}</span>
-                      <ArrowIcon className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
       {/* ================= COMMUNITY FAQ ACCORDION ================= */}
       {faqs.length > 0 && (
-        <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto border-t border-[#151518] relative z-10">
+        <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto border-t border-[#181A22] relative z-10">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/10 text-[#C8874B] text-xs font-bold mb-3 uppercase tracking-wider">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#E6AA38]/10 text-[#FFC857] text-xs font-bold mb-3 uppercase tracking-wider border border-[#E6AA38]/20">
               <HelpCircle className="w-3.5 h-3.5" />
               <span>{t('nav.faq')}</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-black text-white mb-3 uppercase tracking-tight">
-              {language === 'ar' ? 'الأسئلة الشائعة والمعلومات الأساسية' : 'Frequently Asked Questions'}
+              {language === 'ar' ? 'الأسئلة الشائعة وإرشادات الانضمام' : 'Frequently Asked Questions'}
             </h2>
-            <p className="text-[#9A9A9A] text-xs sm:text-sm">
+            <p className="text-[#9EA3B0] text-xs sm:text-sm">
               {language === 'ar'
-                ? 'إجابات مباشرة على أكثر استفسارات اللاعبين الجدد حول الانضمام وقوانين المدينة.'
-                : 'Direct answers regarding joining, whitelist rules, and community guidelines.'}
+                ? 'إجابات شاملة لأبرز أسئلة اللاعبين الجدد حول خطوات الانضمام وحل مشاكل الاتصال.'
+                : 'Direct instructions on whitelisting, keybinds, and FiveM connection setup.'}
             </p>
           </div>
 
@@ -742,14 +864,16 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               return (
                 <div
                   key={faq.id}
-                  className="rounded-2xl bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B]/40 transition-all overflow-hidden"
+                  className={`rounded-2xl border transition-all overflow-hidden ${
+                    isOpen ? 'bg-[#0A0A0F] border-[#E6AA38]/40 shadow-lg' : 'bg-[#08080C] border-[#181A22] hover:border-[#282A35]'
+                  }`}
                 >
                   <button
                     onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
                     className="w-full p-5 text-left rtl:text-right flex items-center justify-between gap-4 cursor-pointer"
                   >
                     <span className="font-bold text-sm text-white">{trans.question}</span>
-                    <ChevronDown className={`w-4 h-4 text-[#C8874B] shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-4 h-4 text-[#E6AA38] shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
                   <AnimatePresence>
                     {isOpen && (
@@ -757,10 +881,10 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
+                        transition={{ duration: 0.25 }}
                         className="overflow-hidden"
                       >
-                        <div className="p-5 pt-0 text-xs text-[#9A9A9A] leading-relaxed border-t border-[#151518]">
+                        <div className="p-5 pt-0 text-xs text-[#9EA3B0] leading-relaxed border-t border-[#151620]">
                           {trans.answer}
                         </div>
                       </motion.div>
@@ -774,76 +898,83 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
           <div className="text-center mt-8">
             <button
               onClick={() => setCurrentTab('faq')}
-              className="inline-flex items-center gap-2 text-xs font-bold text-[#C8874B] hover:text-[#DF9F64] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 text-xs font-bold text-[#E6AA38] hover:text-[#FFC857] transition-colors cursor-pointer"
             >
-              <span>{language === 'ar' ? 'عرض كل الأسئلة الشائعة' : 'View all FAQs'}</span>
+              <span>{language === 'ar' ? 'عرض كافة الأسئلة الشائعة' : 'View full knowledge base'}</span>
               <ArrowIcon className="w-3.5 h-3.5" />
             </button>
           </div>
         </section>
       )}
 
-      {/* ================= COMMUNITY DISCORD CTA BANNER ================= */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#151518] relative z-10">
-        <div className="rounded-3xl bg-gradient-to-r from-[#0D0D0F] via-[#121216] to-[#0D0D0F] border border-[#C8874B]/30 p-8 sm:p-14 text-center relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#5865F2]/10 blur-[100px] pointer-events-none rounded-full" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#C8874B]/10 blur-[100px] pointer-events-none rounded-full" />
+      {/* ================= COMMUNITY DISCORD CITADEL ================= */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#181A22] relative z-10">
+        <div className="rounded-3xl bg-gradient-to-r from-[#0C0D14] via-[#10121C] to-[#0C0D14] border border-[#1E2029] p-8 sm:p-14 text-center relative overflow-hidden shadow-2xl cyber-corners">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#5865F2]/10 blur-[110px] pointer-events-none rounded-full" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-[#E6AA38]/10 blur-[110px] pointer-events-none rounded-full" />
 
           <div className="relative z-10 max-w-3xl mx-auto space-y-6">
-            <span className="w-12 h-12 rounded-2xl bg-[#5865F2]/15 border border-[#5865F2]/30 flex items-center justify-center mx-auto text-[#5865F2]">
-              <MessageSquare className="w-6 h-6" />
+            <span className="w-14 h-14 rounded-2xl bg-[#5865F2]/15 border border-[#5865F2]/30 flex items-center justify-center mx-auto text-[#5865F2] shadow-xl shadow-[#5865F2]/10">
+              <MessageSquare className="w-7 h-7" />
             </span>
 
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight">
-              {language === 'ar' ? 'انضم إلى مجتمع النخبة في ديسكورد' : 'Join the Official PRIME RP Discord'}
+            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight uppercase">
+              {language === 'ar' ? 'مجتمع النخبة في ديسكورد' : 'The Official Discord Citadel'}
             </h2>
 
-            <p className="text-sm sm:text-base text-[#9A9A9A] leading-relaxed max-w-xl mx-auto">
+            <p className="text-sm sm:text-base text-[#9EA3B0] leading-relaxed max-w-xl mx-auto">
               {language === 'ar'
-                ? 'تواصل مع آلاف المواطنين، تابع التحديثات الحصرية، واطلع على إعلانات التوظيف والفعاليات اليومية.'
-                : 'Connect with thousands of citizens, stay ahead with executive announcements, and participate in daily community events.'}
+                ? 'انضم إلى آلاف المواطنين والضباط والمسعفين، وشارك في الفعاليات الأسبوعية، وتابع الإعلانات الحصرية أولاً بأول.'
+                : 'Connect with active citizens, register your character backstory, participate in official community votes, and stay connected with staff.'}
             </p>
 
-            <div className="pt-2">
+            <div className="pt-2 flex flex-wrap justify-center items-center gap-4">
               <a
                 href={siteSettings?.discordUrl || 'https://discord.gg/primerp'}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] active:scale-98 text-white font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-[#5865F2]/25 cursor-pointer"
+                className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] active:scale-95 text-white font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-[#5865F2]/30 cursor-pointer"
               >
-                <span>{language === 'ar' ? 'الانضمام الفوري لسيرفر الديسكورد' : 'Connect to Discord Server'}</span>
+                <span>{language === 'ar' ? 'الانضمام لسيرفر الديسكورد' : 'Connect to Discord Server'}</span>
                 <ExternalLink className="w-4 h-4" />
               </a>
+
+              <button
+                onClick={() => setCurrentTab('support')}
+                className="inline-flex items-center gap-2 px-6 py-4 rounded-2xl bg-[#111218] hover:bg-[#181A22] border border-[#222] text-[#E1E4EC] font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+              >
+                <span>{language === 'ar' ? 'مركز الدعم الفني' : 'Support Desk'}</span>
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ================= FINAL CALL TO ACTION ================= */}
+      {/* ================= FINAL LAUNCH COMMAND CALL TO ACTION ================= */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center relative z-10">
         <h2 className="text-3xl sm:text-6xl font-black text-white mb-6 uppercase tracking-tight">
-          {language === 'ar' ? 'هل أنت مستعد لدخول مدينة PRIME RP؟' : 'Ready to Experience PRIME RP?'}
+          {language === 'ar' ? 'ابدأ رحلتك في مدينة PRIME RP' : 'Your Journey Begins in PRIME'}
         </h2>
-        <p className="text-sm sm:text-base text-[#9A9A9A] max-w-xl mx-auto mb-10 leading-relaxed">
+        <p className="text-sm sm:text-base text-[#9EA3B0] max-w-xl mx-auto mb-10 leading-relaxed">
           {language === 'ar'
-            ? 'سيرفر اللعب الواقعي الأكثر فخامة وتكاملاً. ابدأ مسيرتك الآن وانضم إلى عالم النخبة.'
-            : 'Join the most prestigious roleplay server. Launch FiveM and become part of our sovereign community.'}
+            ? 'سيرفر رول بلاي متكامل بنظام مواطنة موثق ومجتمع شغوف. شغّل FiveM وانضم إلى أفضل تجربة لعب واقعي الآن.'
+            : 'Unrivaled roleplay standard, sovereign judicial system, and living economy. Launch FiveM and claim your citizen status.'}
         </p>
 
         <div className="flex flex-wrap items-center justify-center gap-4">
           <MagneticButton onClick={handlePlayNow}>
-            <div className="flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#C8874B] via-[#DF9F64] to-[#C8874B] text-black font-black text-xs uppercase tracking-wider hover:brightness-110 active:scale-98 transition-all shadow-xl shadow-[#C8874B]/25 cursor-pointer">
+            <div className="flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-[#E6AA38] via-[#FFC857] to-[#E6AA38] text-black font-black text-xs uppercase tracking-wider hover:brightness-110 active:scale-95 transition-all shadow-xl shadow-[#E6AA38]/30 cursor-pointer">
               <Play className="w-4 h-4 fill-current" />
-              <span>{language === 'ar' ? 'ابدأ اللعب الآن' : 'Connect to Server'}</span>
+              <span>{language === 'ar' ? 'دخول السيرفر الآن' : 'Connect to Server'}</span>
             </div>
           </MagneticButton>
 
           <button
             onClick={() => setCurrentTab('jobs')}
-            className="flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-[#0D0D0F] hover:bg-[#151518] border border-[#222226] hover:border-[#C8874B] text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+            className="flex items-center justify-center gap-2.5 px-7 py-4 rounded-2xl bg-[#0F1017] hover:bg-[#161822] border border-[#1E2029] hover:border-[#E6AA38] text-white font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
           >
-            <Briefcase className="w-4 h-4 text-[#C8874B]" />
-            <span>{language === 'ar' ? 'تقديم على وظيفة' : 'Apply for Career'}</span>
+            <Briefcase className="w-4 h-4 text-[#FFC857]" />
+            <span>{language === 'ar' ? 'تقديم على وظيفة' : 'Careers & Roles'}</span>
           </button>
         </div>
       </section>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useSettings } from '../../context/SettingsContext';
 import { PrimeLogo } from '../common/PrimeLogo';
-import { Shield, MessageSquare, Copy, Check, ExternalLink, Activity, Terminal } from 'lucide-react';
+import { Shield, MessageSquare, Copy, Check, ExternalLink, Activity, Terminal, Sparkles, Heart } from 'lucide-react';
 
 interface FooterProps {
   setCurrentTab: (tab: string) => void;
@@ -19,17 +19,17 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
   };
 
   const handleCopyIp = () => {
-    const connectTarget = settings?.fiveMConnectUrl || 'play.primerp.me';
+    const connectTarget = settings?.fiveMConnectUrl || 'play.primerp.net:30120';
     navigator.clipboard.writeText(connectTarget.startsWith('connect ') ? connectTarget : `connect ${connectTarget}`);
     setCopiedIp(true);
     setTimeout(() => setCopiedIp(false), 2000);
   };
 
   return (
-    <footer className="bg-[#050505] border-t border-[#1C1C20] pt-16 pb-12 text-[#9A9A9A] relative overflow-hidden">
+    <footer className="bg-[#040407] border-t border-[#181A22] pt-16 pb-12 text-[#9EA3B0] relative overflow-hidden">
       {/* Background Subtle Glow */}
       <div 
-        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-[#C8874B]/5 blur-3xl pointer-events-none rounded-full" 
+        className="absolute bottom-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-[#E6AA38]/5 blur-3xl pointer-events-none rounded-full" 
         aria-hidden="true"
       />
 
@@ -39,9 +39,9 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
           {/* BRAND COLUMN */}
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center gap-3">
-              <PrimeLogo size="md" variant="footer" showText={true} withGlow={false} />
+              <PrimeLogo size="md" variant="footer" showText={true} withGlow={true} />
             </div>
-            <p className="text-xs sm:text-sm leading-relaxed text-[#888] max-w-sm">
+            <p className="text-xs sm:text-sm leading-relaxed text-[#7E8494] max-w-sm">
               {t('footer.aboutText')}
             </p>
             <div className="pt-2 flex flex-wrap items-center gap-2.5">
@@ -49,7 +49,7 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
                 href={settings?.discordUrl || "https://discord.gg/primerp"}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#0D0D0F] border border-[#222226] hover:border-[#5865F2]/60 text-xs font-bold text-white transition-all shadow-sm"
+                className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#0B0C10] border border-[#1E2029] hover:border-[#5865F2]/60 text-xs font-bold text-white transition-all shadow-sm"
               >
                 <MessageSquare className="w-3.5 h-3.5 text-[#5865F2]" />
                 <span>Discord Community</span>
@@ -57,10 +57,10 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
 
               <button
                 onClick={handleCopyIp}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B]/60 text-xs font-bold text-[#E5E5E5] transition-all cursor-pointer shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0B0C10] border border-[#1E2029] hover:border-[#E6AA38]/60 text-xs font-bold text-[#F1F3F7] transition-all cursor-pointer shadow-sm"
                 title={language === 'ar' ? 'نسخ أمر الاتصال بالسيرفر' : 'Copy Server Direct Connect'}
               >
-                <Terminal className="w-3.5 h-3.5 text-[#C8874B]" />
+                <Terminal className="w-3.5 h-3.5 text-[#E6AA38]" />
                 <span>F8 Connect</span>
                 {copiedIp ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#777]" />}
               </button>
@@ -69,27 +69,27 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
 
           {/* QUICK NAVIGATION */}
           <div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-white mb-4 border-b border-[#1C1C20] pb-2">
+            <h4 className="text-xs font-black uppercase tracking-wider text-white mb-4 border-b border-[#181A22] pb-2 font-rajdhani">
               {t('footer.quickLinks')}
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <button onClick={() => handleNav('home')} className="hover:text-[#C8874B] transition-colors cursor-pointer">
+                <button onClick={() => handleNav('home')} className="hover:text-[#FFC857] transition-colors cursor-pointer">
                   {t('nav.home')}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('rules')} className="hover:text-[#C8874B] transition-colors cursor-pointer">
+                <button onClick={() => handleNav('rules')} className="hover:text-[#FFC857] transition-colors cursor-pointer">
                   {t('nav.rules')}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('jobs')} className="hover:text-[#C8874B] transition-colors cursor-pointer">
+                <button onClick={() => handleNav('jobs')} className="hover:text-[#FFC857] transition-colors cursor-pointer">
                   {t('nav.jobs')}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('news')} className="hover:text-[#C8874B] transition-colors cursor-pointer">
+                <button onClick={() => handleNav('news')} className="hover:text-[#FFC857] transition-colors cursor-pointer">
                   {t('nav.news')}
                 </button>
               </li>
@@ -98,32 +98,32 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
 
           {/* COMMUNITY & PORTAL */}
           <div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-white mb-4 border-b border-[#1C1C20] pb-2">
+            <h4 className="text-xs font-black uppercase tracking-wider text-white mb-4 border-b border-[#181A22] pb-2 font-rajdhani">
               {t('footer.community')}
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <button onClick={() => handleNav('store')} className="hover:text-[#C8874B] transition-colors cursor-pointer">
+                <button onClick={() => handleNav('store')} className="hover:text-[#FFC857] transition-colors cursor-pointer">
                   {t('nav.store')}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('players')} className="hover:text-[#C8874B] transition-colors cursor-pointer">
+                <button onClick={() => handleNav('players')} className="hover:text-[#FFC857] transition-colors cursor-pointer">
                   {t('nav.players')}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('leaderboard')} className="hover:text-[#C8874B] transition-colors cursor-pointer">
+                <button onClick={() => handleNav('leaderboard')} className="hover:text-[#FFC857] transition-colors cursor-pointer">
                   {t('nav.leaderboard')}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('support')} className="hover:text-[#C8874B] transition-colors cursor-pointer">
+                <button onClick={() => handleNav('support')} className="hover:text-[#FFC857] transition-colors cursor-pointer">
                   {t('nav.support')}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('faq')} className="hover:text-[#C8874B] transition-colors cursor-pointer">
+                <button onClick={() => handleNav('faq')} className="hover:text-[#FFC857] transition-colors cursor-pointer">
                   {t('nav.faq')}
                 </button>
               </li>
@@ -132,22 +132,22 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
 
           {/* LEGAL & POLICIES */}
           <div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-white mb-4 border-b border-[#1C1C20] pb-2">
+            <h4 className="text-xs font-black uppercase tracking-wider text-white mb-4 border-b border-[#181A22] pb-2 font-rajdhani">
               {t('footer.legal')}
             </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <button onClick={() => handleNav('legal-terms')} className="hover:text-[#C8874B] transition-colors cursor-pointer">
+                <button onClick={() => handleNav('legal-terms')} className="hover:text-[#FFC857] transition-colors cursor-pointer">
                   {t('footer.terms')}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('legal-privacy')} className="hover:text-[#C8874B] transition-colors cursor-pointer">
+                <button onClick={() => handleNav('legal-privacy')} className="hover:text-[#FFC857] transition-colors cursor-pointer">
                   {t('footer.privacy')}
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('faq')} className="hover:text-[#C8874B] transition-colors cursor-pointer">
+                <button onClick={() => handleNav('faq')} className="hover:text-[#FFC857] transition-colors cursor-pointer">
                   {t('nav.faq')}
                 </button>
               </li>
@@ -157,14 +157,14 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
         </div>
 
         {/* BOTTOM COPYRIGHT */}
-        <div className="pt-8 mt-8 border-t border-[#151518] flex flex-col sm:flex-row items-center justify-between text-xs gap-4 text-[#777]">
+        <div className="pt-8 mt-8 border-t border-[#14151D] flex flex-col sm:flex-row items-center justify-between text-xs gap-4 text-[#666]">
           <p>
             {t('footer.rights')}
           </p>
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#C8874B]" />
-              Crafted for <span className="text-white font-bold">PRIME RP Community</span>
+            <span className="flex items-center gap-1.5 text-[#888]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[#E6AA38] animate-pulse" />
+              Sovereign Roleplay Engine • <span className="text-white font-bold">PRIME RP</span>
             </span>
           </div>
         </div>
