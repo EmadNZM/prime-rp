@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { LanguageProvider, useLanguage } from './context/LanguageContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SettingsProvider } from './context/SettingsContext';
+import { CartProvider } from './context/CartContext';
+import { CustomCursor } from './components/common/CustomCursor';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
 import { HomePage } from './pages/public/HomePage';
@@ -88,6 +90,9 @@ function MainApp() {
 
   return (
     <div className={`min-h-screen bg-[#070707] text-[#E5E5E5] flex flex-col font-sans selection:bg-[#C8874B] selection:text-black ${isRtl ? 'font-cairo' : 'font-montserrat'}`}>
+      {/* High-Performance Luxury Custom Cursor */}
+      <CustomCursor />
+
       {/* Top Navigation */}
       <Navbar currentTab={currentTab} setCurrentTab={setCurrentTab} />
 
@@ -136,7 +141,9 @@ export default function App() {
     <LanguageProvider>
       <AuthProvider>
         <SettingsProvider>
-          <MainApp />
+          <CartProvider>
+            <MainApp />
+          </CartProvider>
         </SettingsProvider>
       </AuthProvider>
     </LanguageProvider>

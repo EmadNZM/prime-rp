@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
+import { useCart } from '../../context/CartContext';
 import { PrimeLogo } from '../common/PrimeLogo';
 import { 
   Globe, 
@@ -23,6 +24,7 @@ interface NavbarProps {
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => {
   const { t, language, toggleLanguage } = useLanguage();
   const { user, isAuthenticated, isStaff, logout } = useAuth();
+  const { totalItems, setIsCartOpen } = useCart();
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
@@ -98,8 +100,23 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
           </nav>
 
           {/* RIGHT ACTION BUTTONS */}
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             
+            {/* Store Shopping Cart Trigger */}
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="relative p-2 rounded-xl bg-[#121212] border border-[#222] hover:border-[#C8874B]/60 text-[#C7C7C7] hover:text-[#C8874B] transition-all cursor-pointer group"
+              title={language === 'ar' ? 'سلة المشتريات' : 'Shopping Cart'}
+              aria-label="Shopping Cart"
+            >
+              <ShoppingBag className="w-4 h-4 transition-transform group-hover:scale-110" />
+              {totalItems > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 rtl:-right-auto rtl:-left-1.5 w-5 h-5 rounded-full bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black text-[10px] font-black flex items-center justify-center shadow-lg shadow-[#C8874B]/40 animate-pulse">
+                  {totalItems}
+                </span>
+              )}
+            </button>
+
             {/* Language Switcher */}
             <button
               onClick={toggleLanguage}
