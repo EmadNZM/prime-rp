@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { apiClient } from '../../services/apiClient';
 import { NewsItem } from '../../types';
-import { Newspaper, Calendar, User, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Newspaper, Calendar, User, ArrowRight, ArrowLeft, Flame } from 'lucide-react';
 
 interface NewsPageProps {
   setCurrentTab: (tab: string) => void;
@@ -35,42 +35,48 @@ export const NewsPage: React.FC<NewsPageProps> = ({ setCurrentTab, setSelectedNe
   const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
 
   return (
-    <div className="min-h-screen bg-[#070707] text-[#E5E5E5] pt-28 pb-24 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#070707] text-[#E5E5E5] pt-28 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Ambient background glow */}
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-5xl h-96 bg-[#C8874B]/5 blur-[140px] pointer-events-none rounded-full" />
+
+      <div className="max-w-6xl mx-auto relative z-10">
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/10 text-[#C8874B] text-xs font-bold mb-4">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#C8874B]/10 border border-[#C8874B]/25 text-[#C8874B] text-[10px] font-black uppercase tracking-wider mb-4">
             <Newspaper className="w-3.5 h-3.5" />
-            <span>Prime Chronicles</span>
+            <span>{language === 'ar' ? 'سجلات وأخبار السيرفر' : 'Prime Chronicles & Logs'}</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-white mb-4">
+          <h1 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight mb-4">
             {t('news.title')}
           </h1>
-          <p className="text-[#8E8E8E] text-sm sm:text-base leading-relaxed">
+          <p className="text-[#888] text-sm sm:text-base leading-relaxed max-w-2xl mx-auto">
             {t('news.subtitle')}
           </p>
         </div>
 
-        {/* Category Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-10 border-b border-[#1A1A1A]">
+        {/* Category Filter Tabs */}
+        <div className="flex items-center gap-2.5 overflow-x-auto pb-4 mb-10 border-b border-[#1E1E22]">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              className={`px-5 py-2.5 rounded-2xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap cursor-pointer ${
                 selectedCategory === cat
-                  ? 'bg-[#C8874B] text-black shadow-md shadow-[#C8874B]/20'
-                  : 'bg-[#111] text-[#999] hover:text-white hover:bg-[#1A1A1A] border border-[#222]'
+                  ? 'bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black shadow-lg shadow-[#C8874B]/20'
+                  : 'bg-[#0D0D0F] text-[#888] hover:text-white hover:bg-[#151518] border border-[#222226]'
               }`}
             >
-              {cat === 'all' ? (language === 'ar' ? 'جميع الأخبار' : 'All Updates') : cat}
+              {cat === 'all' ? (language === 'ar' ? 'جميع الأخبار والتحديثات' : 'All Updates') : cat}
             </button>
           ))}
         </div>
 
         {isLoading ? (
-          <div className="text-center py-20 text-[#888]">{t('common.loading')}</div>
+          <div className="text-center py-20 text-[#888] flex flex-col items-center justify-center gap-3">
+            <div className="w-8 h-8 rounded-full border-2 border-[#C8874B] border-t-transparent animate-spin" />
+            <span className="text-xs uppercase tracking-wider">{t('common.loading')}</span>
+          </div>
         ) : (
           <div>
             {/* Featured Article Banner */}
@@ -80,16 +86,18 @@ export const NewsPage: React.FC<NewsPageProps> = ({ setCurrentTab, setSelectedNe
                   setSelectedNewsSlug(featuredItem.slug);
                   setCurrentTab('news-detail');
                 }}
-                className="group cursor-pointer rounded-3xl overflow-hidden bg-[#0B0B0B] border border-[#222] hover:border-[#C8874B]/50 transition-all mb-12 grid grid-cols-1 lg:grid-cols-12"
+                className="group cursor-pointer rounded-3xl overflow-hidden bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B]/40 transition-all duration-300 mb-12 grid grid-cols-1 lg:grid-cols-12 shadow-2xl"
               >
-                <div className="lg:col-span-7 relative min-h-[300px] overflow-hidden">
+                <div className="lg:col-span-7 relative min-h-[320px] overflow-hidden">
                   <img
                     src={featuredItem.image}
                     alt={featuredItem.translations[language]?.title || ''}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                   />
-                  <span className="absolute top-4 left-4 rtl:left-auto rtl:right-4 px-3 py-1 rounded-md bg-[#C8874B] text-black text-xs font-extrabold uppercase">
-                    Featured Update
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0F] via-transparent to-transparent lg:hidden" />
+                  <span className="absolute top-4 left-4 rtl:left-auto rtl:right-4 px-3 py-1 rounded-full bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black text-[10px] font-black uppercase tracking-wider shadow-lg flex items-center gap-1.5">
+                    <Flame className="w-3 h-3 fill-black" />
+                    <span>Featured Update</span>
                   </span>
                 </div>
                 <div className="lg:col-span-5 p-8 sm:p-10 flex flex-col justify-between">
@@ -105,7 +113,7 @@ export const NewsPage: React.FC<NewsPageProps> = ({ setCurrentTab, setSelectedNe
                       </span>
                     </div>
 
-                    <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 group-hover:text-[#C8874B] transition-colors leading-snug">
+                    <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 group-hover:text-[#DF9F64] transition-colors leading-snug uppercase tracking-tight">
                       {featuredItem.translations[language]?.title || featuredItem.translations.ar.title}
                     </h2>
                     <p className="text-sm text-[#8E8E8E] leading-relaxed mb-6">
@@ -113,7 +121,7 @@ export const NewsPage: React.FC<NewsPageProps> = ({ setCurrentTab, setSelectedNe
                     </p>
                   </div>
 
-                  <div className="inline-flex items-center gap-2 text-sm font-bold text-[#C8874B]">
+                  <div className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#C8874B] group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform">
                     <span>{t('news.readMore')}</span>
                     <ArrowIcon className="w-4 h-4" />
                   </div>
@@ -132,34 +140,34 @@ export const NewsPage: React.FC<NewsPageProps> = ({ setCurrentTab, setSelectedNe
                       setSelectedNewsSlug(item.slug);
                       setCurrentTab('news-detail');
                     }}
-                    className="group cursor-pointer rounded-2xl overflow-hidden bg-[#0B0B0B] border border-[#1E1E1E] hover:border-[#C8874B]/50 transition-all flex flex-col justify-between"
+                    className="group cursor-pointer rounded-3xl overflow-hidden bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B]/40 transition-all duration-300 flex flex-col justify-between shadow-xl"
                   >
                     <div>
-                      <div className="relative h-48 overflow-hidden">
+                      <div className="relative h-52 overflow-hidden">
                         <img
                           src={item.image}
                           alt={trans.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                        <span className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2.5 py-1 text-[11px] font-bold rounded-md bg-black/80 backdrop-blur-md text-[#C8874B] border border-[#C8874B]/30">
+                        <span className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-3 py-1 text-[10px] font-black uppercase tracking-wider rounded-full bg-[#0D0D0F]/90 backdrop-blur-md text-[#DF9F64] border border-[#C8874B]/30">
                           {item.category}
                         </span>
                       </div>
                       <div className="p-6">
-                        <span className="text-xs text-[#777] block mb-2">
+                        <span className="text-[11px] text-[#777] block mb-2 font-mono">
                           {new Date(item.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
                         </span>
-                        <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#C8874B] transition-colors line-clamp-2">
+                        <h3 className="text-lg font-bold text-white mb-2 group-hover:text-[#DF9F64] transition-colors line-clamp-2 uppercase tracking-tight">
                           {trans.title}
                         </h3>
-                        <p className="text-sm text-[#888] line-clamp-3">
+                        <p className="text-xs text-[#888] line-clamp-3 leading-relaxed">
                           {trans.excerpt}
                         </p>
                       </div>
                     </div>
 
                     <div className="px-6 pb-6 pt-2">
-                      <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#C8874B]">
+                      <div className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-[#C8874B] group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform">
                         <span>{t('news.readMore')}</span>
                         <ArrowIcon className="w-3.5 h-3.5" />
                       </div>

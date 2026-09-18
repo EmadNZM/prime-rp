@@ -13,7 +13,8 @@ import {
   AlertCircle, 
   Loader2,
   FileText,
-  Calendar
+  Calendar,
+  Sparkles
 } from 'lucide-react';
 
 interface JobApplicationModalProps {
@@ -127,15 +128,15 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
       <div 
-        className="relative w-full max-w-2xl bg-[#0E0E0E] border border-[#222] rounded-3xl p-6 sm:p-8 shadow-2xl my-8 overflow-hidden"
+        className="relative w-full max-w-2xl bg-[#0D0D0F] border border-[#222226] rounded-3xl p-6 sm:p-8 shadow-2xl my-8 overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-5 right-5 rtl:right-auto rtl:left-5 p-2 rounded-xl bg-[#1A1A1A] hover:bg-[#2A2A2A] text-[#888] hover:text-white transition-colors cursor-pointer"
+          className="absolute top-5 right-5 rtl:right-auto rtl:left-5 p-2 rounded-xl bg-[#151518] hover:bg-[#1E1E22] text-[#888] hover:text-white transition-colors cursor-pointer border border-[#252528]"
         >
           <X className="w-5 h-5" />
         </button>
@@ -143,7 +144,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
         {submittedApplication ? (
           /* Success Screen */
           <div className="py-8 text-center space-y-5">
-            <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/10">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/10">
               <CheckCircle2 className="w-8 h-8" />
             </div>
 
@@ -151,7 +152,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
               <h3 className="text-2xl font-black text-white">
                 {isAr ? 'تم استلام طلب التوظيف بنجاح!' : 'Application Submitted Successfully!'}
               </h3>
-              <p className="text-[#888] text-sm max-w-md mx-auto leading-relaxed">
+              <p className="text-[#9A9A9A] text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
                 {isAr ? (
                   <>تم تسجيل طلبك لوظيفة <span className="text-[#C8874B] font-bold">[{trans.name}]</span> بنجاح. سيقوم مسؤولو التوظيف بمراجعة طلبك وإشعارك بالنتيجة.</>
                 ) : (
@@ -160,18 +161,18 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
               </p>
             </div>
 
-            <div className="bg-[#141414] border border-[#222] rounded-2xl p-4 text-xs text-[#999] max-w-md mx-auto space-y-2">
-              <div className="flex justify-between items-center py-1 border-b border-[#1E1E1E]">
+            <div className="bg-[#151518] border border-[#222226] rounded-2xl p-4 text-xs text-[#999] max-w-md mx-auto space-y-2">
+              <div className="flex justify-between items-center py-1 border-b border-[#222226]">
                 <span>{isAr ? 'رقم مرجع الطلب:' : 'Application ID:'}</span>
-                <span className="font-mono text-[#C8874B]">{submittedApplication.id}</span>
+                <span className="font-mono text-[#C8874B] font-bold">{submittedApplication.id}</span>
               </div>
-              <div className="flex justify-between items-center py-1 border-b border-[#1E1E1E]">
+              <div className="flex justify-between items-center py-1 border-b border-[#222226]">
                 <span>{isAr ? 'اسم الشخصية:' : 'Character Name:'}</span>
                 <span className="text-white font-bold">{submittedApplication.characterName}</span>
               </div>
               <div className="flex justify-between items-center py-1">
                 <span>{isAr ? 'الحالة الحالية:' : 'Current Status:'}</span>
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-bold">
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 font-bold border border-amber-500/20">
                   {isAr ? 'قيد الانتظار (PENDING)' : 'Pending Review'}
                 </span>
               </div>
@@ -184,14 +185,14 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
                     onClose();
                     onNavigateToDashboard();
                   }}
-                  className="px-6 py-3 rounded-xl bg-[#C8874B] text-black font-extrabold text-sm hover:brightness-110 transition-all cursor-pointer"
+                  className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-black text-xs uppercase tracking-wider hover:brightness-110 transition-all cursor-pointer"
                 >
                   {isAr ? 'متابعة الطلب في لوحة التحكم' : 'View in Dashboard'}
                 </button>
               )}
               <button
                 onClick={onClose}
-                className="px-6 py-3 rounded-xl bg-[#1A1A1A] border border-[#2A2A2A] text-white font-bold text-sm hover:bg-[#252525] transition-all cursor-pointer"
+                className="px-6 py-3 rounded-xl bg-[#151518] border border-[#252528] text-white font-bold text-xs uppercase tracking-wider hover:bg-[#1E1E22] transition-all cursor-pointer"
               >
                 {isAr ? 'إغلاق النافذة' : 'Close'}
               </button>
@@ -201,8 +202,8 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
           /* Application Form */
           <div>
             {/* Header */}
-            <div className="mb-6 pb-6 border-b border-[#1C1C1C]">
-              <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#C8874B] block mb-1">
+            <div className="mb-6 pb-6 border-b border-[#222226]">
+              <span className="text-[10px] font-black uppercase tracking-widest text-[#C8874B] block mb-1">
                 {isAr ? `استمارة التقديم الرسمية • ${job.category}` : `Official Application Form • ${job.category}`}
               </span>
               <h2 className="text-2xl font-black text-white flex items-center gap-2">
@@ -214,8 +215,8 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
             </div>
 
             {errorMessage && (
-              <div className="mb-6 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center gap-3">
-                <AlertCircle className="w-5 h-5 shrink-0 text-red-400" />
+              <div className="mb-6 p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 shrink-0 text-rose-400" />
                 <span>{errorMessage}</span>
               </div>
             )}
@@ -233,7 +234,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
                     value={characterName}
                     onChange={(e) => setCharacterName(e.target.value)}
                     placeholder={isAr ? 'مثال: سلطان القحطاني' : 'e.g. Sultan Al-Qahtani'}
-                    className="w-full px-4 py-3 rounded-xl bg-[#141414] border border-[#222] focus:border-[#C8874B] focus:outline-none text-white text-sm transition-colors placeholder:text-[#555]"
+                    className="w-full px-4 py-3 rounded-xl bg-[#151518] border border-[#222226] focus:border-[#C8874B] focus:outline-none text-white text-xs transition-colors placeholder:text-[#555]"
                     required
                   />
                 </div>
@@ -250,7 +251,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
                     min={16}
                     max={80}
                     placeholder="24"
-                    className="w-full px-4 py-3 rounded-xl bg-[#141414] border border-[#222] focus:border-[#C8874B] focus:outline-none text-white text-sm transition-colors placeholder:text-[#555]"
+                    className="w-full px-4 py-3 rounded-xl bg-[#151518] border border-[#222226] focus:border-[#C8874B] focus:outline-none text-white text-xs transition-colors placeholder:text-[#555]"
                     required
                   />
                 </div>
@@ -267,7 +268,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
                   value={dailyAvailability}
                   onChange={(e) => setDailyAvailability(e.target.value)}
                   placeholder={isAr ? 'مثال: 4 إلى 6 ساعات (الفترة المسائية من 6 م إلى 12 ص)' : 'e.g. 4-6 hours daily (evening shift)'}
-                  className="w-full px-4 py-3 rounded-xl bg-[#141414] border border-[#222] focus:border-[#C8874B] focus:outline-none text-white text-sm transition-colors placeholder:text-[#555]"
+                  className="w-full px-4 py-3 rounded-xl bg-[#151518] border border-[#222226] focus:border-[#C8874B] focus:outline-none text-white text-xs transition-colors placeholder:text-[#555]"
                   required
                 />
               </div>
@@ -283,7 +284,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
                   value={experience}
                   onChange={(e) => setExperience(e.target.value)}
                   placeholder={isAr ? 'اذكر السيرفرات التي لعبت بها، الرتب أو المناصب السابقة، ومدى معرفتك بمصطلحات الـ RP...' : 'Mention servers played, previous ranks, and familiarity with roleplay terminology...'}
-                  className="w-full px-4 py-3 rounded-xl bg-[#141414] border border-[#222] focus:border-[#C8874B] focus:outline-none text-white text-sm transition-colors placeholder:text-[#555] resize-none"
+                  className="w-full px-4 py-3 rounded-xl bg-[#151518] border border-[#222226] focus:border-[#C8874B] focus:outline-none text-white text-xs transition-colors placeholder:text-[#555] resize-none"
                   required
                 />
               </div>
@@ -299,12 +300,12 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
                   value={scenarioAnswer}
                   onChange={(e) => setScenarioAnswer(e.target.value)}
                   placeholder={isAr ? 'اكتب كيف ستتعامل مع الموقف دون الخروج من الشخصية (Stay In Character)...' : 'Describe how you maintain character and resolve the situation in-character...'}
-                  className="w-full px-4 py-3 rounded-xl bg-[#141414] border border-[#222] focus:border-[#C8874B] focus:outline-none text-white text-sm transition-colors placeholder:text-[#555] resize-none"
+                  className="w-full px-4 py-3 rounded-xl bg-[#151518] border border-[#222226] focus:border-[#C8874B] focus:outline-none text-white text-xs transition-colors placeholder:text-[#555] resize-none"
                 />
               </div>
 
               {/* Terms Checkbox */}
-              <div className="p-4 rounded-xl bg-[#141414] border border-[#1F1F1F]">
+              <div className="p-4 rounded-2xl bg-[#151518] border border-[#222226]">
                 <label className="flex items-start gap-3 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -312,7 +313,7 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
                     onChange={(e) => setAgreedToRules(e.target.checked)}
                     className="mt-0.5 rounded border-gray-700 text-[#C8874B] focus:ring-[#C8874B]"
                   />
-                  <span className="text-xs text-[#999] leading-relaxed">
+                  <span className="text-xs text-[#888] leading-relaxed">
                     {isAr 
                       ? 'أتعهد بالالتزام التام بكافة قوانين السيرفر ولوائح هذا القطاع، وعدم استغلال الصلاحيات أو الرتب، وأقر بأن تقديم معلومات كاذبة يعرّض الطلب وحسابي للمساءلة.'
                       : 'I hereby pledge to strictly adhere to all server rules and department regulations, avoid powergaming/abuse, and acknowledge that providing falsified details will lead to application dismissal.'}
@@ -325,14 +326,14 @@ export const JobApplicationModal: React.FC<JobApplicationModalProps> = ({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-5 py-3 rounded-xl bg-[#181818] hover:bg-[#222] text-[#AAA] hover:text-white text-xs font-bold transition-all cursor-pointer"
+                  className="px-5 py-3 rounded-xl bg-[#151518] hover:bg-[#1E1E22] text-[#AAA] hover:text-white text-xs font-bold transition-all cursor-pointer border border-[#252528]"
                 >
                   {isAr ? 'إلغاء' : 'Cancel'}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-7 py-3 rounded-xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-extrabold text-xs tracking-wide hover:brightness-110 transition-all flex items-center gap-2 shadow-lg shadow-[#C8874B]/20 disabled:opacity-50 cursor-pointer"
+                  className="px-7 py-3 rounded-xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-black text-xs uppercase tracking-wider hover:brightness-110 active:scale-98 transition-all flex items-center gap-2 shadow-xl shadow-[#C8874B]/20 disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmitting ? (
                     <>

@@ -15,8 +15,10 @@ import {
   ShieldCheck,
   LogIn,
   FileCheck,
-  AlertCircle
+  AlertCircle,
+  Sparkles
 } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface JobsPageProps {
   setCurrentTab: (tab: string) => void;
@@ -82,19 +84,22 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#070707] text-[#E5E5E5] pt-28 pb-24 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-[#070707] text-[#E5E5E5] pt-28 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Background Ambience */}
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-5xl h-96 bg-[#C8874B]/5 blur-[120px] pointer-events-none rounded-full" />
+
+      <div className="max-w-6xl mx-auto relative z-10">
         
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto mb-14">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/10 text-[#C8874B] text-xs font-bold mb-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/10 text-[#C8874B] text-xs font-bold mb-4 border border-[#C8874B]/20 uppercase tracking-wider">
             <Building2 className="w-3.5 h-3.5" />
             <span>Careers & Enterprises</span>
           </div>
-          <h1 className="text-3xl sm:text-5xl font-black text-white mb-4">
+          <h1 className="text-3xl sm:text-5xl font-black text-white mb-4 tracking-tight uppercase">
             {t('jobs.title')}
           </h1>
-          <p className="text-[#8E8E8E] text-sm sm:text-base leading-relaxed">
+          <p className="text-[#9A9A9A] text-sm sm:text-base leading-relaxed">
             {t('jobs.subtitle')}
           </p>
         </div>
@@ -114,24 +119,24 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
                   <button
                     key={job.id}
                     onClick={() => setSelectedJob(job)}
-                    className={`w-full text-left rtl:text-right p-5 rounded-2xl border transition-all flex items-center justify-between ${
+                    className={`w-full text-left rtl:text-right p-5 rounded-2xl border transition-all flex items-center justify-between cursor-pointer ${
                       isSelected
-                        ? 'bg-[#141414] border-[#C8874B] shadow-lg shadow-[#C8874B]/10'
-                        : 'bg-[#0B0B0B] border-[#1C1C1C] hover:border-[#333]'
+                        ? 'bg-[#0D0D0F] border-[#C8874B] shadow-xl shadow-[#C8874B]/10 ring-1 ring-[#C8874B]/30'
+                        : 'bg-[#0D0D0F]/70 border-[#222226] hover:border-[#35353A]'
                     }`}
                   >
                     <div>
-                      <span className="text-[10px] font-extrabold uppercase tracking-widest text-[#C8874B] block mb-1">
+                      <span className="text-[10px] font-black uppercase tracking-widest text-[#C8874B] block mb-1">
                         {job.category}
                       </span>
-                      <h3 className="text-base font-bold text-white mb-1">
+                      <h3 className="text-base font-black text-white mb-1">
                         {trans.name}
                       </h3>
-                      <span className="text-xs text-[#777]">
+                      <span className="text-xs text-[#777] font-rajdhani font-semibold">
                         ${job.salaryMin} - ${job.salaryMax} {t('jobs.perShift')}
                       </span>
                     </div>
-                    <ArrowIcon className={`w-5 h-5 ${isSelected ? 'text-[#C8874B]' : 'text-[#444]'}`} />
+                    <ArrowIcon className={`w-5 h-5 transition-transform ${isSelected ? 'text-[#C8874B] translate-x-1 rtl:-translate-x-1' : 'text-[#555]'}`} />
                   </button>
                 );
               })}
@@ -139,17 +144,17 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
 
             {/* Main Detail View */}
             {selectedJob && (
-              <div className="lg:col-span-7 bg-[#0B0B0B] border border-[#1E1E1E] rounded-3xl overflow-hidden p-6 sm:p-8 flex flex-col justify-between">
+              <div className="lg:col-span-7 bg-[#0D0D0F] border border-[#222226] rounded-3xl overflow-hidden p-6 sm:p-8 flex flex-col justify-between shadow-2xl">
                 <div>
-                  <div className="relative h-56 rounded-2xl overflow-hidden mb-6 border border-[#222]">
+                  <div className="relative h-60 rounded-2xl overflow-hidden mb-6 border border-[#222226]">
                     <img
                       src={selectedJob.image}
                       alt={selectedJob.translations[language]?.name || ''}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0F] via-black/40 to-transparent" />
                     <div className="absolute bottom-4 left-4 rtl:left-auto rtl:right-4">
-                      <span className="px-3 py-1 rounded-md text-xs font-black bg-[#C8874B] text-black">
+                      <span className="px-3 py-1 rounded-lg text-xs font-black bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black uppercase tracking-wider shadow-md">
                         {selectedJob.status === 'HIRING_OPEN'
                           ? t('jobs.hiringOpen')
                           : selectedJob.status === 'INVITE_ONLY'
@@ -159,36 +164,36 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
                     </div>
                   </div>
 
-                  <h2 className="text-2xl font-black text-white mb-2">
+                  <h2 className="text-2xl sm:text-3xl font-black text-white mb-2 tracking-tight">
                     {selectedJob.translations[language]?.name || selectedJob.translations.ar.name}
                   </h2>
 
-                  <p className="text-sm text-[#999] leading-relaxed mb-6">
+                  <p className="text-xs sm:text-sm text-[#9A9A9A] leading-relaxed mb-6">
                     {selectedJob.translations[language]?.description || selectedJob.translations.ar.description}
                   </p>
 
-                  <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-[#111] border border-[#1A1A1A] mb-6">
+                  <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-[#151518] border border-[#222226] mb-6">
                     <div>
                       <span className="text-xs text-[#777] block mb-1">{t('jobs.salaryRange')}</span>
-                      <p className="text-lg font-black text-[#C8874B]">
-                        ${selectedJob.salaryMin} - ${selectedJob.salaryMax}
+                      <p className="text-xl font-black text-[#C8874B] font-rajdhani">
+                        ${selectedJob.salaryMin} - ${selectedJob.salaryMax} / hr
                       </p>
                     </div>
                     <div>
                       <span className="text-xs text-[#777] block mb-1">القطاع / Department</span>
-                      <p className="text-sm font-bold text-white">{selectedJob.category}</p>
+                      <p className="text-sm font-black text-white">{selectedJob.category}</p>
                     </div>
                   </div>
 
                   {/* Requirements */}
                   <div className="mb-6">
-                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#C8874B] mb-3">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-[#C8874B] mb-3">
                       {t('jobs.requirements')}
                     </h4>
                     <div className="space-y-2">
                       {(selectedJob.translations[language]?.requirements || selectedJob.translations.ar.requirements).map(
                         (req, i) => (
-                          <div key={i} className="flex items-start gap-2.5 text-xs text-[#BBB]">
+                          <div key={i} className="flex items-start gap-2.5 text-xs text-[#CCC]">
                             <CheckCircle2 className="w-4 h-4 text-[#C8874B] shrink-0 mt-0.5" />
                             <span>{req}</span>
                           </div>
@@ -199,7 +204,7 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
 
                   {/* Duties */}
                   <div className="mb-8">
-                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#C8874B] mb-3">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-[#C8874B] mb-3">
                       {t('jobs.duties')}
                     </h4>
                     <div className="space-y-2">
@@ -216,25 +221,25 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
                 </div>
 
                 {/* Application CTA State Handling */}
-                <div className="pt-4 border-t border-[#1C1C1C]">
+                <div className="pt-6 border-t border-[#1C1C20]">
                   {!isAuthenticated ? (
                     <button
                       onClick={loginWithDiscord}
-                      className="w-full py-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-extrabold text-sm tracking-wide transition-all shadow-lg shadow-[#5865F2]/20 flex items-center justify-center gap-2"
+                      className="w-full py-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-[#5865F2]/20 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <LogIn className="w-4 h-4" />
                       <span>{language === 'ar' ? 'تسجيل الدخول عبر ديسكورد للتقديم على الوظيفة' : 'Sign In with Discord to Apply'}</span>
                     </button>
                   ) : activeApplication ? (
-                    <div className="p-4 rounded-2xl bg-[#141414] border border-[#222] space-y-3">
+                    <div className="p-4 rounded-2xl bg-[#151518] border border-[#222226] space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                           <FileCheck className="w-5 h-5 text-[#C8874B]" />
-                          <span className="text-sm font-bold text-white">
+                          <span className="text-xs sm:text-sm font-bold text-white">
                             {language === 'ar' ? 'لديك طلب مقدم لهذه الوظيفة' : 'Active Application on File'}
                           </span>
                         </div>
-                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-extrabold ${
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-black ${
                           activeApplication.status === 'ACCEPTED' 
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                             : activeApplication.status === 'UNDER_REVIEW'
@@ -253,14 +258,14 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
                         {language === 'ar' ? 'الشخصية:' : 'Character:'} <span className="text-white font-bold">{activeApplication.characterName}</span> • {language === 'ar' ? 'تاريخ التقديم:' : 'Applied:'} {new Date(activeApplication.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
                       </p>
                       {activeApplication.reviewNotes && (
-                        <div className="p-2.5 rounded-xl bg-[#1C1C1C] text-xs text-[#AAA]">
+                        <div className="p-2.5 rounded-xl bg-[#0D0D0F] text-xs text-[#AAA] border border-[#222226]">
                           <span className="font-bold text-[#C8874B]">{language === 'ar' ? 'ملاحظة الإدارة: ' : 'Staff Note: '}</span>
                           <span>{activeApplication.reviewNotes}</span>
                         </div>
                       )}
                       <button
                         onClick={() => setCurrentTab('dashboard')}
-                        className="w-full py-2.5 rounded-xl bg-[#1F1F1F] hover:bg-[#2A2A2A] text-xs font-bold text-white transition-all text-center cursor-pointer"
+                        className="w-full py-2.5 rounded-xl bg-[#0D0D0F] hover:bg-[#1E1E22] text-xs font-bold text-white transition-all text-center cursor-pointer border border-[#222226]"
                       >
                         {language === 'ar' ? 'عرض ومتابعة كافة طلباتي في لوحة التحكم' : 'View & Track Applications in Dashboard'}
                       </button>
@@ -268,14 +273,14 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
                   ) : selectedJob.status === 'HIRING_CLOSED' ? (
                     <button
                       disabled
-                      className="w-full py-4 rounded-xl bg-[#181818] border border-[#222] text-[#666] font-extrabold text-sm tracking-wide cursor-not-allowed"
+                      className="w-full py-4 rounded-xl bg-[#151518] border border-[#222226] text-[#666] font-black text-xs uppercase tracking-wider cursor-not-allowed"
                     >
                       {t('jobs.hiringClosed')}
                     </button>
                   ) : (
                     <button
                       onClick={() => setIsModalOpen(true)}
-                      className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-extrabold text-sm tracking-wide hover:brightness-110 transition-all shadow-lg shadow-[#C8874B]/20"
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-black text-xs uppercase tracking-wider hover:brightness-110 active:scale-98 transition-all shadow-xl shadow-[#C8874B]/20 cursor-pointer"
                     >
                       {t('jobs.applyNow')}
                     </button>

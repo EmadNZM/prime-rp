@@ -12,7 +12,8 @@ import {
   Copy, 
   Check, 
   Lock,
-  Sparkles
+  Sparkles,
+  Fingerprint
 } from 'lucide-react';
 
 interface LoginPageProps {
@@ -110,19 +111,19 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft;
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 relative">
+    <div className="min-h-[85vh] flex items-center justify-center py-16 px-4 sm:px-6 relative overflow-hidden">
       {/* Background ambient lighting */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#C8874B]/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#5865F2]/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#C8874B]/5 rounded-full blur-[140px] pointer-events-none" />
+      <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-[#5865F2]/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="w-full max-w-md bg-[#121212] border border-[#222] rounded-3xl p-6 sm:p-8 relative shadow-2xl overflow-hidden backdrop-blur-xl">
-        {/* Subtle top ambient bar */}
+      <div className="w-full max-w-md bg-[#0D0D0F] border border-[#222226] rounded-3xl p-6 sm:p-9 relative shadow-2xl overflow-hidden">
+        {/* Top copper ambient glow bar */}
         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#C8874B] to-transparent" />
 
         {/* Back Button */}
         <button
           onClick={() => setCurrentTab('home')}
-          className="inline-flex items-center gap-1.5 text-xs text-[#777] hover:text-[#C8874B] transition-colors mb-6 relative z-10"
+          className="inline-flex items-center gap-1.5 text-xs text-[#888] hover:text-[#C8874B] transition-colors mb-6 relative z-10 cursor-pointer"
         >
           <BackIcon className="w-3.5 h-3.5" />
           <span>{language === 'ar' ? 'العودة للرئيسية' : 'Back to Home'}</span>
@@ -133,21 +134,25 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
           <div className="flex justify-center mb-4">
             <PrimeLogo size="lg" variant="login" showText={false} withGlow={true} />
           </div>
-          <h1 className="text-2xl font-black text-white tracking-tight mb-1.5">
-            {language === 'ar' ? 'بوابة تسجيل الدخول الرسمية' : 'Official Portal Login'}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#C8874B]/10 border border-[#C8874B]/20 text-[#C8874B] text-[10px] font-black uppercase tracking-wider mb-2">
+            <Fingerprint className="w-3.5 h-3.5" />
+            <span>{language === 'ar' ? 'بوابة التحقق الرسمية' : 'Official Authentication Gate'}</span>
+          </div>
+          <h1 className="text-2xl font-black text-white tracking-tight uppercase mb-1.5">
+            {language === 'ar' ? 'تسجيل الدخول' : 'Citizen Portal Access'}
           </h1>
-          <p className="text-xs text-[#888]">
+          <p className="text-xs text-[#888] leading-relaxed">
             {language === 'ar' 
-              ? 'المنصة الرسمية وسيرفر اللعب الواقعي PRIME RP'
+              ? 'المنصة الرسمية وسيرفر اللعب الواقعي PRIME RP FiveM'
               : 'PRIME RP FiveM Official Platform & Community Portal'}
           </p>
         </div>
 
         {/* Error notification */}
         {errorMsg && (
-          <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 flex flex-col gap-3 text-xs text-red-400">
+          <div className="mb-6 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex flex-col gap-3 text-xs text-rose-400">
             <div className="flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-400" />
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
               <div className="space-y-1">
                 <p className="font-bold leading-relaxed">{errorMsg}</p>
                 {isCredentialsMissing && (
@@ -159,14 +164,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
             </div>
 
             {isCredentialsMissing && (
-              <div className="p-3 rounded-xl bg-[#0F0F0F] border border-[#2A2A2A] text-[11px] text-[#BBB] space-y-2">
+              <div className="p-3 rounded-xl bg-[#151518] border border-[#252528] text-[11px] text-[#BBB] space-y-2">
                 <p className="font-bold text-[#C8874B]">رابط الاسترجاع المطلوب في Discord Developer Portal:</p>
-                <div className="pt-1 flex items-center justify-between gap-2 bg-black/50 p-2 rounded-lg border border-[#222]">
+                <div className="pt-1 flex items-center justify-between gap-2 bg-black/50 p-2.5 rounded-xl border border-[#222226]">
                   <span className="font-mono text-[#8EA1FF] text-[10px] truncate">{currentCallbackUrl}</span>
                   <button
                     type="button"
                     onClick={handleCopyCallback}
-                    className="shrink-0 px-2 py-1 rounded bg-[#1F1F1F] hover:bg-[#2A2A2A] text-white flex items-center gap-1 text-[10px]"
+                    className="shrink-0 px-2.5 py-1 rounded-lg bg-[#222226] hover:bg-[#333] text-white flex items-center gap-1 text-[10px] cursor-pointer transition-colors"
                   >
                     {copiedRedirect ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                     <span>{copiedRedirect ? 'تم النسخ' : 'نسخ'}</span>
@@ -179,7 +184,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
 
         {/* Informational Message */}
         {infoMsg && (
-          <div className="mb-6 p-3.5 rounded-xl bg-[#5865F2]/10 border border-[#5865F2]/30 flex items-start gap-2.5 text-xs text-[#8EA1FF]">
+          <div className="mb-6 p-3.5 rounded-2xl bg-[#5865F2]/10 border border-[#5865F2]/30 flex items-start gap-2.5 text-xs text-[#8EA1FF]">
             <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-[#5865F2]" />
             <p className="leading-relaxed">{infoMsg}</p>
           </div>
@@ -191,7 +196,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
             type="button"
             onClick={handleDiscordClick}
             disabled={isRedirectingDiscord}
-            className="w-full py-4 px-5 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-bold text-sm flex items-center justify-center gap-3 shadow-xl shadow-[#5865F2]/25 transition-all hover:scale-[1.01] active:scale-98 disabled:opacity-75 relative group cursor-pointer"
+            className="w-full py-4 px-5 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-3 shadow-xl shadow-[#5865F2]/25 transition-all hover:scale-[1.01] active:scale-98 disabled:opacity-75 relative group cursor-pointer"
           >
             <svg className="w-5 h-5 fill-current shrink-0 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
               <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
@@ -205,16 +210,16 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
 
           {/* Quick Demo Preview Login (Development & Preview Only) */}
           {authConfig?.isDemoAllowed && (
-            <div className="pt-2 border-t border-[#222]">
-              <p className="text-[11px] text-[#777] text-center mb-2.5">
+            <div className="pt-3 border-t border-[#1E1E22]">
+              <p className="text-[11px] text-[#777] text-center mb-3">
                 {language === 'ar' ? 'أو تجربة المنصة ببيئة المعاينة:' : 'Or test in preview mode:'}
               </p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 <button
                   type="button"
                   onClick={() => handleDemoClick('admin')}
                   disabled={Boolean(isLoggingInDemo)}
-                  className="py-2.5 px-3 rounded-xl bg-[#C8874B]/15 hover:bg-[#C8874B]/25 border border-[#C8874B]/40 text-[#E0A96D] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  className="py-2.5 px-3 rounded-xl bg-[#C8874B]/10 hover:bg-[#C8874B]/20 border border-[#C8874B]/30 text-[#DF9F64] text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                 >
                   <span>{isLoggingInDemo === 'admin' ? (language === 'ar' ? 'جاري الدخول...' : 'Logging in...') : (language === 'ar' ? 'دخول كمسؤول' : 'Admin Demo')}</span>
                 </button>
@@ -222,7 +227,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
                   type="button"
                   onClick={() => handleDemoClick('citizen')}
                   disabled={Boolean(isLoggingInDemo)}
-                  className="py-2.5 px-3 rounded-xl bg-[#1C1C1C] hover:bg-[#252525] border border-[#333] text-[#CCC] hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                  className="py-2.5 px-3 rounded-xl bg-[#151518] hover:bg-[#1E1E22] border border-[#252528] text-[#CCC] hover:text-white text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
                 >
                   <span>{isLoggingInDemo === 'citizen' ? (language === 'ar' ? 'جاري الدخول...' : 'Logging in...') : (language === 'ar' ? 'دخول كمواطن' : 'Citizen Demo')}</span>
                 </button>
@@ -232,8 +237,8 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
         </div>
 
         {/* Security & Authentication Info Box */}
-        <div className="p-4 rounded-2xl bg-[#161616] border border-[#262626] text-[11px] text-[#888] space-y-2">
-          <div className="flex items-center gap-2 text-white font-semibold text-xs">
+        <div className="p-4 rounded-2xl bg-[#151518] border border-[#222226] text-[11px] text-[#888] space-y-2">
+          <div className="flex items-center gap-2 text-white font-bold text-xs">
             <ShieldCheck className="w-4 h-4 text-[#C8874B]" />
             <span>{language === 'ar' ? 'نظام المصادقة المشفر' : 'Encrypted Authentication'}</span>
           </div>
@@ -245,14 +250,14 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
         </div>
 
         {/* Footer Security Badges */}
-        <div className="mt-6 pt-4 border-t border-[#1C1C1C] flex items-center justify-between text-[10px] text-[#666]">
+        <div className="mt-6 pt-4 border-t border-[#1E1E22] flex items-center justify-between text-[10px] text-[#666]">
           <div className="flex items-center gap-1.5">
             <Lock className="w-3 h-3 text-[#C8874B]" />
-            <span>SSL / TLS 256-Bit Encrypted</span>
+            <span>SSL / TLS 256-Bit</span>
           </div>
           <div className="flex items-center gap-1">
             <Sparkles className="w-3 h-3 text-emerald-400" />
-            <span className="text-emerald-400 font-medium">Official Community Gate</span>
+            <span className="text-emerald-400 font-medium">Official Gate</span>
           </div>
         </div>
       </div>

@@ -13,8 +13,11 @@ import {
   ChevronDown, 
   Ticket, 
   ShoppingBag,
-  ExternalLink
+  Sparkles,
+  Layers,
+  Crown
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface NavbarProps {
   currentTab: string;
@@ -22,7 +25,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => {
-  const { t, language, toggleLanguage } = useLanguage();
+  const { t, language, toggleLanguage, isRtl } = useLanguage();
   const { user, isAuthenticated, isStaff, logout } = useAuth();
   const { totalItems, setIsCartOpen } = useCart();
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
@@ -31,13 +34,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
 
   useEffect(() => {
     const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
+      setIsScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -57,6 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
   const handleNavClick = (id: string) => {
     setCurrentTab(id);
     setMobileMenuOpen(false);
+    setUserDropdownOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -64,17 +64,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'bg-[#070707]/90 backdrop-blur-md border-b border-[#C8874B]/20 py-3 shadow-2xl shadow-black/80'
-          : 'bg-transparent border-b border-white/5 py-5'
+          ? 'bg-[#070707]/90 backdrop-blur-xl border-b border-[#222226] py-3 shadow-2xl shadow-black/80'
+          : 'bg-transparent border-b border-white/[0.04] py-4 sm:py-5'
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between">
           
-          {/* LOGO */}
+          {/* BRAND LOGO */}
           <button
             onClick={() => handleNavClick('home')}
-            className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8874B] rounded-lg"
+            className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C8874B] rounded-lg group"
           >
             <PrimeLogo size="md" variant="navbar" showText={true} withGlow={true} />
           </button>
@@ -87,13 +87,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
                 <button
                   key={link.id}
                   onClick={() => handleNavClick(link.id)}
-                  className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${
+                  className={`relative px-3.5 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                     active
-                      ? 'text-[#C8874B] bg-[#C8874B]/10 font-bold border-b-2 border-[#C8874B]'
-                      : 'text-[#C7C7C7] hover:text-white hover:bg-white/5'
+                      ? 'text-[#C8874B] bg-[#C8874B]/10 border border-[#C8874B]/30 shadow-sm'
+                      : 'text-[#9A9A9A] hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
                   {link.label}
+                  {active && (
+                    <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4 h-[2px] bg-[#C8874B] rounded-full" />
+                  )}
                 </button>
               );
             })}
@@ -105,7 +108,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
             {/* Store Shopping Cart Trigger */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative p-2 rounded-xl bg-[#121212] border border-[#222] hover:border-[#C8874B]/60 text-[#C7C7C7] hover:text-[#C8874B] transition-all cursor-pointer group"
+              className="relative p-2.5 rounded-xl bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B]/60 text-[#9A9A9A] hover:text-[#C8874B] transition-all cursor-pointer group shadow-md"
               title={language === 'ar' ? 'سلة المشتريات' : 'Shopping Cart'}
               aria-label="Shopping Cart"
             >
@@ -120,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
             {/* Language Switcher */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold uppercase tracking-wider text-[#C7C7C7] hover:text-[#C8874B] bg-[#121212] border border-[#222] hover:border-[#C8874B]/50 transition-all"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-[#9A9A9A] hover:text-[#C8874B] bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B]/50 transition-all cursor-pointer"
               title="Switch Language / تغيير اللغة"
               aria-label="Switch Language"
             >
@@ -133,9 +136,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 pl-3 rtl:pl-1.5 rtl:pr-3 rounded-full bg-[#121212] border border-[#2A2A2A] hover:border-[#C8874B] transition-all focus:outline-none"
+                  className="flex items-center gap-2 p-1.5 pl-3 rtl:pl-1.5 rtl:pr-3 rounded-full bg-[#0D0D0F] border border-[#222226] hover:border-[#C8874B] transition-all focus:outline-none cursor-pointer"
                 >
-                  <span className="text-xs font-semibold text-white max-w-[100px] truncate">
+                  <span className="text-xs font-bold text-white max-w-[90px] truncate hidden sm:inline">
                     {user.globalName || user.username}
                   </span>
                   <img
@@ -143,51 +146,46 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
                     alt={user.username}
                     className="w-7 h-7 rounded-full border border-[#C8874B] object-cover"
                   />
-                  <ChevronDown className="w-3.5 h-3.5 text-[#C7C7C7]" />
+                  <ChevronDown className="w-3.5 h-3.5 text-[#9A9A9A]" />
                 </button>
 
                 {/* Dropdown Menu */}
                 {userDropdownOpen && (
                   <div
-                    className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-56 bg-[#0B0B0B] border border-[#222] rounded-xl shadow-2xl py-2 z-50 text-sm animate-in fade-in zoom-in-95 duration-150"
+                    className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-56 bg-[#0D0D0F] border border-[#222226] rounded-2xl shadow-2xl py-2 z-50 text-sm animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl"
                     onMouseLeave={() => setUserDropdownOpen(false)}
                   >
-                    <div className="px-4 py-2 border-b border-[#1A1A1A]">
-                      <p className="text-xs text-[#888]">مرحباً بك / Welcome</p>
-                      <p className="font-bold text-[#E5E5E5] truncate">{user.globalName || user.username}</p>
-                      <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-bold rounded bg-[#C8874B]/20 text-[#C8874B] border border-[#C8874B]/30">
+                    <div className="px-4 py-3 border-b border-[#1C1C20]">
+                      <p className="text-[11px] text-[#777] uppercase tracking-wider font-semibold">
+                        {language === 'ar' ? 'المواطن المصادق' : 'Authenticated Citizen'}
+                      </p>
+                      <p className="font-black text-white truncate text-sm mt-0.5">
+                        {user.globalName || user.username}
+                      </p>
+                      <span className="inline-block mt-1.5 px-2 py-0.5 text-[10px] font-black rounded-md bg-[#C8874B]/15 text-[#DF9F64] border border-[#C8874B]/30 uppercase">
                         {user.role}
                       </span>
                     </div>
 
                     <button
-                      onClick={() => {
-                        handleNavClick('dashboard');
-                        setUserDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left rtl:text-right text-[#C7C7C7] hover:text-white hover:bg-white/5 transition-colors"
+                      onClick={() => handleNavClick('dashboard')}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left rtl:text-right text-[#9A9A9A] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
                     >
                       <UserIcon className="w-4 h-4 text-[#C8874B]" />
                       <span>{t('userDashboard.overview')}</span>
                     </button>
 
                     <button
-                      onClick={() => {
-                        handleNavClick('tickets');
-                        setUserDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left rtl:text-right text-[#C7C7C7] hover:text-white hover:bg-white/5 transition-colors"
+                      onClick={() => handleNavClick('tickets')}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left rtl:text-right text-[#9A9A9A] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
                     >
                       <Ticket className="w-4 h-4 text-[#C8874B]" />
                       <span>{t('nav.tickets')}</span>
                     </button>
 
                     <button
-                      onClick={() => {
-                        handleNavClick('orders');
-                        setUserDropdownOpen(false);
-                      }}
-                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left rtl:text-right text-[#C7C7C7] hover:text-white hover:bg-white/5 transition-colors"
+                      onClick={() => handleNavClick('orders')}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left rtl:text-right text-[#9A9A9A] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
                     >
                       <ShoppingBag className="w-4 h-4 text-[#C8874B]" />
                       <span>{t('nav.orders')}</span>
@@ -195,24 +193,21 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
 
                     {isStaff && (
                       <button
-                        onClick={() => {
-                          handleNavClick('admin');
-                          setUserDropdownOpen(false);
-                        }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left rtl:text-right text-[#DF9F64] hover:bg-[#C8874B]/10 transition-colors font-semibold border-t border-[#1A1A1A]"
+                        onClick={() => handleNavClick('admin')}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left rtl:text-right text-[#DF9F64] hover:bg-[#C8874B]/10 transition-colors font-bold border-t border-[#1C1C20] cursor-pointer text-xs"
                       >
                         <ShieldCheck className="w-4 h-4 text-[#C8874B]" />
                         <span>{t('nav.adminPanel')}</span>
                       </button>
                     )}
 
-                    <div className="border-t border-[#1A1A1A] mt-1 pt-1">
+                    <div className="border-t border-[#1C1C20] mt-1 pt-1">
                       <button
                         onClick={() => {
                           logout();
                           setUserDropdownOpen(false);
                         }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-red-400 hover:bg-red-500/10 transition-colors text-xs"
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-left rtl:text-right text-rose-400 hover:bg-rose-500/10 transition-colors text-xs font-semibold cursor-pointer"
                       >
                         <LogOut className="w-3.5 h-3.5" />
                         <span>{t('nav.logout')}</span>
@@ -224,19 +219,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
             ) : (
               <button
                 onClick={() => handleNavClick('login')}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-bold transition-all shadow-md shadow-[#5865F2]/20 hover:scale-[1.02]"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] hover:brightness-110 active:scale-98 text-black text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-[#C8874B]/20 cursor-pointer"
               >
-                <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                  <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.894.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-                </svg>
-                <span className="hidden sm:inline">{t('nav.loginDiscord')}</span>
+                <Crown className="w-3.5 h-3.5" />
+                <span>{t('nav.loginDiscord')}</span>
               </button>
             )}
 
             {/* Mobile Menu Toggle Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden p-2 rounded-lg bg-[#121212] border border-[#222] text-[#C7C7C7] hover:text-white"
+              className="xl:hidden p-2 rounded-xl bg-[#0D0D0F] border border-[#222226] text-[#9A9A9A] hover:text-white cursor-pointer"
               aria-label="Toggle Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -248,15 +241,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
 
       {/* MOBILE RESPONSIVE DRAWER */}
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-[#0B0B0B] border-b border-[#222] px-4 pt-3 pb-6 space-y-1">
+        <div className="xl:hidden bg-[#0D0D0F]/95 backdrop-blur-2xl border-b border-[#222226] px-4 pt-4 pb-6 space-y-1.5 shadow-2xl animate-in slide-in-from-top-2 duration-200">
           {navLinks.map((link) => (
             <button
               key={link.id}
               onClick={() => handleNavClick(link.id)}
-              className={`w-full text-left rtl:text-right px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`w-full text-left rtl:text-right px-4 py-3 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
                 currentTab === link.id
-                  ? 'bg-[#C8874B]/15 text-[#C8874B] font-bold'
-                  : 'text-[#C7C7C7] hover:bg-white/5 hover:text-white'
+                  ? 'bg-[#C8874B]/15 text-[#C8874B] border border-[#C8874B]/30'
+                  : 'text-[#9A9A9A] hover:bg-white/[0.04] hover:text-white'
               }`}
             >
               {link.label}
@@ -265,7 +258,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
           {isStaff && (
             <button
               onClick={() => handleNavClick('admin')}
-              className="w-full text-left rtl:text-right px-4 py-2.5 rounded-lg text-sm font-bold text-[#DF9F64] bg-[#C8874B]/10 hover:bg-[#C8874B]/20"
+              className="w-full text-left rtl:text-right px-4 py-3 rounded-xl text-xs font-black uppercase tracking-wider text-[#DF9F64] bg-[#C8874B]/10 hover:bg-[#C8874B]/20 border border-[#C8874B]/20 cursor-pointer"
             >
               {t('nav.adminPanel')}
             </button>

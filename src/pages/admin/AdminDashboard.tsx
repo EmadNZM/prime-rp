@@ -402,22 +402,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
   }
 
   return (
-    <div className="min-h-screen bg-[#070707] text-[#E5E5E5] pt-24 pb-20 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-[#070707] text-[#E5E5E5] pt-24 pb-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+      {/* Ambient background glow */}
+      <div className="absolute top-20 left-1/2 -translate-x-1/2 w-full max-w-6xl h-96 bg-[#C8874B]/5 blur-[140px] pointer-events-none rounded-full" />
       
       {/* Toast Notification */}
       {notificationMsg && (
-        <div className="fixed bottom-6 right-6 rtl:right-auto rtl:left-6 z-50 px-5 py-3 rounded-2xl bg-[#C8874B] text-black font-bold text-xs shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4">
+        <div className="fixed bottom-6 right-6 rtl:right-auto rtl:left-6 z-50 px-5 py-3 rounded-2xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-black text-xs uppercase tracking-wider shadow-2xl flex items-center gap-2 animate-in fade-in slide-in-from-bottom-4">
           <Check className="w-4 h-4" />
           <span>{notificationMsg}</span>
         </div>
       )}
 
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto relative z-10">
         
         {/* Admin Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#1C1C1C]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-[#222226]">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/20 text-[#C8874B] text-xs font-bold mb-2 border border-[#C8874B]/30">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/15 text-[#C8874B] text-[10px] font-black uppercase tracking-wider mb-2 border border-[#C8874B]/30">
               <ShieldCheck className="w-3.5 h-3.5" />
               <span>Staff Administration Suite</span>
               {isOwner && (
@@ -427,10 +429,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
                 </span>
               )}
             </div>
-            <h1 className="text-2xl sm:text-3xl font-black text-white">
+            <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight">
               {t('admin.title')}
             </h1>
-            <p className="text-xs text-[#888]">
+            <p className="text-xs text-[#888] mt-1">
               {language === 'ar' ? 'تسجيل الدخول الحالي:' : 'Current Session:'}{' '}
               <span className="text-white font-semibold">{user?.globalName || user?.username}</span> ({user?.role})
             </p>
@@ -438,14 +440,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
 
           <button
             onClick={() => setCurrentTab('home')}
-            className="px-4 py-2 rounded-xl bg-[#141414] hover:bg-[#202020] border border-[#2B2B2B] text-xs font-bold text-white transition-all self-start sm:self-auto"
+            className="px-5 py-2.5 rounded-2xl bg-[#151518] hover:bg-[#1E1E22] border border-[#252528] text-xs font-bold uppercase tracking-wider text-white transition-all self-start sm:self-auto cursor-pointer"
           >
             {language === 'ar' ? 'العودة للموقع' : 'Back to Website'}
           </button>
         </div>
 
         {/* Horizontal Navigation Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 border-b border-[#181818]">
+        <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 border-b border-[#1E1E22]">
           {[
             { id: 'overview', label: t('admin.overview'), icon: LayoutDashboard },
             { id: 'users', label: t('admin.users'), icon: Users },
@@ -464,10 +466,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
               <button
                 key={item.id}
                 onClick={() => setActiveAdminTab(item.id as any)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
                   active
-                    ? 'bg-[#C8874B] text-black shadow-md shadow-[#C8874B]/20'
-                    : 'bg-[#101010] text-[#888] hover:text-white hover:bg-[#181818] border border-[#202020]'
+                    ? 'bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black shadow-lg shadow-[#C8874B]/20 font-black uppercase tracking-wider'
+                    : 'bg-[#0D0D0F] text-[#888] hover:text-white hover:bg-[#151518] border border-[#222226]'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -480,49 +482,49 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
         {/* TAB 1: OVERVIEW */}
         {activeAdminTab === 'overview' && (
           <div className="space-y-8">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              <div className="p-6 rounded-2xl bg-[#0B0B0B] border border-[#1C1C1C]">
-                <span className="text-xs text-[#777] block mb-1">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+              <div className="p-6 rounded-3xl bg-[#0D0D0F] border border-[#222226] shadow-xl">
+                <span className="text-xs text-[#777] block mb-1 font-bold uppercase tracking-wider">
                   {language === 'ar' ? 'المستخدمين المسجلين' : 'Registered Citizens'}
                 </span>
-                <p className="text-3xl font-black text-white">{overviewMetrics?.totalUsers || 0}</p>
+                <p className="text-3xl font-black text-white font-rajdhani">{overviewMetrics?.totalUsers || 0}</p>
               </div>
-              <div className="p-6 rounded-2xl bg-[#0B0B0B] border border-[#1C1C1C]">
-                <span className="text-xs text-[#777] block mb-1">
+              <div className="p-6 rounded-3xl bg-[#0D0D0F] border border-[#222226] shadow-xl">
+                <span className="text-xs text-[#777] block mb-1 font-bold uppercase tracking-wider">
                   {language === 'ar' ? 'التذاكر المفتوحة' : 'Open Tickets'}
                 </span>
-                <p className="text-3xl font-black text-amber-400">{overviewMetrics?.openTickets || 0}</p>
+                <p className="text-3xl font-black text-amber-400 font-rajdhani">{overviewMetrics?.openTickets || 0}</p>
               </div>
-              <div className="p-6 rounded-2xl bg-[#0B0B0B] border border-[#1C1C1C]">
-                <span className="text-xs text-[#777] block mb-1">
+              <div className="p-6 rounded-3xl bg-[#0D0D0F] border border-[#222226] shadow-xl">
+                <span className="text-xs text-[#777] block mb-1 font-bold uppercase tracking-wider">
                   {language === 'ar' ? 'البلاغات المفتوحة' : 'Pending Reports'}
                 </span>
-                <p className="text-3xl font-black text-blue-400">{overviewMetrics?.openReports || 0}</p>
+                <p className="text-3xl font-black text-blue-400 font-rajdhani">{overviewMetrics?.openReports || 0}</p>
               </div>
-              <div className="p-6 rounded-2xl bg-[#0B0B0B] border border-[#1C1C1C]">
-                <span className="text-xs text-[#777] block mb-1">
+              <div className="p-6 rounded-3xl bg-[#0D0D0F] border border-[#222226] shadow-xl">
+                <span className="text-xs text-[#777] block mb-1 font-bold uppercase tracking-wider">
                   {language === 'ar' ? 'إجمالي المبيعات' : 'Total Revenue'}
                 </span>
-                <p className="text-3xl font-black text-emerald-400">${overviewMetrics?.totalRevenue || 0} USD</p>
+                <p className="text-3xl font-black text-emerald-400 font-rajdhani">${overviewMetrics?.totalRevenue || 0} USD</p>
               </div>
             </div>
 
             {/* Recent Audit Trail Preview */}
-            <div className="rounded-3xl bg-[#0B0B0B] border border-[#1C1C1C] p-6">
-              <h3 className="text-base font-black text-white mb-4">
+            <div className="rounded-3xl bg-[#0D0D0F] border border-[#222226] p-6 sm:p-8 shadow-2xl">
+              <h3 className="text-base font-black text-white uppercase tracking-tight mb-4">
                 {language === 'ar' ? 'آخر سجلات الأنشطة الإدارية (Audit Trail)' : 'Recent Administrative Audit Trail'}
               </h3>
-              <div className="space-y-2 text-xs">
+              <div className="space-y-2.5 text-xs">
                 {auditLogs.slice(0, 6).map((log) => (
-                  <div key={log.id} className="p-3 rounded-xl bg-[#111] border border-[#1C1C1C] flex items-center justify-between">
+                  <div key={log.id} className="p-3.5 rounded-2xl bg-[#151518] border border-[#222226] flex items-center justify-between">
                     <div>
-                      <span className="font-bold text-[#C8874B] mr-2 rtl:mr-0 rtl:ml-2">{log.adminName}</span>
-                      <span className="text-white font-mono bg-[#1E1E1E] px-2 py-0.5 rounded text-[10px] mr-2 rtl:mr-0 rtl:ml-2">
+                      <span className="font-bold text-[#DF9F64] mr-2 rtl:mr-0 rtl:ml-2">{log.adminName}</span>
+                      <span className="text-white font-mono bg-[#222226] px-2.5 py-0.5 rounded-lg text-[10px] mr-2 rtl:mr-0 rtl:ml-2">
                         {log.action}
                       </span>
                       <span className="text-[#888]">{log.metadata}</span>
                     </div>
-                    <span className="text-[#666] text-[10px]">
+                    <span className="text-[#666] text-[10px] font-mono">
                       {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
