@@ -16,9 +16,8 @@ import {
   ChevronDown,
   ShieldCheck,
   Ticket,
-  Zap,
   Play,
-  Users
+  Terminal
 } from 'lucide-react';
 
 interface NavbarProps {
@@ -28,7 +27,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIsCartOpen }) => {
-  const { t, language, setLanguage, isRtl } = useLanguage();
+  const { t, language, setLanguage } = useLanguage();
   const { user, isAuthenticated, logout, isStaff } = useAuth();
   const { totalItems } = useCart();
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
@@ -105,26 +104,26 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
         <div
           className={`flex items-center justify-between rounded-2xl transition-all duration-300 px-4 sm:px-5 py-2.5 ${
             isScrolled
-              ? 'bg-[#08080C]/90 backdrop-blur-2xl border border-[#1E2029] shadow-2xl shadow-black/90'
-              : 'bg-[#08080C]/75 backdrop-blur-xl border border-white/[0.08] shadow-xl'
+              ? 'bg-[#0b0d14]/92 backdrop-blur-2xl border border-white/[0.08] shadow-2xl shadow-black/90'
+              : 'bg-[#0b0d14]/80 backdrop-blur-xl border border-white/[0.06] shadow-xl'
           }`}
         >
           {/* BRAND LOGO */}
           <div className="flex items-center gap-3 sm:gap-4">
             <button
               onClick={() => handleNavClick('home')}
-              className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E6AA38] rounded-xl group transition-transform hover:scale-105"
+              className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c8874b] rounded-xl group transition-transform hover:scale-105 cursor-pointer"
             >
               <PrimeLogo size="md" variant="navbar" showText={true} withGlow={true} />
             </button>
 
-            {/* LIVE SERVER TELEMETRY PILL (Desktop) */}
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#111218]/90 border border-[#1E2029]">
+            {/* LIVE SERVER TELEMETRY PILL (EchoRP / ONX Style) */}
+            <div className="hidden lg:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-[#11131c] border border-white/[0.06]">
               <span className="relative flex h-2 w-2">
                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${isOnline ? 'bg-emerald-500' : 'bg-amber-500'}`} />
               </span>
-              <span className="text-[11px] font-black uppercase tracking-wider text-[#9EA3B0] font-rajdhani">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#969cad] font-rajdhani">
                 {isOnline ? (
                   <>
                     <span className="text-white font-bold">{playersOnline}</span>
@@ -147,13 +146,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
                   onClick={() => handleNavClick(link.id)}
                   className={`relative px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer ${
                     active
-                      ? 'text-[#FFC857] bg-[#E6AA38]/15 border border-[#E6AA38]/40 shadow-sm shadow-[#E6AA38]/10'
-                      : 'text-[#9EA3B0] hover:text-white hover:bg-white/[0.05]'
+                      ? 'text-[#df9f64] bg-[#c8874b]/15 border border-[#c8874b]/40 shadow-sm'
+                      : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
                   }`}
                 >
                   {link.label}
                   {active && (
-                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-[2px] bg-[#E6AA38] rounded-full shadow-sm shadow-[#E6AA38]" />
+                    <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-[2px] bg-[#c8874b] rounded-full shadow-sm shadow-[#c8874b]" />
                   )}
                 </button>
               );
@@ -162,7 +161,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
 
           {/* RIGHT ACTION BUTTONS */}
           <div className="flex items-center gap-2 sm:gap-2.5">
-            {/* Direct Connect Quick Action (Hidden on very small screens) */}
+            {/* Direct Connect Action (EchoRP Style) */}
             <button
               onClick={() => {
                 if (telemetry?.ip && telemetry?.port) {
@@ -171,23 +170,23 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
                   handleNavClick('players');
                 }
               }}
-              className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-[#E6AA38] to-[#FFC857] hover:brightness-110 text-black text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-[#E6AA38]/20 active:scale-95 cursor-pointer"
+              className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-[#c8874b]/20 active:scale-95 cursor-pointer"
               title={language === 'ar' ? 'اتصال مباشر بالسيرفر' : 'Direct FiveM Connect'}
             >
               <Play className="w-3 h-3 fill-current" />
               <span>{language === 'ar' ? 'دخول السيرفر' : 'Connect'}</span>
             </button>
 
-            {/* Store Shopping Cart Trigger */}
+            {/* Store Shopping Cart (DusaDev Style) */}
             <button
               onClick={() => setIsCartOpen(true)}
-              className="relative p-2.5 rounded-xl bg-[#111218] border border-[#1E2029] hover:border-[#E6AA38]/60 text-[#9EA3B0] hover:text-[#FFC857] transition-all cursor-pointer group shadow-md"
+              className="relative p-2.5 rounded-xl bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b]/60 text-[#969cad] hover:text-[#df9f64] transition-all cursor-pointer group shadow-sm"
               title={language === 'ar' ? 'سلة المشتريات' : 'Shopping Cart'}
               aria-label="Shopping Cart"
             >
               <ShoppingBag className="w-4 h-4 transition-transform group-hover:scale-110" />
               {totalItems > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 rtl:-right-auto rtl:-left-1.5 w-5 h-5 rounded-full bg-gradient-to-r from-[#E6AA38] to-[#FFC857] text-black text-[10px] font-black flex items-center justify-center shadow-lg shadow-[#E6AA38]/40 animate-pulse">
+                <span className="absolute -top-1.5 -right-1.5 rtl:-right-auto rtl:-left-1.5 w-5 h-5 rounded-full bg-[#c8874b] text-black text-[10px] font-black flex items-center justify-center shadow-md shadow-[#c8874b]/40">
                   {totalItems}
                 </span>
               )}
@@ -196,11 +195,11 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             {/* Language Switcher */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-[#9EA3B0] hover:text-[#FFC857] bg-[#111218] border border-[#1E2029] hover:border-[#E6AA38]/50 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-[#969cad] hover:text-[#df9f64] bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b]/50 transition-all cursor-pointer"
               title="Switch Language / تغيير اللغة"
               aria-label="Switch Language"
             >
-              <Globe className="w-3.5 h-3.5 text-[#E6AA38]" />
+              <Globe className="w-3.5 h-3.5 text-[#c8874b]" />
               <span className="text-[11px]">{language === 'ar' ? 'EN' : 'عربي'}</span>
             </button>
 
@@ -209,7 +208,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
               <div className="relative">
                 <button
                   onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 pl-3 rtl:pl-1.5 rtl:pr-3 rounded-xl bg-[#111218] border border-[#1E2029] hover:border-[#E6AA38] transition-all focus:outline-none cursor-pointer"
+                  className="flex items-center gap-2 p-1.5 pl-3 rtl:pl-1.5 rtl:pr-3 rounded-xl bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b] transition-all focus:outline-none cursor-pointer"
                 >
                   <span className="text-xs font-bold text-white max-w-[90px] truncate hidden sm:inline">
                     {user.globalName || user.username}
@@ -217,64 +216,64 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
                   <img
                     src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80'}
                     alt={user.username}
-                    className="w-7 h-7 rounded-lg border border-[#E6AA38] object-cover"
+                    className="w-7 h-7 rounded-lg border border-[#c8874b] object-cover"
                   />
-                  <ChevronDown className="w-3 h-3 text-[#9EA3B0]" />
+                  <ChevronDown className="w-3 h-3 text-[#969cad]" />
                 </button>
 
                 {/* Dropdown Menu */}
                 {userDropdownOpen && (
                   <div
-                    className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-56 bg-[#0B0C10] border border-[#1E2029] rounded-2xl shadow-2xl py-2 z-50 text-sm animate-in fade-in zoom-in-95 duration-150 backdrop-blur-2xl"
+                    className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-56 bg-[#0d0f16] border border-white/[0.08] rounded-2xl shadow-2xl py-2 z-50 text-sm animate-in fade-in zoom-in-95 duration-150 backdrop-blur-2xl"
                     onMouseLeave={() => setUserDropdownOpen(false)}
                   >
-                    <div className="px-4 py-3 border-b border-[#181A22]">
+                    <div className="px-4 py-3 border-b border-white/[0.06]">
                       <p className="text-[10px] text-[#666] uppercase tracking-wider font-semibold">
                         {language === 'ar' ? 'المواطن المصادق' : 'Authenticated Citizen'}
                       </p>
                       <p className="font-black text-white truncate text-sm mt-0.5">
                         {user.globalName || user.username}
                       </p>
-                      <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-black rounded-md bg-[#E6AA38]/15 text-[#FFC857] border border-[#E6AA38]/30 uppercase font-rajdhani">
+                      <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-black rounded-md bg-[#c8874b]/15 text-[#df9f64] border border-[#c8874b]/30 uppercase font-rajdhani">
                         {user.role}
                       </span>
                     </div>
 
                     <button
                       onClick={() => handleNavClick('dashboard')}
-                      className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#9EA3B0] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#969cad] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
                     >
-                      <UserIcon className="w-4 h-4 text-[#E6AA38]" />
+                      <UserIcon className="w-4 h-4 text-[#c8874b]" />
                       <span>{t('userDashboard.overview')}</span>
                     </button>
 
                     <button
                       onClick={() => handleNavClick('tickets')}
-                      className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#9EA3B0] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#969cad] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
                     >
-                      <Ticket className="w-4 h-4 text-[#E6AA38]" />
+                      <Ticket className="w-4 h-4 text-[#c8874b]" />
                       <span>{t('nav.tickets')}</span>
                     </button>
 
                     <button
                       onClick={() => handleNavClick('orders')}
-                      className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#9EA3B0] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
+                      className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#969cad] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
                     >
-                      <ShoppingBag className="w-4 h-4 text-[#E6AA38]" />
+                      <ShoppingBag className="w-4 h-4 text-[#c8874b]" />
                       <span>{t('nav.orders')}</span>
                     </button>
 
                     {isStaff && (
                       <button
                         onClick={() => handleNavClick('admin')}
-                        className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#FFC857] hover:bg-[#E6AA38]/10 transition-colors font-bold border-t border-[#181A22] cursor-pointer text-xs"
+                        className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#df9f64] hover:bg-[#c8874b]/10 transition-colors font-bold border-t border-white/[0.06] cursor-pointer text-xs"
                       >
-                        <ShieldCheck className="w-4 h-4 text-[#E6AA38]" />
+                        <ShieldCheck className="w-4 h-4 text-[#c8874b]" />
                         <span>{t('nav.adminPanel')}</span>
                       </button>
                     )}
 
-                    <div className="border-t border-[#181A22] mt-1 pt-1">
+                    <div className="border-t border-white/[0.06] mt-1 pt-1">
                       <button
                         onClick={() => {
                           logout();
@@ -292,7 +291,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             ) : (
               <button
                 onClick={() => handleNavClick('login')}
-                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl bg-gradient-to-r from-[#E6AA38] via-[#FFC857] to-[#E6AA38] hover:brightness-110 active:scale-95 text-black text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-[#E6AA38]/20 cursor-pointer"
+                className="flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-4 py-2 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] active:scale-95 text-black text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-[#c8874b]/20 cursor-pointer"
               >
                 <Crown className="w-3.5 h-3.5" />
                 <span className="hidden xs:inline">{t('nav.loginDiscord')}</span>
@@ -303,7 +302,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             {/* Mobile Menu Toggle Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden p-2 rounded-xl bg-[#111218] border border-[#1E2029] text-[#9EA3B0] hover:text-white cursor-pointer"
+              className="xl:hidden p-2 rounded-xl bg-[#11131c] border border-white/[0.06] text-[#969cad] hover:text-white cursor-pointer"
               aria-label="Toggle Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -313,16 +312,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
 
         {/* MOBILE RESPONSIVE DRAWER */}
         {mobileMenuOpen && (
-          <div className="xl:hidden mt-2 bg-[#0B0C10]/95 backdrop-blur-2xl border border-[#1E2029] rounded-2xl px-4 pt-4 pb-5 space-y-1 shadow-2xl animate-in slide-in-from-top-2 duration-200">
+          <div className="xl:hidden mt-2 bg-[#0b0d14]/95 backdrop-blur-2xl border border-white/[0.08] rounded-2xl px-4 pt-4 pb-5 space-y-1 shadow-2xl animate-in slide-in-from-top-2 duration-200">
             {/* Mobile Server status bar */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-[#111218] border border-[#1E2029] mb-3">
+            <div className="flex items-center justify-between p-3 rounded-xl bg-[#11131c] border border-white/[0.06] mb-3">
               <div className="flex items-center gap-2">
                 <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
                 <span className="text-xs font-bold text-white uppercase">
                   {isOnline ? (language === 'ar' ? 'السيرفر متاح' : 'Server Online') : (language === 'ar' ? 'قيد الصيانة' : 'Standby')}
                 </span>
               </div>
-              <span className="text-xs font-bold text-[#E6AA38] font-rajdhani">
+              <span className="text-xs font-bold text-[#c8874b] font-rajdhani">
                 {playersOnline} / {maxPlayers} {language === 'ar' ? 'لاعب' : 'Slots'}
               </span>
             </div>
@@ -333,8 +332,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
                 onClick={() => handleNavClick(link.id)}
                 className={`w-full text-left rtl:text-right px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
                   currentTab === link.id
-                    ? 'bg-[#E6AA38]/20 text-[#FFC857] border border-[#E6AA38]/40'
-                    : 'text-[#9EA3B0] hover:bg-white/[0.04] hover:text-white'
+                    ? 'bg-[#c8874b]/15 text-[#df9f64] border border-[#c8874b]/40'
+                    : 'text-[#969cad] hover:bg-white/[0.04] hover:text-white'
                 }`}
               >
                 {link.label}
@@ -344,7 +343,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             {isStaff && (
               <button
                 onClick={() => handleNavClick('admin')}
-                className="w-full text-left rtl:text-right px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-[#FFC857] bg-[#E6AA38]/10 hover:bg-[#E6AA38]/20 border border-[#E6AA38]/30 cursor-pointer"
+                className="w-full text-left rtl:text-right px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-[#df9f64] bg-[#c8874b]/10 hover:bg-[#c8874b]/20 border border-[#c8874b]/30 cursor-pointer"
               >
                 {t('nav.adminPanel')}
               </button>
