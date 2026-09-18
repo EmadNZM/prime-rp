@@ -108,8 +108,31 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
   const maxPlayers = telemetry?.maxPlayers || 150;
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-3 sm:px-6 pt-3 pointer-events-none">
-      <div className="max-w-7xl mx-auto pointer-events-auto">
+    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-3 sm:px-6 pt-2 pointer-events-none">
+      <div className="max-w-7xl mx-auto pointer-events-auto space-y-1.5">
+        
+        {/* TOP BRAND MOTTO STRIP (As in the Poster) */}
+        <div className={`hidden md:flex items-center justify-between px-4 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all duration-300 ${
+          isScrolled ? 'opacity-0 h-0 overflow-hidden py-0 my-0' : 'bg-[#070707]/70 backdrop-blur-md border border-white/[0.04] text-[#A1A1A1]'
+        }`}>
+          <div className="flex items-center gap-2 text-white/80 font-rajdhani">
+            <span className="w-1.5 h-1.5 rounded-full bg-[#C8874B] animate-pulse" />
+            <span className="text-white font-black tracking-widest">PRIME RP</span>
+            <span className="text-[#666]">•</span>
+            <span className="text-[#A1A1A1] text-[10px]">PREMIUM FIVEM ROLEPLAY</span>
+          </div>
+
+          <div className="flex items-center gap-3 text-[10px] font-montserrat tracking-widest text-[#DF9F64]">
+            <span>A NEW ERA</span>
+            <span className="text-white/20">•</span>
+            <span>A REALER WORLD</span>
+          </div>
+
+          <div className="text-[10px] italic text-[#888] font-serif">
+            &ldquo;More Than a Server, A Community.&rdquo;
+          </div>
+        </div>
+
         <div
           className={`flex items-center justify-between rounded-2xl transition-all duration-300 px-4 sm:px-5 py-2.5 ${
             isScrolled

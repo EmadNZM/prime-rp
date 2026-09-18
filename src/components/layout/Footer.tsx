@@ -156,8 +156,36 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
 
         </div>
 
+        {/* POSTER SIGNATURE BRANDING BAR */}
+        <div className="py-8 my-8 border-y border-white/[0.06] flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left rtl:md:text-right">
+          <div className="flex items-center gap-3">
+            <PrimeLogo size="sm" variant="footer" showText={false} withGlow={true} />
+            <div>
+              <div className="text-white font-black tracking-wider text-sm font-rajdhani">PRIME RP</div>
+              <div className="text-[10px] text-[#A1A1A1] uppercase font-bold tracking-widest">PREMIUM FIVEM ROLEPLAY</div>
+            </div>
+          </div>
+
+          <div className="flex flex-col items-center">
+            <div className="text-sm sm:text-base font-black tracking-widest text-[#DF9F64] uppercase font-rajdhani">
+              A BIGGER STORY AWAITS
+            </div>
+            <div className="flex items-center gap-2 text-[11px] font-bold text-[#A1A1A1] tracking-wider uppercase mt-0.5">
+              <span>PLAY</span>
+              <span className="text-[#C8874B]">•</span>
+              <span>ROLEPLAY</span>
+              <span className="text-[#C8874B]">•</span>
+              <span>BELONG</span>
+            </div>
+          </div>
+
+          <div className="text-xs italic text-[#888] font-serif">
+            &ldquo;Same World. A New Experience.&rdquo;
+          </div>
+        </div>
+
         {/* BOTTOM COPYRIGHT */}
-        <div className="pt-8 mt-8 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between text-xs gap-4 text-[#666]">
+        <div className="flex flex-col sm:flex-row items-center justify-between text-xs gap-4 text-[#666]">
           <p>
             {t('footer.rights')}
           </p>

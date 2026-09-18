@@ -77,48 +77,24 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
 
       <div className="max-w-6xl mx-auto space-y-8 relative z-10">
         
-        {/* Profile Card Header (ONX & EchoRP Style) */}
-        <div className="rounded-2xl bg-[#0d0f16] border border-white/[0.08] p-6 sm:p-8 flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 shadow-2xl relative overflow-hidden">
-          {/* Top copper accent */}
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#c8874b] to-transparent" />
-
-          <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10 text-center sm:text-left sm:rtl:text-right">
-            <div className="relative">
-              <img
-                src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120'}
-                alt={user.username}
-                className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl object-cover border-2 border-[#c8874b] shadow-xl"
-              />
-              <span className="absolute bottom-0 right-0 rtl:right-auto rtl:left-0 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#0d0f16]" />
+        {/* Section Header with Poster Identity */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-2">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#c8874b]/10 text-[#df9f64] text-xs font-black mb-3 uppercase tracking-widest border border-[#c8874b]/20 font-rajdhani">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#c8874b]" />
+              <span>{language === 'ar' ? 'لوحة التحكم • نظيفة واحترافية' : 'DASHBOARD • CLEAN & PROFESSIONAL'}</span>
             </div>
-
-            <div>
-              <div className="flex items-center justify-center sm:justify-start gap-2 mb-1">
-                <h1 className="text-2xl sm:text-3xl font-black text-white uppercase tracking-tight font-rajdhani">
-                  {user.globalName || user.username}
-                </h1>
-                <span className="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-[#c8874b]/15 text-[#df9f64] border border-[#c8874b]/30 uppercase tracking-wider font-mono">
-                  {user.role}
-                </span>
-              </div>
-              <p className="text-xs text-[#7a8091] font-mono mb-3">Discord ID: {user.discordId}</p>
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 text-xs text-[#969cad]">
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-[#c8874b]" />
-                  <span>
-                    {language === 'ar' ? 'انضم:' : 'Joined:'}{' '}
-                    {new Date(user.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
-                  </span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>{language === 'ar' ? 'الحالة:' : 'Status:'} {user.status}</span>
-                </span>
-              </div>
-            </div>
+            <h1 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight font-rajdhani">
+              {language === 'ar' ? `مرحباً بعودتك، ${user.globalName || user.username}` : `Welcome Back, ${user.globalName || user.username}`}
+            </h1>
+            <p className="text-xs sm:text-sm text-[#969cad] mt-1.5 max-w-xl">
+              {language === 'ar' 
+                ? 'إدارة متكاملة لملف المواطنة، الرصيد البنكي، التراخيص الحكومية، وطلبات التوظيف والدعم الفني.' 
+                : 'Direct live access to your citizen dossier, registered vehicles, bank accounts, permits, and active support tickets.'}
+            </p>
           </div>
 
-          <div className="flex items-center gap-3 relative z-10">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setCurrentTab('jobs')}
               className="px-5 py-2.5 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-[#c8874b]/20 flex items-center gap-1.5 cursor-pointer"
@@ -132,6 +108,148 @@ export const UserDashboard: React.FC<UserDashboardProps> = ({ setCurrentTab }) =
             >
               {language === 'ar' ? 'فتح تذكرة' : 'Open Ticket'}
             </button>
+          </div>
+        </div>
+
+        {/* CITIZEN DOSSIER & FINANCIAL STATUS (Matching Mockup 4) */}
+        <div className="rounded-3xl bg-[#0d0f16] border border-white/[0.09] p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-1/4 w-80 h-80 bg-[#c8874b]/10 rounded-full blur-[100px] pointer-events-none" />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
+            
+            {/* Citizen Identity Profile (4 Cols) */}
+            <div className="lg:col-span-4 p-6 rounded-2xl bg-[#08090d] border border-white/[0.06] flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="relative">
+                    <img
+                      src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120'}
+                      alt={user.username}
+                      className="w-16 h-16 rounded-2xl object-cover border-2 border-[#c8874b] shadow-xl p-0.5 bg-[#131620]"
+                    />
+                    <span className="absolute -bottom-1 -right-1 rtl:right-auto rtl:-left-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-[#08090d]" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-[#A1A1A1] uppercase font-bold tracking-wider">
+                      {language === 'ar' ? 'سجل المواطن:' : 'CITIZEN DOSSIER'}
+                    </span>
+                    <h3 className="text-lg font-black text-white font-rajdhani">
+                      {user.globalName || user.username}
+                    </h3>
+                    <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-[#c8874b]/15 text-[#df9f64] text-[10px] font-black uppercase tracking-wider mt-1 border border-[#c8874b]/30">
+                      <ShieldCheck className="w-2.5 h-2.5" />
+                      <span>{language === 'ar' ? `مواطن موثق • ${user.role}` : `WHITELISTED • ${user.role}`}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2.5 text-xs pt-4 border-t border-white/[0.06]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#666]">{language === 'ar' ? 'المدينة والولاية:' : 'Jurisdiction:'}</span>
+                    <span className="text-white font-bold">Los Santos, San Andreas</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#666]">{language === 'ar' ? 'ديسكورد ID:' : 'Discord ID:'}</span>
+                    <span className="text-[#df9f64] font-mono text-[11px]">{user.discordId}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[#666]">{language === 'ar' ? 'تاريخ الانضمام:' : 'Joined City:'}</span>
+                    <span className="text-white font-bold">{new Date(user.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-6 mt-6 border-t border-white/[0.06] flex items-center justify-between">
+                <div className="text-[11px] text-emerald-400 font-bold flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>{language === 'ar' ? 'حساب نشط ومربوط' : 'Linked & Verified'}</span>
+                </div>
+                <span className="text-[10px] text-[#7a8091] font-mono">STATUS: {user.status}</span>
+              </div>
+            </div>
+
+            {/* Financials, Assets & Official Licenses (8 Cols) */}
+            <div className="lg:col-span-8 space-y-6">
+              
+              {/* Financial Stats Bar (Fleeca Bank, Cash, Credit) */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                
+                <div className="p-5 rounded-2xl bg-[#08090d] border border-white/[0.06] hover:border-[#c8874b]/30 transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-[#7a8091] font-bold uppercase">{language === 'ar' ? 'حساب بنك فليكا' : 'Fleeca Bank'}</span>
+                    <ShoppingBag className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div className="text-2xl font-black text-white font-rajdhani">$125,480</div>
+                  <span className="text-[10px] text-emerald-400 font-bold block mt-1">✓ {language === 'ar' ? 'حساب نشط ومؤمّن' : 'Verified Savings'}</span>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-[#08090d] border border-white/[0.06] hover:border-[#c8874b]/30 transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-[#7a8091] font-bold uppercase">{language === 'ar' ? 'السيولة النقدية' : 'Cash on Hand'}</span>
+                    <Briefcase className="w-4 h-4 text-[#df9f64]" />
+                  </div>
+                  <div className="text-2xl font-black text-[#df9f64] font-rajdhani">$4,250</div>
+                  <span className="text-[10px] text-[#A1A1A1] block mt-1">{language === 'ar' ? 'المحفظة الشخصية' : 'Physical Cash'}</span>
+                </div>
+
+                <div className="p-5 rounded-2xl bg-[#08090d] border border-white/[0.06] hover:border-[#c8874b]/30 transition-colors">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs text-[#7a8091] font-bold uppercase">{language === 'ar' ? 'التقييم الائتماني' : 'Credit Score'}</span>
+                    <ShieldCheck className="w-4 h-4 text-[#38bdf8]" />
+                  </div>
+                  <div className="text-2xl font-black text-white font-rajdhani">785 / 850</div>
+                  <span className="text-[10px] text-[#38bdf8] font-bold block mt-1">{language === 'ar' ? 'مؤهل للقروض العقارية' : 'Prime Tier Borrower'}</span>
+                </div>
+
+              </div>
+
+              {/* Official Permits & Licenses Matrix */}
+              <div className="p-5 rounded-2xl bg-[#08090d] border border-white/[0.06]">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <FileCheck className="w-4 h-4 text-[#c8874b]" />
+                    <span className="text-xs font-bold uppercase tracking-wider text-white">
+                      {language === 'ar' ? 'التراخيص والسجلات الرسمية (Department of Justice)' : 'Official Permits & Certifications (State Records)'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-[#666] font-mono">MDT-SYNCED</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-3 rounded-xl bg-[#0d0f16] border border-white/[0.04] flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-[#7a8091] block uppercase font-bold">{language === 'ar' ? 'رخصة القيادة' : 'Driver License'}</span>
+                      <span className="text-xs font-bold text-white">CLASS A / B</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-black border border-emerald-500/20">
+                      {language === 'ar' ? 'سارية' : 'VALID'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-[#0d0f16] border border-white/[0.04] flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-[#7a8091] block uppercase font-bold">{language === 'ar' ? 'تصريح السلاح' : 'Firearm Permit'}</span>
+                      <span className="text-xs font-bold text-white">CLASS-3 CCW</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 text-[10px] font-black border border-emerald-500/20">
+                      {language === 'ar' ? 'مرخص' : 'ISSUED'}
+                    </span>
+                  </div>
+
+                  <div className="p-3 rounded-xl bg-[#0d0f16] border border-white/[0.04] flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] text-[#7a8091] block uppercase font-bold">{language === 'ar' ? 'رخصة الطيران' : 'Aviation License'}</span>
+                      <span className="text-xs font-bold text-white">HELICOPTER / JET</span>
+                    </div>
+                    <span className="px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 text-[10px] font-black border border-sky-500/20">
+                      {language === 'ar' ? 'معتمد' : 'CERTIFIED'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
           </div>
         </div>
 
