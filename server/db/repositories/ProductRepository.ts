@@ -3,8 +3,9 @@ import { ProductItem } from '../../../src/types';
 import { db } from '../store';
 
 export class ProductRepository {
-  private static async attachTranslations(prodRow: any): Promise<ProductItem> {
-    const transRes = await query(
+  private static async attachTranslations(prodRow: any, client?: any): Promise<ProductItem> {
+    const queryFn = client ? (text: string, params?: any[]) => client.query(text, params) : query;
+    const transRes = await queryFn(
       'SELECT language, name, description, perks FROM product_translations WHERE product_id = $1',
       [prodRow.id]
     );
@@ -99,8 +100,19 @@ export class ProductRepository {
         [id, slug, category, price, currency, image, stock, status, featured]
       );
 
+      // Exact Synchronization: Delete stale translations not present in payload
       if (product.translations) {
-        for (const lang of ['ar', 'en']) {
+        const payloadLangs = Object.keys(product.translations).filter(l => (product.translations as any)[l]);
+        if (payloadLangs.length > 0) {
+          await client.query(
+            'DELETE FROM product_translations WHERE product_id = $1 AND NOT (language = ANY($2))',
+            [id, payloadLangs]
+          );
+        } else {
+          await client.query('DELETE FROM product_translations WHERE product_id = $1', [id]);
+        }
+
+        for (const lang of payloadLangs) {
           const t = (product.translations as any)[lang];
           if (t) {
             await client.query(
@@ -115,7 +127,7 @@ export class ProductRepository {
       }
 
       const row = (await client.query('SELECT * FROM products WHERE id = $1', [id])).rows[0];
-      return ProductRepository.attachTranslations(row);
+      return ProductRepository.attachTranslations(row, client);
     });
   }
 

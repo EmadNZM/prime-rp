@@ -71,7 +71,8 @@ export async function getAuthConfig(req: Request, res: Response) {
     hasDiscordOauth: Boolean(clientId),
     oauthConfigured: Boolean(clientId && process.env.DISCORD_CLIENT_SECRET),
     currentRedirectUri: currentHostRedirect,
-    configuredRedirectUri: redirectUri
+    configuredRedirectUri: redirectUri,
+    isDemoAllowed: process.env.NODE_ENV !== 'production'
   });
 }
 
@@ -298,35 +299,39 @@ export async function handleLogout(req: Request, res: Response) {
 }
 
 /**
- * Demo login for developer preview and testing when Discord OAuth is pending configuration.
- * STRICT SECURITY:
- * 1. Disabled completely in production unless explicit ENABLE_DEMO_LOGIN is set.
- * 2. NEVER permits creating or assuming the OWNER role via a public endpoint.
+ * Demo login for developer preview/testing ONLY.
+ * STRICT PRODUCTION SECURITY:
+ * 1. Unconditionally blocked in production (HTTP 403) — Discord OAuth is the sole authentication route in production.
+ * 2. Does NOT trust user-supplied roles to determine permissions.
+ * 3. Never permits creating or assuming the OWNER role.
  */
 export async function handleDemoLogin(req: Request, res: Response) {
-  // 1. Strictly closed in Production
-  if (process.env.NODE_ENV === 'production' && process.env.ENABLE_DEMO_LOGIN !== 'true') {
+  // 1. Strictly disabled in Production environments unconditionally
+  if (process.env.NODE_ENV === 'production') {
     return res.status(403).json({
       error: 'Demo login is strictly disabled in production. Authentication must proceed exclusively via Discord OAuth.'
     });
   }
 
   try {
-    const rawRole = String(req.body?.role || req.query?.role || 'citizen').toLowerCase();
-
-    // 2. Prohibit OWNER role creation or assumption via public demo endpoint
-    if (rawRole === 'owner' || rawRole === 'userrole.owner') {
+    // 2. Do not trust arbitrary user input to assign roles or privileges.
+    // In dev/preview environments, only predetermined fixed test profiles can be used.
+    const requestedProfile = String(req.body?.role || req.query?.role || 'citizen').trim().toLowerCase();
+    
+    // Strictly forbid any attempt to pass or assume owner
+    if (requestedProfile.includes('owner')) {
       return res.status(403).json({
-        error: 'Forbidden: Creating or logging into the OWNER account via demo-login is strictly prohibited.'
+        error: 'Forbidden: Creating or accessing owner accounts via demo login is strictly prohibited.'
       });
     }
 
-    const roleType = rawRole === 'citizen' ? 'citizen' : 'admin';
-    const targetId = roleType === 'citizen' ? 'usr_citizen' : 'usr_admin_demo';
+    // Only two predetermined non-owner preview profiles exist in dev mode:
+    const isStaffPreview = requestedProfile === 'admin';
+    const targetId = isStaffPreview ? 'usr_admin_demo' : 'usr_citizen';
 
     let targetUser = await userRepository.findById(targetId);
     if (!targetUser) {
-      if (roleType === 'citizen') {
+      if (!isStaffPreview) {
         targetUser = await userRepository.upsert({
           discordId: '309876543210987699',
           username: 'Tariq_Citizen',
@@ -342,7 +347,7 @@ export async function handleDemoLogin(req: Request, res: Response) {
           username: 'PrimeAdmin',
           globalName: 'Prime Staff Admin',
           avatar: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&auto=format&fit=crop&q=80',
-          role: UserRole.ADMIN, // STRICT: ADMIN role only, NEVER OWNER!
+          role: UserRole.ADMIN,
           status: UserStatus.ACTIVE,
           permissions: ['tickets.*', 'reports.*', 'news.*', 'jobs.*']
         });

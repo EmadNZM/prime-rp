@@ -466,7 +466,12 @@ class DatabaseStore {
     if (cat.id) {
       const idx = this.data.rules.findIndex((r) => r.id === cat.id);
       if (idx >= 0) {
-        this.data.rules[idx] = { ...this.data.rules[idx], ...cat } as RuleCategory;
+        this.data.rules[idx] = {
+          ...this.data.rules[idx],
+          ...cat,
+          translations: cat.translations ? cat.translations : this.data.rules[idx].translations,
+          rules: cat.rules !== undefined ? cat.rules : this.data.rules[idx].rules
+        } as RuleCategory;
         this.save();
         return this.data.rules[idx];
       }
@@ -495,7 +500,11 @@ class DatabaseStore {
     if (job.id) {
       const idx = this.data.jobs.findIndex((j) => j.id === job.id);
       if (idx >= 0) {
-        this.data.jobs[idx] = { ...this.data.jobs[idx], ...job } as JobItem;
+        this.data.jobs[idx] = {
+          ...this.data.jobs[idx],
+          ...job,
+          translations: job.translations ? job.translations : this.data.jobs[idx].translations
+        } as JobItem;
         this.save();
         return this.data.jobs[idx];
       }
@@ -527,7 +536,11 @@ class DatabaseStore {
     if (prod.id) {
       const idx = this.data.products.findIndex((p) => p.id === prod.id);
       if (idx >= 0) {
-        this.data.products[idx] = { ...this.data.products[idx], ...prod } as ProductItem;
+        this.data.products[idx] = {
+          ...this.data.products[idx],
+          ...prod,
+          translations: prod.translations ? prod.translations : this.data.products[idx].translations
+        } as ProductItem;
         this.save();
         return this.data.products[idx];
       }

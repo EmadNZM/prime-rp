@@ -3,8 +3,9 @@ import { RuleCategory, RuleItem } from '../../../src/types';
 import { db } from '../store';
 
 export class RulesRepository {
-  private static async attachCategoryDetails(catRow: any): Promise<RuleCategory> {
-    const transRes = await query(
+  private static async attachCategoryDetails(catRow: any, client?: any): Promise<RuleCategory> {
+    const queryFn = client ? (text: string, params?: any[]) => client.query(text, params) : query;
+    const transRes = await queryFn(
       'SELECT language, title, description, penalty_info FROM rule_translations WHERE rule_id = $1',
       [catRow.id]
     );
@@ -22,12 +23,12 @@ export class RulesRepository {
       };
     }
 
-    const itemsRes = await query(
+    const itemsRes = await queryFn(
       'SELECT id, number, translations FROM rule_items WHERE rule_category_id = $1 ORDER BY id ASC',
       [catRow.id]
     );
 
-    const rules: RuleItem[] = itemsRes.rows.map((item) => ({
+    const rules: RuleItem[] = itemsRes.rows.map((item: any) => ({
       id: item.id,
       number: item.number,
       translations: item.translations
@@ -80,8 +81,19 @@ export class RulesRepository {
         [id, slug, order]
       );
 
+      // Exact Synchronization: Remove stale translations not present in payload
       if (cat.translations) {
-        for (const lang of ['ar', 'en']) {
+        const payloadLangs = Object.keys(cat.translations).filter(l => (cat.translations as any)[l]);
+        if (payloadLangs.length > 0) {
+          await client.query(
+            'DELETE FROM rule_translations WHERE rule_id = $1 AND NOT (language = ANY($2))',
+            [id, payloadLangs]
+          );
+        } else {
+          await client.query('DELETE FROM rule_translations WHERE rule_id = $1', [id]);
+        }
+
+        for (const lang of payloadLangs) {
           const t = (cat.translations as any)[lang];
           if (t) {
             await client.query(
@@ -95,20 +107,33 @@ export class RulesRepository {
         }
       }
 
+      // Exact Synchronization: Remove stale rule_items not present in payload
       if (Array.isArray(cat.rules)) {
+        const keepItemIds: string[] = [];
         for (const item of cat.rules) {
+          const itemId = item.id || `r_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+          keepItemIds.push(itemId);
           await client.query(
             `INSERT INTO rule_items (id, rule_category_id, number, translations, created_at)
              VALUES ($1, $2, $3, $4, NOW())
              ON CONFLICT (id) DO UPDATE
              SET number = EXCLUDED.number, translations = EXCLUDED.translations`,
-            [item.id || `r_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`, id, item.number, JSON.stringify(item.translations)]
+            [itemId, id, item.number, JSON.stringify(item.translations)]
           );
+        }
+
+        if (keepItemIds.length > 0) {
+          await client.query(
+            'DELETE FROM rule_items WHERE rule_category_id = $1 AND NOT (id = ANY($2))',
+            [id, keepItemIds]
+          );
+        } else {
+          await client.query('DELETE FROM rule_items WHERE rule_category_id = $1', [id]);
         }
       }
 
       const row = (await client.query('SELECT * FROM rules WHERE id = $1', [id])).rows[0];
-      return RulesRepository.attachCategoryDetails(row);
+      return RulesRepository.attachCategoryDetails(row, client);
     });
   }
 

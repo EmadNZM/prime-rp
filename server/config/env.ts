@@ -92,9 +92,10 @@ export const env = {
     return process.env.DISCORD_BOT_TOKEN || '';
   },
   get FIVEM_SERVER_IP(): string {
-    return process.env.FIVEM_SERVER_IP || '143.14.44.217';
+    return (process.env.FIVEM_SERVER_IP || '').trim();
   },
   get FIVEM_SERVER_PORT(): number {
-    return Number(process.env.FIVEM_SERVER_PORT) || 30120;
+    const port = Number(process.env.FIVEM_SERVER_PORT);
+    return !isNaN(port) && port > 0 ? port : 0;
   }
 };

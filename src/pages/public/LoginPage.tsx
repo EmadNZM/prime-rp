@@ -203,30 +203,32 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
             </span>
           </button>
 
-          {/* Quick Demo Preview Login */}
-          <div className="pt-2 border-t border-[#222]">
-            <p className="text-[11px] text-[#777] text-center mb-2.5">
-              {language === 'ar' ? 'أو تجربة المنصة ببيئة المعاينة:' : 'Or test in preview mode:'}
-            </p>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => handleDemoClick('admin')}
-                disabled={Boolean(isLoggingInDemo)}
-                className="py-2.5 px-3 rounded-xl bg-[#C8874B]/15 hover:bg-[#C8874B]/25 border border-[#C8874B]/40 text-[#E0A96D] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-              >
-                <span>{isLoggingInDemo === 'admin' ? (language === 'ar' ? 'جاري الدخول...' : 'Logging in...') : (language === 'ar' ? 'دخول كمسؤول' : 'Admin Demo')}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemoClick('citizen')}
-                disabled={Boolean(isLoggingInDemo)}
-                className="py-2.5 px-3 rounded-xl bg-[#1C1C1C] hover:bg-[#252525] border border-[#333] text-[#CCC] hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
-              >
-                <span>{isLoggingInDemo === 'citizen' ? (language === 'ar' ? 'جاري الدخول...' : 'Logging in...') : (language === 'ar' ? 'دخول كمواطن' : 'Citizen Demo')}</span>
-              </button>
+          {/* Quick Demo Preview Login (Development & Preview Only) */}
+          {authConfig?.isDemoAllowed && (
+            <div className="pt-2 border-t border-[#222]">
+              <p className="text-[11px] text-[#777] text-center mb-2.5">
+                {language === 'ar' ? 'أو تجربة المنصة ببيئة المعاينة:' : 'Or test in preview mode:'}
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleDemoClick('admin')}
+                  disabled={Boolean(isLoggingInDemo)}
+                  className="py-2.5 px-3 rounded-xl bg-[#C8874B]/15 hover:bg-[#C8874B]/25 border border-[#C8874B]/40 text-[#E0A96D] text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <span>{isLoggingInDemo === 'admin' ? (language === 'ar' ? 'جاري الدخول...' : 'Logging in...') : (language === 'ar' ? 'دخول كمسؤول' : 'Admin Demo')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDemoClick('citizen')}
+                  disabled={Boolean(isLoggingInDemo)}
+                  className="py-2.5 px-3 rounded-xl bg-[#1C1C1C] hover:bg-[#252525] border border-[#333] text-[#CCC] hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer disabled:opacity-50"
+                >
+                  <span>{isLoggingInDemo === 'citizen' ? (language === 'ar' ? 'جاري الدخول...' : 'Logging in...') : (language === 'ar' ? 'دخول كمواطن' : 'Citizen Demo')}</span>
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* Security & Authentication Info Box */}

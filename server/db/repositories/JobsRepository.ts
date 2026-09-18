@@ -3,8 +3,9 @@ import { JobItem } from '../../../src/types';
 import { db } from '../store';
 
 export class JobsRepository {
-  private static async attachTranslations(jobRow: any): Promise<JobItem> {
-    const transRes = await query(
+  private static async attachTranslations(jobRow: any, client?: any): Promise<JobItem> {
+    const queryFn = client ? (text: string, params?: any[]) => client.query(text, params) : query;
+    const transRes = await queryFn(
       'SELECT language, name, description, requirements, duties FROM job_translations WHERE job_id = $1',
       [jobRow.id]
     );
@@ -79,8 +80,19 @@ export class JobsRepository {
         [id, slug, category, image, salaryMin, salaryMax, status]
       );
 
+      // Exact Synchronization: Delete stale translations not present in payload
       if (job.translations) {
-        for (const lang of ['ar', 'en']) {
+        const payloadLangs = Object.keys(job.translations).filter(l => (job.translations as any)[l]);
+        if (payloadLangs.length > 0) {
+          await client.query(
+            'DELETE FROM job_translations WHERE job_id = $1 AND NOT (language = ANY($2))',
+            [id, payloadLangs]
+          );
+        } else {
+          await client.query('DELETE FROM job_translations WHERE job_id = $1', [id]);
+        }
+
+        for (const lang of payloadLangs) {
           const t = (job.translations as any)[lang];
           if (t) {
             await client.query(
@@ -96,7 +108,7 @@ export class JobsRepository {
       }
 
       const row = (await client.query('SELECT * FROM jobs WHERE id = $1', [id])).rows[0];
-      return JobsRepository.attachTranslations(row);
+      return JobsRepository.attachTranslations(row, client);
     });
   }
 

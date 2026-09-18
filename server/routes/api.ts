@@ -83,6 +83,9 @@ router.get('/site-settings', async (req: Request, res: Response) => {
 
     return res.json({
       ...sanitizedSettings,
+      activePlayersCount: telemetry.isOnline ? telemetry.activePlayers : 0,
+      maxPlayersCount: telemetry.isOnline ? telemetry.maxPlayers : 0,
+      serverStatus: telemetry.isOnline ? 'ONLINE' : (telemetry.error === 'not_configured' ? 'NOT_CONFIGURED' : 'OFFLINE'),
       telemetry
     });
   } catch (err: any) {

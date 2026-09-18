@@ -11,6 +11,9 @@ export interface FiveMServerStatus {
   gameBuild: string;
   pingMs: number;
   serverName?: string;
+  ip?: string;
+  port?: number;
+  status?: string;
   error?: string;
 }
 
@@ -49,8 +52,6 @@ export interface FiveMLeaderboardEntry {
 
 export class FiveMService {
   private static instance: FiveMService;
-  private readonly defaultIp = '143.14.44.217';
-  private readonly defaultPort = 30120;
   private readonly timeoutMs = 2500;
 
   // Cache to prevent pounding the FiveM server repeatedly on high traffic
@@ -67,9 +68,16 @@ export class FiveMService {
     return FiveMService.instance;
   }
 
-  private getServerEndpoint(): { ip: string; port: number; baseUrl: string } {
-    const ip = process.env.FIVEM_SERVER_IP || this.defaultIp;
-    const port = Number(process.env.FIVEM_SERVER_PORT) || this.defaultPort;
+  /**
+   * Resolves configured server endpoint.
+   * Returns null if environment variables are missing (no hardcoded IP/port fallback).
+   */
+  private getServerEndpoint(): { ip: string; port: number; baseUrl: string } | null {
+    const ip = (process.env.FIVEM_SERVER_IP || '').trim();
+    const port = Number(process.env.FIVEM_SERVER_PORT);
+    if (!ip || isNaN(port) || port <= 0) {
+      return null;
+    }
     return { ip, port, baseUrl: `http://${ip}:${port}` };
   }
 
@@ -99,12 +107,26 @@ export class FiveMService {
    * Query real FXServer server status
    */
   public async getServerStatus(): Promise<FiveMServerStatus> {
+    const endpoint = this.getServerEndpoint();
+    if (!endpoint) {
+      return {
+        isOnline: false,
+        activePlayers: 0,
+        maxPlayers: 0,
+        serverVersion: 'FXServer',
+        gameBuild: 'b3095',
+        pingMs: 0,
+        status: 'not_configured',
+        error: 'not_configured'
+      };
+    }
+
     const now = Date.now();
     if (this.cachedStatus && now - this.lastFetchTime < this.cacheDurationMs) {
       return this.cachedStatus;
     }
 
-    const { ip, port, baseUrl } = this.getServerEndpoint();
+    const { ip, port, baseUrl } = endpoint;
     const startTime = Date.now();
 
     try {
@@ -130,7 +152,10 @@ export class FiveMService {
           serverVersion: 'FXServer',
           gameBuild: 'b3095',
           pingMs: 0,
-          error: 'Server data unavailable'
+          ip,
+          port,
+          status: 'offline',
+          error: 'Server unreachable'
         };
         this.cachedStatus = status;
         this.lastFetchTime = now;
@@ -150,7 +175,10 @@ export class FiveMService {
         serverVersion,
         gameBuild,
         pingMs,
-        serverName
+        serverName,
+        ip,
+        port,
+        status: 'online'
       };
 
       this.cachedStatus = status;
@@ -164,7 +192,10 @@ export class FiveMService {
         serverVersion: 'FXServer',
         gameBuild: 'b3095',
         pingMs: 0,
-        error: 'Server data unavailable'
+        ip,
+        port,
+        status: 'offline',
+        error: 'Server unreachable'
       };
       this.cachedStatus = status;
       this.lastFetchTime = now;
@@ -176,9 +207,13 @@ export class FiveMService {
    * Query connected players list
    */
   public async getPlayers(): Promise<FiveMPlayer[]> {
-    const { baseUrl } = this.getServerEndpoint();
+    const endpoint = this.getServerEndpoint();
+    if (!endpoint) {
+      return [];
+    }
+
     try {
-      const res = await this.fetchWithTimeout(`${baseUrl}/players.json`);
+      const res = await this.fetchWithTimeout(`${endpoint.baseUrl}/players.json`);
       if (!res.ok) return [];
       const data = await res.json();
       return Array.isArray(data) ? data : [];

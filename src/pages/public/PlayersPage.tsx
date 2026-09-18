@@ -59,9 +59,8 @@ export const PlayersPage: React.FC = () => {
   };
 
   const handleCopyConnect = () => {
-    const ip = telemetry?.ip || '143.14.44.217';
-    const port = telemetry?.port || 30120;
-    navigator.clipboard.writeText(`connect ${ip}:${port}`);
+    if (!telemetry?.ip || !telemetry?.port) return;
+    navigator.clipboard.writeText(`connect ${telemetry.ip}:${telemetry.port}`);
     setCopiedConnect(true);
     setTimeout(() => setCopiedConnect(false), 2500);
   };
@@ -72,6 +71,7 @@ export const PlayersPage: React.FC = () => {
     return p.name.toLowerCase().includes(q) || String(p.id).includes(q);
   });
 
+  const isConfigured = Boolean(telemetry?.ip && telemetry?.port && telemetry?.error !== 'not_configured');
   const isOnline = Boolean(telemetry?.isOnline);
 
   return (
@@ -98,25 +98,33 @@ export const PlayersPage: React.FC = () => {
         <div className="mb-10 p-5 rounded-2xl bg-[#0E0E0E] border border-[#1F1F1F] flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-4 w-full md:w-auto">
             <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border ${
-              isOnline 
-                ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
-                : 'bg-red-500/10 border-red-500/30 text-red-400'
+              !isConfigured
+                ? 'bg-amber-500/10 border-amber-500/30 text-amber-400'
+                : isOnline 
+                  ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                  : 'bg-red-500/10 border-red-500/30 text-red-400'
             }`}>
-              {isOnline ? <Wifi className="w-6 h-6" /> : <WifiOff className="w-6 h-6" />}
+              {!isConfigured ? <Server className="w-6 h-6" /> : isOnline ? <Wifi className="w-6 h-6" /> : <WifiOff className="w-6 h-6" />}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-white text-base">PRIME RP Server</span>
                 <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                  isOnline 
-                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
-                    : 'bg-red-500/20 text-red-400 border border-red-500/40'
+                  !isConfigured
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                    : isOnline 
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' 
+                      : 'bg-red-500/20 text-red-400 border border-red-500/40'
                 }`}>
-                  {isOnline ? (language === 'ar' ? 'متصل' : 'Online') : (language === 'ar' ? 'غير متصل' : 'Offline')}
+                  {!isConfigured 
+                    ? (language === 'ar' ? 'غير مهيأ' : 'Not Configured')
+                    : isOnline 
+                      ? (language === 'ar' ? 'متصل' : 'Online') 
+                      : (language === 'ar' ? 'غير متصل' : 'Offline')}
                 </span>
               </div>
               <p className="text-xs text-[#888] font-mono mt-0.5">
-                {telemetry?.ip || '143.14.44.217'}:{telemetry?.port || 30120}
+                {isConfigured ? `${telemetry?.ip}:${telemetry?.port}` : (language === 'ar' ? 'بانتظار إعداد FIVEM_SERVER_IP و PORT' : 'Awaiting FIVEM_SERVER_IP & PORT')}
               </p>
             </div>
           </div>
@@ -137,16 +145,17 @@ export const PlayersPage: React.FC = () => {
                 {language === 'ar' ? 'زمن الاستجابة' : 'Latency'}
               </span>
               <span className="text-sm font-bold text-[#C8874B]">
-                {isOnline ? `${telemetry?.ping || 35} ms` : '-'}
+                {isOnline ? `${telemetry?.pingMs || telemetry?.ping || 35} ms` : '-'}
               </span>
             </div>
 
             <button
               onClick={handleCopyConnect}
-              className="px-3.5 py-2.5 rounded-xl bg-[#1A1A1A] hover:bg-[#252525] text-white border border-[#333] transition-colors flex items-center gap-1.5 text-xs font-semibold"
+              disabled={!isConfigured}
+              className="px-3.5 py-2.5 rounded-xl bg-[#1A1A1A] hover:bg-[#252525] text-white border border-[#333] transition-colors flex items-center gap-1.5 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
             >
               {copiedConnect ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedConnect ? (language === 'ar' ? 'تم النسخ' : 'Copied') : (language === 'ar' ? 'أمر الاتصال' : 'Connect')}</span>
+              <span>{copiedConnect ? (language === 'ar' ? 'تم النسخ' : 'Copied') : (!isConfigured ? (language === 'ar' ? 'غير مهيأ' : 'Not Configured') : (language === 'ar' ? 'أمر الاتصال' : 'Connect'))}</span>
             </button>
 
             <button

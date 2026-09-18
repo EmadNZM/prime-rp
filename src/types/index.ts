@@ -272,13 +272,22 @@ export interface SocialLinkItem {
 
 export interface FiveMTelemetry {
   online: boolean;
+  isOnline?: boolean;
   playersCount: number;
+  activePlayers?: number;
   maxPlayers: number;
   serverName?: string;
+  serverVersion?: string;
+  gameBuild?: string;
   gametype?: string;
   mapname?: string;
   ping?: number;
+  pingMs?: number;
   connectUrl?: string;
+  ip?: string;
+  port?: number;
+  status?: string;
+  error?: string;
   source?: string;
   raw?: any;
 }

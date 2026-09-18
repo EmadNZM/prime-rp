@@ -93,7 +93,7 @@ export const LeaderboardPage: React.FC = () => {
         <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
           <button
             onClick={() => setActiveTab('live')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'live'
                 ? 'bg-[#C8874B] text-black shadow-lg shadow-[#C8874B]/20'
                 : 'bg-[#111] text-[#888] hover:text-white border border-[#222]'
@@ -108,38 +108,47 @@ export const LeaderboardPage: React.FC = () => {
 
           <button
             onClick={() => setActiveTab('playtime')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'playtime'
-                ? 'bg-[#C8874B] text-black shadow-lg shadow-[#C8874B]/20'
-                : 'bg-[#111] text-[#888] hover:text-white border border-[#222]'
+                ? 'bg-[#222] text-white border border-[#C8874B]/60'
+                : 'bg-[#111] text-[#777] hover:text-[#AAA] border border-[#222]'
             }`}
           >
             <Clock className="w-3.5 h-3.5" />
             <span>{language === 'ar' ? 'ساعات اللعب' : 'Playtime'}</span>
+            <span className="px-1.5 py-0.2 text-[9px] rounded bg-amber-500/15 text-amber-400 border border-amber-500/25">
+              {language === 'ar' ? 'غير نشط' : 'Inactive'}
+            </span>
           </button>
           
           <button
             onClick={() => setActiveTab('wealth')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'wealth'
-                ? 'bg-[#C8874B] text-black shadow-lg shadow-[#C8874B]/20'
-                : 'bg-[#111] text-[#888] hover:text-white border border-[#222]'
+                ? 'bg-[#222] text-white border border-[#C8874B]/60'
+                : 'bg-[#111] text-[#777] hover:text-[#AAA] border border-[#222]'
             }`}
           >
             <Wallet className="w-3.5 h-3.5" />
             <span>{language === 'ar' ? 'اقتصاد المدينة' : 'Wealth'}</span>
+            <span className="px-1.5 py-0.2 text-[9px] rounded bg-amber-500/15 text-amber-400 border border-amber-500/25">
+              {language === 'ar' ? 'غير نشط' : 'Inactive'}
+            </span>
           </button>
 
           <button
             onClick={() => setActiveTab('law')}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeTab === 'law'
-                ? 'bg-[#C8874B] text-black shadow-lg shadow-[#C8874B]/20'
-                : 'bg-[#111] text-[#888] hover:text-white border border-[#222]'
+                ? 'bg-[#222] text-white border border-[#C8874B]/60'
+                : 'bg-[#111] text-[#777] hover:text-[#AAA] border border-[#222]'
             }`}
           >
             <Shield className="w-3.5 h-3.5" />
             <span>{language === 'ar' ? 'القطاعات الأمنية' : 'Law Enforcement'}</span>
+            <span className="px-1.5 py-0.2 text-[9px] rounded bg-amber-500/15 text-amber-400 border border-amber-500/25">
+              {language === 'ar' ? 'غير نشط' : 'Inactive'}
+            </span>
           </button>
         </div>
 
