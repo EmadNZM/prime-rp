@@ -37,7 +37,8 @@ export const CartDrawer: React.FC<CartDrawerProps> = ({
   const handleCheckout = async () => {
     if (items.length === 0) return;
     if (!isAuthenticated) {
-      loginWithDiscord();
+      setIsCartOpen(false);
+      setCurrentTab('login');
       return;
     }
 

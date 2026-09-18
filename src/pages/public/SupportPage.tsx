@@ -18,7 +18,11 @@ import {
   FileText
 } from 'lucide-react';
 
-export const SupportPage: React.FC = () => {
+interface SupportPageProps {
+  setCurrentTab?: (tab: string) => void;
+}
+
+export const SupportPage: React.FC<SupportPageProps> = ({ setCurrentTab }) => {
   const { t, language } = useLanguage();
   const { user, isAuthenticated, loginWithDiscord } = useAuth();
 
@@ -249,12 +253,23 @@ export const SupportPage: React.FC = () => {
                 ? 'يرجى تسجيل الدخول عبر حساب الديسكورد الخاص بك لتتمكن من رفع التذاكر والبلاغات ومتابعة الإجراءات.'
                 : 'Please login with your Discord account to open support tickets, submit violation reports, and track responses.'}
             </p>
-            <button
-              onClick={loginWithDiscord}
-              className="px-7 py-3 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-black uppercase tracking-wider transition-all shadow-xl shadow-[#5865F2]/20 cursor-pointer"
-            >
-              {language === 'ar' ? 'تسجيل الدخول عبر Discord' : 'Login via Discord'}
-            </button>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                onClick={loginWithDiscord}
+                className="w-full sm:w-auto px-7 py-3 rounded-2xl bg-[#5865F2] hover:bg-[#4752C4] text-white text-xs font-black uppercase tracking-wider transition-all shadow-xl shadow-[#5865F2]/20 cursor-pointer flex items-center justify-center gap-2"
+              >
+                <MessageSquare className="w-4 h-4" />
+                <span>{language === 'ar' ? 'تسجيل الدخول عبر Discord' : 'Login via Discord'}</span>
+              </button>
+              {setCurrentTab && (
+                <button
+                  onClick={() => setCurrentTab('login')}
+                  className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-[#151518] hover:bg-[#1E1E22] border border-[#252528] text-white text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+                >
+                  {language === 'ar' ? 'خيارات الدخول السريع' : 'Fast Demo Login'}
+                </button>
+              )}
+            </div>
           </div>
         ) : isLoading ? (
           <div className="text-center py-20 text-[#888]">{t('common.loading')}</div>

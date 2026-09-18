@@ -54,9 +54,22 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab }) => 
   ];
 
   const handleNavClick = (id: string) => {
-    setCurrentTab(id);
     setMobileMenuOpen(false);
     setUserDropdownOpen(false);
+
+    if (id === 'about') {
+      if (currentTab === 'home') {
+        const el = document.getElementById('about');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+          return;
+        }
+      }
+      setCurrentTab('about');
+      return;
+    }
+
+    setCurrentTab(id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 

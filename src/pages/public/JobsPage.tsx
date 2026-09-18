@@ -277,6 +277,14 @@ export const JobsPage: React.FC<JobsPageProps> = ({ setCurrentTab }) => {
                     >
                       {t('jobs.hiringClosed')}
                     </button>
+                  ) : !isAuthenticated ? (
+                    <button
+                      onClick={() => setCurrentTab('login')}
+                      className="w-full py-4 rounded-xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-black text-xs uppercase tracking-wider hover:brightness-110 active:scale-98 transition-all shadow-xl shadow-[#C8874B]/20 cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span>{language === 'ar' ? 'تسجيل الدخول للتقديم على الوظيفة' : 'Login to Apply for Career'}</span>
+                    </button>
                   ) : (
                     <button
                       onClick={() => setIsModalOpen(true)}

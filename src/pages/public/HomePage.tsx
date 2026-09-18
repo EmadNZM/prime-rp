@@ -38,9 +38,10 @@ import { motion, AnimatePresence } from 'motion/react';
 interface HomePageProps {
   setCurrentTab: (tab: string) => void;
   setSelectedNewsSlug: (slug: string) => void;
+  currentTab?: string;
 }
 
-export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNewsSlug }) => {
+export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNewsSlug, currentTab }) => {
   const { t, language, isRtl } = useLanguage();
   const [siteSettings, setSiteSettings] = useState<any>(null);
   const [telemetry, setTelemetry] = useState<FiveMTelemetry | null>(null);
@@ -50,6 +51,19 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [copiedConnect, setCopiedConnect] = useState<boolean>(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
+
+  // Auto-scroll to About section if requested
+  useEffect(() => {
+    if (currentTab === 'about') {
+      const timer = setTimeout(() => {
+        const el = document.getElementById('about');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 150);
+      return () => clearTimeout(timer);
+    }
+  }, [currentTab]);
 
   useEffect(() => {
     async function loadData() {
@@ -301,12 +315,12 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         </div>
       </section>
 
-      {/* ================= WHY PRIME RP PILLARS ================= */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#151518] relative z-10">
+      {/* ================= WHY PRIME RP PILLARS (ABOUT) ================= */}
+      <section id="about" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[#151518] relative z-10 scroll-mt-20">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#C8874B]/10 text-[#C8874B] text-xs font-bold mb-3 uppercase tracking-wider">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>{language === 'ar' ? 'المعايير القياسية' : 'Standard Architecture'}</span>
+            <span>{language === 'ar' ? 'المعايير القياسية • من نحن' : 'Standard Architecture • About Us'}</span>
           </div>
           <h2 className="text-3xl sm:text-5xl font-black text-white mb-4 uppercase tracking-tight">
             {t('features.title')}
@@ -369,72 +383,116 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-6 rounded-3xl bg-gradient-to-b from-[#0D0D0F] to-[#09090B] border border-[#222226] hover:border-[#58A6FF]/50 transition-all card-hover-lift group">
-            <div className="w-12 h-12 rounded-2xl bg-[#58A6FF]/10 border border-[#58A6FF]/30 flex items-center justify-center mb-5 text-[#58A6FF]">
-              <Shield className="w-6 h-6" />
+          <div className="p-6 rounded-3xl bg-gradient-to-b from-[#0D0D0F] to-[#09090B] border border-[#222226] hover:border-[#58A6FF]/50 transition-all card-hover-lift group flex flex-col justify-between">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-[#58A6FF]/10 border border-[#58A6FF]/30 flex items-center justify-center mb-5 text-[#58A6FF]">
+                <Shield className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-black text-white mb-2">
+                {language === 'ar' ? 'قطاع الأمن والعدالة' : 'Law Enforcement & SWAT'}
+              </h3>
+              <p className="text-xs text-[#888] leading-relaxed mb-4">
+                {language === 'ar'
+                  ? 'مراكز شرطة متطورة، رادارات حديثة، تدريبات تكتيكية، ودوريات لحماية المواطنين وفرض النظام.'
+                  : 'Advanced dispatch radios, MDT terminals, pursuit vehicles, and tactical crisis response.'}
+              </p>
             </div>
-            <h3 className="text-lg font-black text-white mb-2">
-              {language === 'ar' ? 'قطاع الأمن والعدالة' : 'Law Enforcement & SWAT'}
-            </h3>
-            <p className="text-xs text-[#888] leading-relaxed mb-4">
-              {language === 'ar'
-                ? 'مراكز شرطة متطورة، رادارات حديثة، تدريبات تكتيكية، ودوريات لحماية المواطنين وفرض النظام.'
-                : 'Advanced dispatch radios, MDT terminals, pursuit vehicles, and tactical crisis response.'}
-            </p>
-            <span className="text-[11px] font-bold text-[#58A6FF] uppercase tracking-wider">
-              {language === 'ar' ? 'رتب وانضباط رسمي' : 'Official Ranks'}
-            </span>
+            <div className="pt-4 border-t border-[#1C1C20] flex items-center justify-between">
+              <span className="text-[11px] font-bold text-[#58A6FF] uppercase tracking-wider">
+                {language === 'ar' ? 'رتب وانضباط' : 'Official Ranks'}
+              </span>
+              <button
+                onClick={() => setCurrentTab('jobs')}
+                className="inline-flex items-center gap-1 text-xs font-bold text-white hover:text-[#58A6FF] transition-colors cursor-pointer"
+              >
+                <span>{language === 'ar' ? 'التوظيف' : 'Careers'}</span>
+                <ArrowIcon className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
-          <div className="p-6 rounded-3xl bg-gradient-to-b from-[#0D0D0F] to-[#09090B] border border-[#222226] hover:border-rose-500/50 transition-all card-hover-lift group">
-            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mb-5 text-rose-400">
-              <Activity className="w-6 h-6" />
+          <div className="p-6 rounded-3xl bg-gradient-to-b from-[#0D0D0F] to-[#09090B] border border-[#222226] hover:border-rose-500/50 transition-all card-hover-lift group flex flex-col justify-between">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/30 flex items-center justify-center mb-5 text-rose-400">
+                <Activity className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-black text-white mb-2">
+                {language === 'ar' ? 'الخدمات الطبية والإنقاذ' : 'Emergency & Medical Services'}
+              </h3>
+              <p className="text-xs text-[#888] leading-relaxed mb-4">
+                {language === 'ar'
+                  ? 'غرف عمليات تفاعلية، إسعاف جوي سريع، وعلاج ميداني فوري للحفاظ على أرواح المصابين.'
+                  : 'Field triage, interactive trauma surgeries, air medical evacuation, and disaster management.'}
+              </p>
             </div>
-            <h3 className="text-lg font-black text-white mb-2">
-              {language === 'ar' ? 'الخدمات الطبية والإنقاذ' : 'Emergency & Medical Services'}
-            </h3>
-            <p className="text-xs text-[#888] leading-relaxed mb-4">
-              {language === 'ar'
-                ? 'غرف عمليات تفاعلية، إسعاف جوي سريع، وعلاج ميداني فوري للحفاظ على أرواح المصابين.'
-                : 'Field triage, interactive trauma surgeries, air medical evacuation, and disaster management.'}
-            </p>
-            <span className="text-[11px] font-bold text-rose-400 uppercase tracking-wider">
-              {language === 'ar' ? 'خدمة إنسانية 24/7' : '24/7 Response'}
-            </span>
+            <div className="pt-4 border-t border-[#1C1C20] flex items-center justify-between">
+              <span className="text-[11px] font-bold text-rose-400 uppercase tracking-wider">
+                {language === 'ar' ? 'إنقاذ 24/7' : '24/7 Response'}
+              </span>
+              <button
+                onClick={() => setCurrentTab('jobs')}
+                className="inline-flex items-center gap-1 text-xs font-bold text-white hover:text-rose-400 transition-colors cursor-pointer"
+              >
+                <span>{language === 'ar' ? 'التوظيف' : 'Careers'}</span>
+                <ArrowIcon className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
-          <div className="p-6 rounded-3xl bg-gradient-to-b from-[#0D0D0F] to-[#09090B] border border-[#222226] hover:border-[#C8874B]/50 transition-all card-hover-lift group">
-            <div className="w-12 h-12 rounded-2xl bg-[#C8874B]/10 border border-[#C8874B]/30 flex items-center justify-center mb-5 text-[#C8874B]">
-              <DollarSign className="w-6 h-6" />
+          <div className="p-6 rounded-3xl bg-gradient-to-b from-[#0D0D0F] to-[#09090B] border border-[#222226] hover:border-[#C8874B]/50 transition-all card-hover-lift group flex flex-col justify-between">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-[#C8874B]/10 border border-[#C8874B]/30 flex items-center justify-center mb-5 text-[#C8874B]">
+                <DollarSign className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-black text-white mb-2">
+                {language === 'ar' ? 'الشركات والاستثمار' : 'Commerce & Real Estate'}
+              </h3>
+              <p className="text-xs text-[#888] leading-relaxed mb-4">
+                {language === 'ar'
+                  ? 'امتلك معرض سياراتك، أو أدِر مطعماً راقياً، أو استثمر في العقارات والقصور الفاخرة.'
+                  : 'Player-owned dealerships, mechanic garages, luxury penthouses, and sovereign corporations.'}
+              </p>
             </div>
-            <h3 className="text-lg font-black text-white mb-2">
-              {language === 'ar' ? 'الشركات والاستثمار' : 'Commerce & Real Estate'}
-            </h3>
-            <p className="text-xs text-[#888] leading-relaxed mb-4">
-              {language === 'ar'
-                ? 'امتلك معرض سياراتك، أو أدِر مطعماً راقياً، أو استثمر في العقارات والقصور الفاخرة.'
-                : 'Player-owned dealerships, mechanic garages, luxury penthouses, and sovereign corporations.'}
-            </p>
-            <span className="text-[11px] font-bold text-[#C8874B] uppercase tracking-wider">
-              {language === 'ar' ? 'حرية مالية كاملة' : 'Sovereign Wealth'}
-            </span>
+            <div className="pt-4 border-t border-[#1C1C20] flex items-center justify-between">
+              <span className="text-[11px] font-bold text-[#C8874B] uppercase tracking-wider">
+                {language === 'ar' ? 'حرية مالية' : 'Sovereign Wealth'}
+              </span>
+              <button
+                onClick={() => setCurrentTab('store')}
+                className="inline-flex items-center gap-1 text-xs font-bold text-[#C8874B] hover:text-[#DF9F64] transition-colors cursor-pointer"
+              >
+                <span>{language === 'ar' ? 'المتجر' : 'Store'}</span>
+                <ArrowIcon className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
-          <div className="p-6 rounded-3xl bg-gradient-to-b from-[#0D0D0F] to-[#09090B] border border-[#222226] hover:border-purple-500/50 transition-all card-hover-lift group">
-            <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mb-5 text-purple-400">
-              <Flame className="w-6 h-6" />
+          <div className="p-6 rounded-3xl bg-gradient-to-b from-[#0D0D0F] to-[#09090B] border border-[#222226] hover:border-purple-500/50 transition-all card-hover-lift group flex flex-col justify-between">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center mb-5 text-purple-400">
+                <Flame className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-black text-white mb-2">
+                {language === 'ar' ? 'الجريمة المنظمة والعصابات' : 'Syndicates & Underworld'}
+              </h3>
+              <p className="text-xs text-[#888] leading-relaxed mb-4">
+                {language === 'ar'
+                  ? 'حروب نفوذ، خطط سرقات كبرى، وتجارة سرية بموجب قوانين رول بلاي دقيقة تحمي اللعب النظيف.'
+                  : 'Turf wars, bank heists, smuggling networks, and territorial influence under strict RP rule.'}
+              </p>
             </div>
-            <h3 className="text-lg font-black text-white mb-2">
-              {language === 'ar' ? 'الجريمة المنظمة والعصابات' : 'Syndicates & Underworld'}
-            </h3>
-            <p className="text-xs text-[#888] leading-relaxed mb-4">
-              {language === 'ar'
-                ? 'حروب نفوذ، خطط سرقات كبرى، وتجارة سرية بموجب قوانين رول بلاي دقيقة تحمي اللعب النظيف.'
-                : 'Turf wars, bank heists, smuggling networks, and territorial influence under strict RP rule.'}
-            </p>
-            <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">
-              {language === 'ar' ? 'نفوذ وسيطرة' : 'Territory Control'}
-            </span>
+            <div className="pt-4 border-t border-[#1C1C20] flex items-center justify-between">
+              <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">
+                {language === 'ar' ? 'نفوذ وسيطرة' : 'Territory Control'}
+              </span>
+              <button
+                onClick={() => setCurrentTab('rules')}
+                className="inline-flex items-center gap-1 text-xs font-bold text-white hover:text-purple-400 transition-colors cursor-pointer"
+              >
+                <span>{language === 'ar' ? 'القوانين' : 'Rules'}</span>
+                <ArrowIcon className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </section>

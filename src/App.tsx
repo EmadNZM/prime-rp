@@ -76,7 +76,9 @@ function MainApp() {
     } catch {
       // ignore
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (currentTab !== 'about') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, [currentTab]);
 
   // Support browser back/forward buttons
@@ -98,11 +100,8 @@ function MainApp() {
 
       {/* Main Content Area */}
       <main className="flex-grow">
-        {currentTab === 'home' && (
-          <HomePage setCurrentTab={setCurrentTab} setSelectedNewsSlug={setSelectedNewsSlug} />
-        )}
-        {currentTab === 'about' && (
-          <HomePage setCurrentTab={setCurrentTab} setSelectedNewsSlug={setSelectedNewsSlug} />
+        {(currentTab === 'home' || currentTab === 'about') && (
+          <HomePage currentTab={currentTab} setCurrentTab={setCurrentTab} setSelectedNewsSlug={setSelectedNewsSlug} />
         )}
         {currentTab === 'rules' && <RulesPage />}
         {currentTab === 'jobs' && <JobsPage setCurrentTab={setCurrentTab} />}
@@ -115,9 +114,8 @@ function MainApp() {
         {currentTab === 'store' && <StorePage setCurrentTab={setCurrentTab} />}
         {currentTab === 'players' && <PlayersPage />}
         {currentTab === 'leaderboard' && <LeaderboardPage />}
-        {currentTab === 'support' && <SupportPage />}
-        {currentTab === 'tickets' && <SupportPage />}
-        {currentTab === 'faq' && <FAQPage />}
+        {(currentTab === 'support' || currentTab === 'tickets') && <SupportPage setCurrentTab={setCurrentTab} />}
+        {currentTab === 'faq' && <FAQPage setCurrentTab={setCurrentTab} />}
         {currentTab === 'login' && <LoginPage setCurrentTab={setCurrentTab} />}
         {currentTab === 'dashboard' && <UserDashboard setCurrentTab={setCurrentTab} />}
         {currentTab === 'orders' && <UserDashboard setCurrentTab={setCurrentTab} />}

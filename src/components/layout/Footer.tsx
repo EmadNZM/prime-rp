@@ -122,6 +122,11 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
                   {t('nav.support')}
                 </button>
               </li>
+              <li>
+                <button onClick={() => handleNav('faq')} className="hover:text-[#C8874B] transition-colors cursor-pointer">
+                  {t('nav.faq')}
+                </button>
+              </li>
             </ul>
           </div>
 

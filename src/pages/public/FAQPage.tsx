@@ -1,20 +1,41 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useSettings } from '../../context/SettingsContext';
 import { apiClient } from '../../services/apiClient';
 import { FAQItem } from '../../types';
-import { HelpCircle, ChevronDown, ChevronUp, Sparkles, MessageCircleQuestion } from 'lucide-react';
+import { 
+  HelpCircle, 
+  ChevronDown, 
+  ChevronUp, 
+  Search, 
+  X, 
+  Ticket, 
+  MessageSquare, 
+  Sparkles, 
+  Layers,
+  ArrowRight,
+  ArrowLeft
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 
-export const FAQPage: React.FC = () => {
-  const { t, language } = useLanguage();
+interface FAQPageProps {
+  setCurrentTab?: (tab: string) => void;
+}
+
+export const FAQPage: React.FC<FAQPageProps> = ({ setCurrentTab }) => {
+  const { t, language, isRtl } = useLanguage();
+  const { settings } = useSettings();
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
     async function loadFaq() {
       try {
         const data = await apiClient.getFAQ();
-        setFaqs(data);
+        setFaqs(data || []);
       } catch (err) {
         console.error('Failed to load FAQ:', err);
       } finally {
@@ -24,9 +45,32 @@ export const FAQPage: React.FC = () => {
     loadFaq();
   }, []);
 
+  const categories = [
+    { id: 'all', labelAr: 'الكل', labelEn: 'All Questions' },
+    { id: 'GENERAL', labelAr: 'عام والانضمام', labelEn: 'General & Join' },
+    { id: 'RULES', labelAr: 'القوانين والرول بلاي', labelEn: 'Rules & RP' },
+    { id: 'FIVEM', labelAr: 'الاتصال والمشاكل', labelEn: 'Connection' },
+    { id: 'STORE', labelAr: 'المتجر وباقات VIP', labelEn: 'Store & VIP' }
+  ];
+
+  const filteredFaqs = useMemo(() => {
+    return faqs.filter(item => {
+      // Category filter (if items have category or fallback match)
+      if (selectedCategory !== 'all' && (item as any).category && (item as any).category !== selectedCategory) {
+        return false;
+      }
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      const trans = item.translations[language] || item.translations.ar || item.translations.en;
+      return trans.question.toLowerCase().includes(q) || trans.answer.toLowerCase().includes(q);
+    });
+  }, [faqs, selectedCategory, searchQuery, language]);
+
   const toggleAccordion = (idx: number) => {
     setOpenIndex(openIndex === idx ? null : idx);
   };
+
+  const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
 
   return (
     <div className="min-h-screen bg-[#070707] text-[#E5E5E5] pt-28 pb-24 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -36,10 +80,10 @@ export const FAQPage: React.FC = () => {
       <div className="max-w-4xl mx-auto relative z-10">
         
         {/* Header */}
-        <div className="text-center max-w-3xl mx-auto mb-14">
+        <div className="text-center max-w-3xl mx-auto mb-10">
           <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#C8874B]/10 border border-[#C8874B]/25 text-[#C8874B] text-[10px] font-black uppercase tracking-wider mb-4">
-            <MessageCircleQuestion className="w-3.5 h-3.5" />
-            <span>{language === 'ar' ? 'مركز المساعدة والاستفسارات' : 'Knowledge Base & FAQ'}</span>
+            <HelpCircle className="w-3.5 h-3.5" />
+            <span>{language === 'ar' ? 'مركز المعرفة والاستفسارات' : 'Knowledge Base & FAQ'}</span>
           </div>
           <h1 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight mb-4">
             {t('faq.title')}
@@ -49,20 +93,82 @@ export const FAQPage: React.FC = () => {
           </p>
         </div>
 
+        {/* Live Search Bar */}
+        <div className="relative max-w-2xl mx-auto mb-8">
+          <Search className="absolute left-4 rtl:left-auto rtl:right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#666]" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder={language === 'ar' ? 'ابحث في الأسئلة الشائعة، القوانين، طريقة الاتصال...' : 'Search questions, rules, connection guide...'}
+            className="w-full pl-12 pr-12 rtl:pl-12 rtl:pr-12 py-4 rounded-2xl bg-[#0D0D0F] border border-[#222226] focus:border-[#C8874B] text-sm text-white placeholder-[#666] outline-none transition-all shadow-xl"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-4 rtl:right-auto rtl:left-4 top-1/2 -translate-y-1/2 p-1 rounded-lg hover:bg-white/10 text-[#888] hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Category Pill Filters */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mb-10">
+          {categories.map((cat) => {
+            const active = selectedCategory === cat.id;
+            return (
+              <button
+                key={cat.id}
+                onClick={() => {
+                  setSelectedCategory(cat.id);
+                  setOpenIndex(null);
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  active
+                    ? 'bg-[#C8874B] text-black shadow-lg shadow-[#C8874B]/20'
+                    : 'bg-[#0D0D0F] text-[#888] hover:text-white border border-[#222226] hover:border-[#333]'
+                }`}
+              >
+                {language === 'ar' ? cat.labelAr : cat.labelEn}
+              </button>
+            );
+          })}
+        </div>
+
         {isLoading ? (
           <div className="text-center py-20 text-[#888] flex flex-col items-center justify-center gap-3">
             <div className="w-8 h-8 rounded-full border-2 border-[#C8874B] border-t-transparent animate-spin" />
             <span className="text-xs uppercase tracking-wider">{t('common.loading')}</span>
           </div>
+        ) : filteredFaqs.length === 0 ? (
+          <div className="text-center py-16 p-8 rounded-3xl bg-[#0D0D0F] border border-[#222226]">
+            <HelpCircle className="w-10 h-10 text-[#555] mx-auto mb-3" />
+            <p className="text-sm font-bold text-white mb-2">
+              {language === 'ar' ? 'لم يتم العثور على نتائج مطابقة' : 'No matching questions found'}
+            </p>
+            <p className="text-xs text-[#777] mb-6">
+              {language === 'ar' ? 'جرب البحث بكلمات مختلفة أو تواصل مع فريق الدعم مباشرة.' : 'Try a different search term or reach out to our support team directly.'}
+            </p>
+            {setCurrentTab && (
+              <button
+                onClick={() => setCurrentTab('support')}
+                className="px-6 py-2.5 rounded-xl bg-[#151518] hover:bg-[#1E1E22] border border-[#C8874B]/40 text-[#C8874B] text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-2"
+              >
+                <Ticket className="w-4 h-4" />
+                <span>{language === 'ar' ? 'فتح تذكرة دعم فني' : 'Open Support Ticket'}</span>
+              </button>
+            )}
+          </div>
         ) : (
-          <div className="space-y-4">
-            {faqs.map((item, idx) => {
-              const trans = item.translations[language] || item.translations.ar;
+          <div className="space-y-3.5">
+            {filteredFaqs.map((item, idx) => {
+              const trans = item.translations[language] || item.translations.ar || item.translations.en;
               const isOpen = openIndex === idx;
               return (
                 <div
                   key={item.id}
-                  className={`rounded-3xl border transition-all duration-300 overflow-hidden ${
+                  className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
                     isOpen 
                       ? 'bg-[#0D0D0F] border-[#C8874B]/40 shadow-xl shadow-[#C8874B]/5' 
                       : 'bg-[#0D0D0F] border-[#222226] hover:border-[#333]'
@@ -70,30 +176,40 @@ export const FAQPage: React.FC = () => {
                 >
                   <button
                     onClick={() => toggleAccordion(idx)}
-                    className="w-full text-left rtl:text-right p-6 sm:p-7 flex items-center justify-between gap-4 focus:outline-none cursor-pointer"
+                    className="w-full text-left rtl:text-right p-5 sm:p-6 flex items-center justify-between gap-4 focus:outline-none cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
-                      <span className={`w-2 h-2 rounded-full transition-colors ${isOpen ? 'bg-[#C8874B]' : 'bg-[#333]'}`} />
-                      <span className="text-base sm:text-lg font-bold text-white leading-snug">
+                      <span className={`w-2 h-2 rounded-full transition-colors shrink-0 ${isOpen ? 'bg-[#C8874B]' : 'bg-[#333]'}`} />
+                      <span className="text-sm sm:text-base font-bold text-white leading-snug">
                         {trans.question}
                       </span>
                     </div>
-                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all ${
+                    <div className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all shrink-0 ${
                       isOpen ? 'bg-[#C8874B]/15 text-[#C8874B]' : 'bg-[#151518] text-[#777]'
                     }`}>
                       {isOpen ? (
-                        <ChevronUp className="w-4 h-4 shrink-0" />
+                        <ChevronUp className="w-4 h-4" />
                       ) : (
-                        <ChevronDown className="w-4 h-4 shrink-0" />
+                        <ChevronDown className="w-4 h-4" />
                       )}
                     </div>
                   </button>
 
-                  {isOpen && (
-                    <div className="px-6 sm:px-7 pb-7 text-sm text-[#AAA] leading-relaxed border-t border-[#1E1E22] pt-5">
-                      {trans.answer}
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.25 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-5 sm:px-6 pb-6 text-xs sm:text-sm text-[#AAA] leading-relaxed border-t border-[#1C1C20] pt-4">
+                          {trans.answer}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
@@ -101,25 +217,40 @@ export const FAQPage: React.FC = () => {
         )}
 
         {/* Need More Help Box */}
-        <div className="mt-14 p-6 sm:p-8 rounded-3xl bg-[#0D0D0F] border border-[#222226] text-center flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
+        <div className="mt-14 p-6 sm:p-8 rounded-3xl bg-[#0D0D0F] border border-[#222226] flex flex-col sm:flex-row items-center justify-between gap-6 shadow-2xl">
           <div className="text-center sm:text-left sm:rtl:text-right">
-            <h3 className="text-lg font-black text-white uppercase tracking-tight mb-1">
-              {language === 'ar' ? 'هل لا تزال لديك استفسارات إضافية؟' : 'Still have questions?'}
+            <h3 className="text-base sm:text-lg font-black text-white uppercase tracking-tight mb-1">
+              {language === 'ar' ? 'هل لا تزال لديك استفسارات إضافية؟' : 'Still have unanswered questions?'}
             </h3>
             <p className="text-xs text-[#777]">
               {language === 'ar' 
-                ? 'فريق الدعم الفني جاهز لمساعدتك على مدار الساعة عبر تذاكر الدعم والديسكورد.' 
-                : 'Our support team is available 24/7 to assist you via support tickets and Discord.'}
+                ? 'فريق الدعم الفني وإدارة السيرفر جاهزون لمساعدتك على مدار الساعة.' 
+                : 'Our support team is available 24/7 to assist with tickets, reports, and onboarding.'}
             </p>
           </div>
-          <a
-            href="https://discord.gg/prime-rp"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-6 py-3 rounded-2xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-black text-xs uppercase tracking-wider hover:brightness-110 transition-all shadow-xl shadow-[#C8874B]/20 shrink-0"
-          >
-            {language === 'ar' ? 'انضم إلى مجتمع الديسكورد' : 'Join Discord Support'}
-          </a>
+          <div className="flex flex-wrap items-center gap-3">
+            {setCurrentTab && (
+              <button
+                onClick={() => {
+                  setCurrentTab('support');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="px-5 py-3 rounded-xl bg-gradient-to-r from-[#C8874B] to-[#DF9F64] text-black font-black text-xs uppercase tracking-wider hover:brightness-110 active:scale-98 transition-all shadow-xl shadow-[#C8874B]/20 shrink-0 cursor-pointer flex items-center gap-2"
+              >
+                <Ticket className="w-4 h-4" />
+                <span>{language === 'ar' ? 'فتح تذكرة دعم' : 'Open Support Ticket'}</span>
+              </button>
+            )}
+            <a
+              href={settings?.discordUrl || "https://discord.gg/primerp"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 py-3 rounded-xl bg-[#151518] hover:bg-[#1E1E22] border border-[#252528] hover:border-[#5865F2]/50 text-white font-bold text-xs uppercase tracking-wider transition-all shrink-0 flex items-center gap-2"
+            >
+              <MessageSquare className="w-4 h-4 text-[#5865F2]" />
+              <span>{language === 'ar' ? 'ديسكورد الدعم' : 'Discord Support'}</span>
+            </a>
+          </div>
         </div>
 
       </div>

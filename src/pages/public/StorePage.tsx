@@ -122,7 +122,8 @@ export const StorePage: React.FC<StorePageProps> = ({ setCurrentTab }) => {
   const handleDirectCheckout = async () => {
     if (!directCheckoutProduct) return;
     if (!isAuthenticated) {
-      loginWithDiscord();
+      setDirectCheckoutProduct(null);
+      setCurrentTab('login');
       return;
     }
 
