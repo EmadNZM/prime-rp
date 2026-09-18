@@ -171,3 +171,88 @@ body {
 .animate-beacon {
   animation: beacon 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Cinematic Living Hero Keyframes */
+@keyframes cinematicPanZoom {
+  0% {
+    transform: scale(1.04) translate3d(0, 0, 0);
+  }
+  50% {
+    transform: scale(1.12) translate3d(-1.2%, -0.8%, 0);
+  }
+  100% {
+    transform: scale(1.04) translate3d(0, 0, 0);
+  }
+}
+
+.animate-cinematic-hero {
+  animation: cinematicPanZoom 32s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes fogDriftMotion {
+  0% {
+    transform: translate3d(-4%, 0, 0);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translate3d(4%, -2%, 0);
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate3d(-4%, 0, 0);
+    opacity: 0.45;
+  }
+}
+
+.animate-fog-drift {
+  animation: fogDriftMotion 24s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+@keyframes subtleFilmGrain {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-1%, -1%); }
+  20% { transform: translate(1%, 0); }
+  30% { transform: translate(-0.5%, 1%); }
+  40% { transform: translate(1%, -1%); }
+  50% { transform: translate(-1%, 0.5%); }
+  60% { transform: translate(1%, 1%); }
+  70% { transform: translate(0, -1%); }
+  80% { transform: translate(-1%, 0); }
+  90% { transform: translate(0.5%, 0.5%); }
+}
+
+.animate-film-grain {
+  animation: subtleFilmGrain 1.2s steps(4) infinite;
+}
+
+@keyframes particleFloatSlow {
+  0% {
+    transform: translateY(0) translateX(0);
+    opacity: 0;
+  }
+  25% {
+    opacity: 0.7;
+  }
+  75% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translateY(-160px) translateX(30px);
+    opacity: 0;
+  }
+}
+
+.animate-particle-float {
+  animation: particleFloatSlow 8s ease-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-cinematic-hero,
+  .animate-fog-drift,
+  .animate-film-grain,
+  .animate-particle-float {
+    animation: none !important;
+  }
+}

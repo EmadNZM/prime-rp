@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
@@ -112,15 +112,103 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
     loadData();
   }, []);
 
+  const isConfigured = Boolean(
+    siteSettings?.fiveMConnectUrl || 
+    telemetry?.ip ||
+    (telemetry && telemetry.status !== 'NOT_CONFIGURED' && telemetry.status !== 'UNCONFIGURED')
+  );
   const isOnline = Boolean(telemetry?.online || (telemetry?.playersCount !== undefined && telemetry?.playersCount > 0));
+  const isOffline = isConfigured && !isOnline;
+  const isNotConfigured = !isConfigured && !isOnline;
   const playersCount = isOnline ? (telemetry?.playersCount ?? 0) : 0;
   const maxPlayers = telemetry?.maxPlayers || 150;
-  const capacityPercent = Math.min(100, Math.round((playersCount / maxPlayers) * 100)) || 15;
+  const capacityPercent = isOnline ? Math.min(100, Math.round((playersCount / maxPlayers) * 100)) : 0;
 
   const connectTarget = telemetry?.ip && telemetry?.port 
     ? `${telemetry.ip}:${telemetry.port}`
     : 'play.primerp.net:30120';
   const connectCommand = `connect ${connectTarget}`;
+
+  // ================= 60FPS MOUSE PARALLAX & SCROLL DYNAMICS =================
+  const heroSectionRef = useRef<HTMLElement | null>(null);
+  const heroBgRef = useRef<HTMLDivElement | null>(null);
+  const heroFgRef = useRef<HTMLDivElement | null>(null);
+  const heroSpotlightRef = useRef<HTMLDivElement | null>(null);
+  const rawMousePos = useRef({ x: 0, y: 0, clientX: 0, clientY: 0 });
+  const smoothMousePos = useRef({ x: 0, y: 0, clientX: 0, clientY: 0 });
+  const [scrollFadeProgress, setScrollFadeProgress] = useState(0);
+
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let animId: number;
+
+    const onMouseMove = (e: MouseEvent) => {
+      if (prefersReducedMotion) return;
+      const heroEl = heroSectionRef.current;
+      if (!heroEl) return;
+      const rect = heroEl.getBoundingClientRect();
+      if (rect.bottom < 0) return; // Scrolled past hero
+
+      const normX = (e.clientX / window.innerWidth) * 2 - 1; // -1 to +1
+      const normY = (e.clientY / window.innerHeight) * 2 - 1; // -1 to +1
+
+      rawMousePos.current = {
+        x: normX,
+        y: normY,
+        clientX: e.clientX,
+        clientY: e.clientY
+      };
+    };
+
+    const onScroll = () => {
+      const heroHeight = heroSectionRef.current?.offsetHeight || window.innerHeight;
+      const progress = Math.min(1, Math.max(0, window.scrollY / (heroHeight * 0.75)));
+      setScrollFadeProgress(progress);
+    };
+
+    window.addEventListener('mousemove', onMouseMove, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    // Smooth RAF lerp for silky parallax & spotlight
+    const lerpLoop = () => {
+      if (!prefersReducedMotion) {
+        const ease = 0.08;
+        smoothMousePos.current.x += (rawMousePos.current.x - smoothMousePos.current.x) * ease;
+        smoothMousePos.current.y += (rawMousePos.current.y - smoothMousePos.current.y) * ease;
+        smoothMousePos.current.clientX += (rawMousePos.current.clientX - smoothMousePos.current.clientX) * ease;
+        smoothMousePos.current.clientY += (rawMousePos.current.clientY - smoothMousePos.current.clientY) * ease;
+
+        // Background layer subtle inverse drift
+        if (heroBgRef.current) {
+          const bgX = smoothMousePos.current.x * -16;
+          const bgY = smoothMousePos.current.y * -12;
+          heroBgRef.current.style.transform = `translate3d(${bgX}px, ${bgY}px, 0)`;
+        }
+
+        // Foreground content opposing drift
+        if (heroFgRef.current) {
+          const fgX = smoothMousePos.current.x * 10;
+          const fgY = smoothMousePos.current.y * 8;
+          heroFgRef.current.style.transform = `translate3d(${fgX}px, ${fgY}px, 0)`;
+        }
+
+        // Copper mouse-follow spotlight
+        if (heroSpotlightRef.current) {
+          heroSpotlightRef.current.style.transform = `translate3d(${smoothMousePos.current.clientX}px, ${smoothMousePos.current.clientY}px, 0)`;
+        }
+      }
+
+      animId = requestAnimationFrame(lerpLoop);
+    };
+
+    animId = requestAnimationFrame(lerpLoop);
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      window.removeEventListener('scroll', onScroll);
+      if (animId) cancelAnimationFrame(animId);
+    };
+  }, []);
 
   const handleCopyConnect = () => {
     navigator.clipboard.writeText(connectCommand);
@@ -137,6 +225,21 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
   };
 
   const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
+
+  const HERO_AMBIENT_PARTICLES = [
+    { id: 1, left: '14%', bottom: '18%', size: '3px', duration: '9s', delay: '0s' },
+    { id: 2, left: '26%', bottom: '26%', size: '4px', duration: '11s', delay: '1.5s' },
+    { id: 3, left: '39%', bottom: '14%', size: '2.5px', duration: '8s', delay: '2.8s' },
+    { id: 4, left: '54%', bottom: '32%', size: '3.5px', duration: '12s', delay: '0.6s' },
+    { id: 5, left: '67%', bottom: '20%', size: '4px', duration: '9.5s', delay: '3.4s' },
+    { id: 6, left: '79%', bottom: '28%', size: '2px', duration: '13s', delay: '1.9s' },
+    { id: 7, left: '89%', bottom: '15%', size: '3.5px', duration: '10s', delay: '0.3s' },
+    { id: 8, left: '21%', bottom: '38%', size: '2.5px', duration: '11.5s', delay: '4.5s' },
+    { id: 9, left: '35%', bottom: '22%', size: '3px', duration: '8.5s', delay: '2.2s' },
+    { id: 10, left: '72%', bottom: '42%', size: '4px', duration: '12.5s', delay: '1.1s' },
+    { id: 11, left: '83%', bottom: '10%', size: '3px', duration: '9s', delay: '3.8s' },
+    { id: 12, left: '93%', bottom: '30%', size: '2px', duration: '14s', delay: '0.4s' }
+  ];
 
   const citySectors = [
     {
@@ -280,162 +383,300 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
       
       {/* ATMOSPHERIC BACKGROUND (Obsidian Canvas + Radial Copper Aurora) */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[950px] pointer-events-none z-0 overflow-hidden">
-        <div className="w-full h-full bg-copper-glow-radial opacity-60" />
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-[#c8874b]/12 blur-[150px]" />
-        <div className="absolute top-80 right-10 w-[450px] h-[450px] rounded-full bg-[#df9f64]/8 blur-[130px]" />
+        <div className="w-full h-full bg-copper-glow-radial opacity-50" />
+        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-[#c8874b]/10 blur-[160px]" />
+        <div className="absolute top-80 right-10 w-[450px] h-[450px] rounded-full bg-[#df9f64]/6 blur-[140px]" />
       </div>
       
       {/* Subtle Background Mesh Grid */}
-      <div className="absolute inset-0 bg-mesh-grid pointer-events-none opacity-25 z-0" />
+      <div className="absolute inset-0 bg-mesh-grid pointer-events-none opacity-20 z-0" />
 
-      {/* ================= 1. HERO SECTION (Cinematic & Immersive • Frame 1 Reference) ================= */}
-      <section className="relative z-10 min-h-[92vh] flex items-center pt-28 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
+      {/* ================= 1. FULL-SCREEN CINEMATIC LIVING HERO SECTION ================= */}
+      <section 
+        ref={heroSectionRef} 
+        className="relative z-10 w-full min-h-[100dvh] flex items-center justify-center overflow-hidden select-none"
+      >
         
-        {/* Full-width Cinematic Nocturnal Sports Car Backdrop (Exact Mockup 1) */}
-        <div className="absolute inset-0 z-0 pointer-events-none rounded-3xl overflow-hidden border border-white/[0.05]">
-          <img
-            src="https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=2000&q=85"
-            alt="Prime RP Cinematic Night Scene"
-            className="w-full h-full object-cover object-right lg:object-center opacity-45 scale-105 filter brightness-90 contrast-110"
+        {/* FULL-BLEED LIVING BACKGROUND CONTAINER (Edge-to-Edge, Zero Borders, Zero Boxes) */}
+        <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden z-0">
+          
+          {/* 1. Cinematic Background Image Layer with Pan/Zoom & Mouse Parallax */}
+          <div 
+            ref={heroBgRef}
+            className="absolute -inset-[5%] w-[110%] h-[110%] will-change-transform pointer-events-none"
+          >
+            <img
+              src="https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=2560&q=90"
+              alt="Prime RP Cinematic Night Backdrop"
+              className="w-full h-full object-cover object-center animate-cinematic-hero pointer-events-none transition-all duration-300"
+              style={{
+                opacity: Math.max(0.06, 0.56 - scrollFadeProgress * 0.48),
+                filter: `brightness(${Math.max(0.35, 0.95 - scrollFadeProgress * 0.6)}) contrast(1.12) blur(${scrollFadeProgress * 8}px)`
+              }}
+            />
+          </div>
+
+          {/* 2. Mouse-Follow Spotlight (Radial Copper Aurora Glow) */}
+          <div
+            ref={heroSpotlightRef}
+            className="fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] rounded-full pointer-events-none blur-[140px] will-change-transform transition-opacity duration-500 hidden md:block"
+            style={{
+              background: 'radial-gradient(circle, rgba(200, 135, 75, 0.24) 0%, rgba(200, 135, 75, 0.06) 45%, transparent 70%)',
+              opacity: Math.max(0, 0.32 - scrollFadeProgress * 0.32)
+            }}
           />
-          {/* Multi-layered dark vignette to preserve high contrast for text on the left */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#08090d] via-[#08090d]/85 to-transparent rtl:bg-gradient-to-l rtl:from-[#08090d] rtl:via-[#08090d]/85 rtl:to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#08090d] via-transparent to-[#08090d]/70" />
-          <div className="absolute inset-0 bg-radial-vignette opacity-70" />
+
+          {/* 3. Drifting Atmospheric Fog / Haze Overlay */}
+          <div 
+            className="absolute inset-0 animate-fog-drift pointer-events-none"
+            style={{
+              background: 'radial-gradient(ellipse 70% 50% at 50% 60%, rgba(200, 135, 75, 0.08) 0%, rgba(13, 15, 22, 0.25) 50%, transparent 80%)',
+              opacity: Math.max(0.1, 0.6 - scrollFadeProgress * 0.5)
+            }}
+          />
+
+          {/* 4. Floating Ambient Copper Embers & Dust Motes */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            {HERO_AMBIENT_PARTICLES.map((particle) => (
+              <span
+                key={particle.id}
+                className="absolute rounded-full bg-[#df9f64] pointer-events-none animate-particle-float"
+                style={{
+                  left: particle.left,
+                  bottom: particle.bottom,
+                  width: particle.size,
+                  height: particle.size,
+                  animationDuration: particle.duration,
+                  animationDelay: particle.delay,
+                  boxShadow: '0 0 10px rgba(200, 135, 75, 0.8)',
+                  opacity: Math.max(0, 0.65 - scrollFadeProgress * 0.65)
+                }}
+              />
+            ))}
+          </div>
+
+          {/* 5. Subtle Cinematic Film Grain Texture */}
+          <div className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay animate-film-grain">
+            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
+              <filter id="hero-film-grain">
+                <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" />
+                <feColorMatrix type="saturate" values="0" />
+              </filter>
+              <rect width="100%" height="100%" filter="url(#hero-film-grain)" />
+            </svg>
+          </div>
+
+          {/* 6. Seamless Multi-Stop Atmospheric Vignettes (Eliminating ALL Hard Borders) */}
+          {/* Top Fade (under global navbar) */}
+          <div className="absolute top-0 inset-x-0 h-44 bg-gradient-to-b from-[#08090d] via-[#08090d]/70 to-transparent pointer-events-none" />
+
+          {/* Lateral Vignettes (Text Readability & Side Blending) */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#08090d] via-[#08090d]/85 via-40% to-transparent rtl:bg-gradient-to-l rtl:from-[#08090d] rtl:via-[#08090d]/85 rtl:via-40% rtl:to-transparent pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-l from-[#08090d]/60 via-transparent to-transparent rtl:bg-gradient-to-r rtl:from-[#08090d]/60 pointer-events-none" />
+
+          {/* Deep Radial Vignette */}
+          <div className="absolute inset-0 bg-radial-vignette opacity-75 pointer-events-none" />
+
+          {/* Bottom Fade: Seamless Melt into the website page canvas */}
+          <div className="absolute bottom-0 inset-x-0 h-80 bg-gradient-to-t from-[#08090d] via-[#08090d]/95 via-45% to-transparent pointer-events-none" />
+
         </div>
 
-        <div className="relative z-10 w-full max-w-2xl py-8 space-y-6 text-left rtl:text-right">
-          
-          {/* Top Era Tag & Server Status Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-            className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#0d0f16]/90 border border-[#c8874b]/40 text-xs shadow-lg backdrop-blur-xl"
-          >
-            <span className="flex items-center gap-2 font-bold">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${isOnline ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-              </span>
-              <span className={isOnline ? 'text-emerald-400 font-black' : 'text-amber-400 font-black'}>
-                {isOnline ? (language === 'ar' ? 'السيرفر متصل الآن' : 'SERVER ONLINE') : (language === 'ar' ? 'في وضع الاستعداد' : 'FIVEM STANDBY')}
-              </span>
-            </span>
-            <span className="text-white/20">•</span>
-            <span className="text-[#df9f64] font-black uppercase tracking-widest text-[11px] font-rajdhani">
-              {language === 'ar' ? 'عصر جديد • واقع لا مثيل له' : 'A NEW ERA • A REALER WORLD'}
-            </span>
-          </motion.div>
-
-          {/* Large Cinematic Hero Headline (Matching Exact Poster Mockup 1) */}
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.08 }}
-            className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight text-white uppercase leading-[0.98] font-rajdhani"
-          >
-            <span className="block text-white">
-              {language === 'ar' ? 'مدينة صُنعت' : 'A CITY'}
-            </span>
-            <span className="block text-white">
-              {language === 'ar' ? 'بأيديكم' : 'BUILT BY YOU'}
-            </span>
-          </motion.h1>
-
-          {/* Hero Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.16 }}
-            className="text-sm sm:text-base md:text-lg text-[#a1a1a1] max-w-xl leading-relaxed font-normal"
-          >
-            {language === 'ar'
-              ? 'مدينة حية متكاملة بُنيت بعناية لعشاق اللعب الواقعي الجاد. نظام اقتصادي متوازن، وظائف رسمية بمحاكاة كاملة، صوت ثلاثي الأبعاد محيطي، وأداء ثابت يضمن تجربة خالية من التقطيع.'
-              : 'A living, breathing metropolis built for authentic storylines, dedicated community, custom MDT systems, 3D spatial radio, and seamless 60 FPS netcode.'}
-          </motion.p>
-
-          {/* Two Prominent Integrated CTA Buttons (Exact Frame 1 Composition) */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.24 }}
-            className="flex flex-wrap items-center gap-4 pt-2"
-          >
-            <MagneticButton onClick={handlePlayNow}>
-              <div className="flex items-center gap-2.5 px-8 py-4 rounded-full bg-[#c8874b] hover:bg-[#df9f64] text-black font-black text-xs uppercase tracking-wider active:scale-95 transition-all shadow-[0_10px_30px_rgba(200,135,75,0.35)] cursor-pointer">
-                <Play className="w-4 h-4 fill-current" />
-                <span>{language === 'ar' ? 'دخول السيرفر الآن' : 'CONNECT NOW'}</span>
-              </div>
-            </MagneticButton>
-
-            <MagneticButton>
-              <a
-                href={siteSettings?.discordUrl || 'https://discord.gg/primerp'}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-2.5 px-7 py-4 rounded-full bg-[#0d0f16]/90 hover:bg-[#131620] border border-white/[0.12] hover:border-[#5865F2] text-white font-bold text-xs uppercase tracking-wider transition-all backdrop-blur-md cursor-pointer shadow-lg"
-              >
-                <MessageSquare className="w-4 h-4 text-[#5865F2]" />
-                <span>{language === 'ar' ? 'مجتمع الديسكورد' : 'JOIN DISCORD'}</span>
-              </a>
-            </MagneticButton>
-          </motion.div>
-
-          {/* Integrated Glass Telemetry Strip (Bottom Pinned of Mockup 1) */}
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.32 }}
-            className="pt-4 max-w-lg"
-          >
-            <div className="p-4 rounded-2xl bg-[#0d0f16]/80 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-3">
-              
-              {/* Telemetry Stats Bar */}
-              <div className="flex items-center justify-between text-xs font-mono">
-                <div className="flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                  <span className="text-white font-bold">PRIME NODE #1</span>
-                  <span className="text-[#666]">•</span>
-                  <span className="text-[#df9f64]">{telemetry?.pingMs || 24}ms</span>
-                </div>
-                <div className="text-white font-bold font-rajdhani">
-                  <span className="text-[#c8874b]">{playersCount}</span> / {maxPlayers} Citizens
-                </div>
-              </div>
-
-              {/* Progress Bar with Bronze Gradient */}
-              <div className="w-full h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
-                <div 
-                  className="h-full rounded-full bg-gradient-to-r from-[#9e6331] via-[#c8874b] to-[#df9f64] shadow-[0_0_8px_rgba(200,135,75,0.8)] transition-all duration-700"
-                  style={{ width: `${capacityPercent}%` }}
-                />
-              </div>
-
-              {/* One-click F8 Connect Pill */}
-              <div className="flex items-center justify-between pt-1 border-t border-white/[0.04] text-[11px]">
-                <span className="text-[#888] font-mono select-all truncate">{connectCommand}</span>
-                <button
-                  onClick={handleCopyConnect}
-                  className="inline-flex items-center gap-1 text-[#df9f64] hover:text-white font-bold ml-2 shrink-0 transition-colors cursor-pointer"
-                >
-                  {copiedConnect ? (
-                    <>
-                      <Check className="w-3 h-3 text-emerald-400" />
-                      <span className="text-emerald-400">{language === 'ar' ? 'تم النسخ' : 'Copied'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3" />
-                      <span>{language === 'ar' ? 'نسخ F8' : 'Copy F8'}</span>
-                    </>
+        {/* FOREGROUND HERO CONTENT (Interactive UI & Staggered Typography) */}
+        <div 
+          ref={heroFgRef}
+          className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24 flex items-center will-change-transform"
+          style={{
+            opacity: Math.max(0, 1 - scrollFadeProgress * 1.5),
+            transform: `translate3d(0, -${scrollFadeProgress * 45}px, 0)`
+          }}
+        >
+          <div className="w-full max-w-2xl space-y-6 text-left rtl:text-right">
+            
+            {/* Stagger 1: Small Status / Badge */}
+            <motion.div
+              initial={{ opacity: 0, y: -16, filter: 'blur(8px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.45, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+              className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#0d0f16]/90 border border-[#c8874b]/40 text-xs shadow-xl backdrop-blur-xl"
+            >
+              <span className="flex items-center gap-2 font-bold">
+                <span className="relative flex h-2.5 w-2.5">
+                  {isOnline && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 bg-emerald-400" />
                   )}
-                </button>
+                  <span 
+                    className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+                      isOnline 
+                        ? 'bg-emerald-500 shadow-[0_0_8px_#10b981]' 
+                        : isOffline 
+                        ? 'bg-rose-500 shadow-[0_0_8px_#f43f5e]' 
+                        : 'bg-amber-500 shadow-[0_0_8px_#f59e0b]'
+                    }`} 
+                  />
+                </span>
+                <span 
+                  className={
+                    isOnline 
+                      ? 'text-emerald-400 font-black' 
+                      : isOffline 
+                      ? 'text-rose-400 font-black' 
+                      : 'text-amber-400 font-black'
+                  }
+                >
+                  {isOnline 
+                    ? (language === 'ar' ? 'السيرفر متصل الآن' : 'SERVER ONLINE') 
+                    : isOffline 
+                    ? (language === 'ar' ? 'السيرفر غير متصل' : 'SERVER OFFLINE')
+                    : (language === 'ar' ? 'في انتظار التهيئة' : 'NOT CONFIGURED')}
+                </span>
+              </span>
+              <span className="text-white/20">•</span>
+              <span className="text-[#df9f64] font-black uppercase tracking-widest text-[11px] font-rajdhani">
+                {language === 'ar' ? 'عصر جديد • واقع لا مثيل له' : 'A NEW ERA • A REALER WORLD'}
+              </span>
+            </motion.div>
+
+            {/* Stagger 2: Large Cinematic Display Heading */}
+            <motion.h1
+              initial={{ opacity: 0, y: 22, scale: 0.96, filter: 'blur(10px)' }}
+              animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+              transition={{ duration: 0.55, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
+              className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight text-white uppercase leading-[0.96] font-rajdhani drop-shadow-2xl"
+            >
+              <span className="block text-white">
+                {language === 'ar' ? 'مدينة صُنعت' : 'A CITY'}
+              </span>
+              <span className="block text-white copper-gradient-shimmer">
+                {language === 'ar' ? 'بأيديكم' : 'BUILT BY YOU'}
+              </span>
+            </motion.h1>
+
+            {/* Stagger 3: Narrative Hero Subtitle */}
+            <motion.p
+              initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.5, delay: 0.38, ease: [0.16, 1, 0.3, 1] }}
+              className="text-sm sm:text-base md:text-lg text-[#b8b8be] max-w-xl leading-relaxed font-normal"
+            >
+              {language === 'ar'
+                ? 'مدينة حية متكاملة بُنيت بعناية لعشاق اللعب الواقعي الجاد. نظام اقتصادي متوازن، وظائف رسمية بمحاكاة كاملة، صوت ثلاثي الأبعاد محيطي، وأداء ثابت يضمن تجربة خالية من التقطيع.'
+                : 'A living, breathing metropolis built for authentic storylines, dedicated community, custom MDT systems, 3D spatial radio, and seamless 60 FPS netcode.'}
+            </motion.p>
+
+            {/* Stagger 4: Integrated CTA Buttons with Hover Glow & Micro-motion */}
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.45, delay: 0.52, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-wrap items-center gap-4 pt-2"
+            >
+              <MagneticButton onClick={handlePlayNow}>
+                <div 
+                  className="group relative overflow-hidden flex items-center gap-3 px-8 py-4 rounded-full bg-[#c8874b] hover:bg-[#df9f64] text-black font-black text-xs uppercase tracking-wider transition-all duration-300 shadow-[0_10px_35px_rgba(200,135,75,0.35)] hover:shadow-[0_0_35px_rgba(200,135,75,0.65)] hover:scale-105 active:scale-95 cursor-pointer"
+                  data-cursor="pointer"
+                >
+                  <Play className="w-4 h-4 fill-current group-hover:translate-x-1 rtl:group-hover:-translate-x-1 group-hover:scale-110 transition-transform duration-200" />
+                  <span>{language === 'ar' ? 'دخول السيرفر الآن' : 'CONNECT NOW'}</span>
+                </div>
+              </MagneticButton>
+
+              <MagneticButton>
+                <a
+                  href={siteSettings?.discordUrl || 'https://discord.gg/primerp'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="group flex items-center gap-2.5 px-7 py-4 rounded-full bg-[#0d0f16]/85 hover:bg-[#131622] border border-white/[0.12] hover:border-[#5865F2] text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 backdrop-blur-xl shadow-lg hover:shadow-[0_0_25px_rgba(88,101,242,0.35)] cursor-pointer"
+                  data-cursor="pointer"
+                >
+                  <MessageSquare className="w-4 h-4 text-[#5865F2] group-hover:scale-110 transition-transform duration-200" />
+                  <span>{language === 'ar' ? 'مجتمع الديسكورد' : 'JOIN DISCORD'}</span>
+                </a>
+              </MagneticButton>
+            </motion.div>
+
+            {/* Stagger 5: Real-data Server Status Panel */}
+            <motion.div
+              initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              transition={{ duration: 0.5, delay: 0.64, ease: [0.16, 1, 0.3, 1] }}
+              className="pt-3 max-w-lg"
+            >
+              <div className="p-4 rounded-2xl bg-[#0d0f16]/80 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-3">
+                
+                {/* Telemetry Stats Bar */}
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <div className="flex items-center gap-2">
+                    <span 
+                      className={`w-2 h-2 rounded-full ${
+                        isOnline 
+                          ? 'bg-emerald-400 animate-pulse' 
+                          : isOffline 
+                          ? 'bg-rose-500' 
+                          : 'bg-amber-400'
+                      }`} 
+                    />
+                    <span className="text-white font-bold">
+                      {isOnline 
+                        ? 'PRIME NODE #1' 
+                        : isOffline 
+                        ? 'PRIME NODE #1 (OFFLINE)' 
+                        : 'FIVEM NODE'}
+                    </span>
+                    {isOnline && (
+                      <>
+                        <span className="text-[#666]">•</span>
+                        <span className="text-[#df9f64]">{telemetry?.pingMs || telemetry?.ping || 24}ms</span>
+                      </>
+                    )}
+                  </div>
+                  <div className="text-white font-bold font-rajdhani">
+                    {isOnline ? (
+                      <>
+                        <span className="text-[#c8874b]">{playersCount}</span> / {maxPlayers} Citizens
+                      </>
+                    ) : isOffline ? (
+                      <span className="text-rose-400 font-semibold">{language === 'ar' ? 'السيرفر متوقف' : 'Offline'}</span>
+                    ) : (
+                      <span className="text-amber-400 font-semibold">{language === 'ar' ? 'وضع الاستعداد' : 'Standby'}</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Progress Bar with Bronze Gradient (Real capacity or dormant) */}
+                <div className="w-full h-1.5 rounded-full bg-white/[0.08] overflow-hidden">
+                  <div 
+                    className="h-full rounded-full bg-gradient-to-r from-[#9e6331] via-[#c8874b] to-[#df9f64] shadow-[0_0_8px_rgba(200,135,75,0.8)] transition-all duration-700"
+                    style={{ width: `${capacityPercent}%` }}
+                  />
+                </div>
+
+                {/* One-click F8 Connect Pill */}
+                <div className="flex items-center justify-between pt-1 border-t border-white/[0.04] text-[11px]">
+                  <span className="text-[#888] font-mono select-all truncate">{connectCommand}</span>
+                  <button
+                    onClick={handleCopyConnect}
+                    className="inline-flex items-center gap-1 text-[#df9f64] hover:text-white font-bold ml-2 shrink-0 transition-colors cursor-pointer"
+                    data-cursor="pointer"
+                  >
+                    {copiedConnect ? (
+                      <>
+                        <Check className="w-3 h-3 text-emerald-400" />
+                        <span className="text-emerald-400">{language === 'ar' ? 'تم النسخ' : 'Copied'}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3 h-3" />
+                        <span>{language === 'ar' ? 'نسخ F8' : 'Copy F8'}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
               </div>
+            </motion.div>
 
-            </div>
-          </motion.div>
-
+          </div>
         </div>
       </section>
 
