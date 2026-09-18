@@ -482,6 +482,16 @@ router.post('/tickets/:id/messages', requireAuth, async (req: Request, res: Resp
       message
     });
 
+    if (isStaff && ticket.userId !== req.user!.id) {
+      await notificationRepository.create({
+        userId: ticket.userId,
+        type: 'TICKET',
+        title: `رد جديد على التذكرة #${ticket.ticketNumber}`,
+        message: `قام ${req.user!.globalName || req.user!.username} بالرد على تذكرتك: "${message.substring(0, 80)}${message.length > 80 ? '...' : ''}"`,
+        link: '/support'
+      }).catch((e) => console.warn('[Notification Error]', e.message));
+    }
+
     return res.json(updatedTicket);
   } catch (err: any) {
     console.error('[API] /tickets/:id/messages error:', err.message);
@@ -491,15 +501,28 @@ router.post('/tickets/:id/messages', requireAuth, async (req: Request, res: Resp
 
 router.patch('/tickets/:id/status', requireAuth, async (req: Request, res: Response) => {
   const { status } = req.body;
-  const isStaff = Boolean(
-    req.user!.isOwner || 
-    [UserRole.OWNER, UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPPORT].includes(req.user!.role)
-  );
-  if (!isStaff) {
-    return res.status(403).json({ error: 'Only staff can modify ticket status' });
+  if (!status) {
+    return res.status(400).json({ error: 'Status is required' });
   }
 
   try {
+    const ticket = await ticketRepository.getById(req.params.id);
+    if (!ticket) {
+      return res.status(404).json({ error: 'Ticket not found' });
+    }
+
+    const isStaff = Boolean(
+      req.user!.isOwner || 
+      [UserRole.OWNER, UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR, UserRole.SUPPORT].includes(req.user!.role)
+    );
+
+    const isTicketOwner = ticket.userId === req.user!.id;
+
+    // Staff can set any status; Ticket creator can close their own ticket
+    if (!isStaff && (!isTicketOwner || status !== 'CLOSED')) {
+      return res.status(403).json({ error: 'Forbidden: Insufficient privileges to change ticket status' });
+    }
+
     const updated = await ticketRepository.updateStatus(req.params.id, status);
     if (!updated) {
       return res.status(404).json({ error: 'Ticket not found' });
@@ -514,6 +537,22 @@ router.patch('/tickets/:id/status', requireAuth, async (req: Request, res: Respo
       metadata: `Changed ticket status to ${status}`,
       ip: req.ip || '127.0.0.1'
     });
+
+    if (updated.userId !== req.user!.id) {
+      const statusLabels: Record<string, string> = {
+        OPEN: 'مفتوحة',
+        IN_PROGRESS: 'قيد المتابعة',
+        RESOLVED: 'تم الحل',
+        CLOSED: 'مغلقة'
+      };
+      await notificationRepository.create({
+        userId: updated.userId,
+        type: 'TICKET',
+        title: `تحديث حالة التذكرة #${updated.ticketNumber}`,
+        message: `تم تغيير حالة تذكرتك [${updated.subject}] إلى: ${statusLabels[status] || status}`,
+        link: '/support'
+      }).catch((e) => console.warn('[Notification Error]', e.message));
+    }
 
     return res.json(updated);
   } catch (err: any) {
@@ -623,6 +662,24 @@ router.patch('/reports/:id/status', requireAuth, requireRole([UserRole.SUPER_ADM
       metadata: `Changed report status to ${status}`,
       ip: req.ip || '127.0.0.1'
     });
+
+    if (updated.reporterId) {
+      const statusLabels: Record<string, string> = {
+        OPEN: 'مفتوح',
+        IN_REVIEW: 'قيد التحقيق والمراجعة',
+        RESOLVED: 'تم اتخاذ الإجراء والحل',
+        CLOSED: 'مغلق'
+      };
+      await notificationRepository.create({
+        userId: updated.reporterId,
+        type: 'SYSTEM',
+        title: `تحديث حالة البلاغ: ${statusLabels[status] || status}`,
+        message: notes 
+          ? `تم تحديث حالة بلاغك [${updated.category}] إلى ${statusLabels[status] || status}. ملاحظات الإدارة: ${notes}`
+          : `تم تحديث حالة بلاغك [${updated.category}] إلى ${statusLabels[status] || status}.`,
+        link: '/dashboard'
+      }).catch((e) => console.warn('[Notification Error]', e.message));
+    }
 
     return res.json(updated);
   } catch (err: any) {

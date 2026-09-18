@@ -288,7 +288,7 @@ export class UserRepository {
       );
       if (existing) {
         const ownerDiscordId = process.env.OWNER_DISCORD_ID?.trim();
-        if (ownerDiscordId && existing.discordId === ownerDiscordId) {
+        if (existing.isOwner || (ownerDiscordId && existing.discordId === ownerDiscordId)) {
           throw new Error('Cannot modify Server Owner role.');
         }
         return db.updateUser(existing.id, {
@@ -329,7 +329,7 @@ export class UserRepository {
     if (findRes.rows.length > 0) {
       const user = findRes.rows[0];
       const ownerDiscordId = process.env.OWNER_DISCORD_ID?.trim();
-      if (ownerDiscordId && user.discord_id === ownerDiscordId) {
+      if (user.is_owner || (ownerDiscordId && user.discord_id === ownerDiscordId)) {
         throw new Error('Cannot modify Server Owner role.');
       }
 

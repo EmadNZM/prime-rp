@@ -62,8 +62,9 @@ export const StorePage: React.FC<StorePageProps> = ({ setCurrentTab }) => {
     setCheckoutError(null);
     try {
       const res = await apiClient.checkoutOrder(cartProduct.id);
-      if (res.id) {
-        setCheckoutSuccess(res);
+      const createdOrder = res.order || (res.id ? res : null);
+      if (createdOrder) {
+        setCheckoutSuccess(createdOrder);
         setCartProduct(null);
       } else {
         setCheckoutError(res.error || 'Failed to process order');
