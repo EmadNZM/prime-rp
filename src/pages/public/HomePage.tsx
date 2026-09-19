@@ -472,39 +472,36 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             </svg>
           </div>
 
-          {/* 6. Seamless Multi-Stop Atmospheric Vignettes (Eliminating ALL Hard Borders) */}
+          {/* 6. Seamless Symmetrical Atmospheric Vignettes (Edge-to-Edge immersion, No lopsided dark sides) */}
           {/* Top Fade (under global navbar) */}
           <div className="absolute top-0 inset-x-0 h-44 bg-gradient-to-b from-[#08090d] via-[#08090d]/70 to-transparent pointer-events-none" />
 
-          {/* Lateral Vignettes (Text Readability & Side Blending) */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#08090d] via-[#08090d]/85 via-40% to-transparent rtl:bg-gradient-to-l rtl:from-[#08090d] rtl:via-[#08090d]/85 rtl:via-40% rtl:to-transparent pointer-events-none" />
-          <div className="absolute inset-0 bg-gradient-to-l from-[#08090d]/60 via-transparent to-transparent rtl:bg-gradient-to-r rtl:from-[#08090d]/60 pointer-events-none" />
-
-          {/* Deep Radial Vignette */}
-          <div className="absolute inset-0 bg-radial-vignette opacity-75 pointer-events-none" />
+          {/* Symmetrical Central Radial Vignette & Backdrop Darkening for maximum contrast & full immersion */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(8,9,13,0.5)_0%,_rgba(8,9,13,0.78)_55%,_#08090d_100%)] pointer-events-none" />
+          <div className="absolute inset-0 bg-[#08090d]/30 pointer-events-none" />
 
           {/* Bottom Fade: Seamless Melt into the website page canvas */}
-          <div className="absolute bottom-0 inset-x-0 h-80 bg-gradient-to-t from-[#08090d] via-[#08090d]/95 via-45% to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 inset-x-0 h-64 sm:h-80 bg-gradient-to-t from-[#08090d] via-[#08090d]/95 via-45% to-transparent pointer-events-none" />
 
         </div>
 
-        {/* FOREGROUND HERO CONTENT (Interactive UI & Staggered Typography) */}
+        {/* FOREGROUND HERO CONTENT (Full-Screen, Centered, Edge-to-Edge Balanced) */}
         <div 
           ref={heroFgRef}
-          className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24 flex items-center will-change-transform"
+          className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 pb-16 sm:pb-20 flex flex-col items-center justify-center will-change-transform text-center"
           style={{
             opacity: Math.max(0, 1 - scrollFadeProgress * 1.5),
             transform: `translate3d(0, -${scrollFadeProgress * 45}px, 0)`
           }}
         >
-          <div className="w-full max-w-2xl space-y-6 text-left rtl:text-right">
+          <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center space-y-6 sm:space-y-7 text-center">
             
             {/* Optional Announcement Banner from Homepage CMS */}
             {siteSettings?.homepage?.announcementActive && siteSettings?.homepage?.announcementText && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 rounded-xl bg-[#c8874b]/15 border border-[#c8874b]/30 text-xs text-[#df9f64] font-bold flex items-center justify-between gap-3 shadow-lg"
+                className="p-3 rounded-xl bg-[#c8874b]/15 border border-[#c8874b]/30 text-xs text-[#df9f64] font-bold flex items-center justify-between gap-3 shadow-lg w-full max-w-2xl mx-auto"
               >
                 <div className="flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-[#c8874b] shrink-0" />
@@ -528,7 +525,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               initial={{ opacity: 0, y: -16, filter: 'blur(8px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
               transition={{ duration: 0.45, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-              className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-[#0d0f16]/90 border border-[#c8874b]/40 text-xs shadow-xl backdrop-blur-xl"
+              className="inline-flex items-center justify-center gap-2.5 px-4 py-1.5 rounded-full bg-[#0d0f16]/90 border border-[#c8874b]/40 text-xs shadow-xl backdrop-blur-xl mx-auto"
             >
               <span className="flex items-center gap-2 font-bold">
                 <span className="relative flex h-2.5 w-2.5">
@@ -574,7 +571,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               initial={{ opacity: 0, y: 22, scale: 0.96, filter: 'blur(10px)' }}
               animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
               transition={{ duration: 0.55, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
-              className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight text-white uppercase leading-[0.96] font-rajdhani drop-shadow-2xl"
+              className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-black tracking-tight text-white uppercase leading-[0.98] font-rajdhani drop-shadow-2xl text-center mx-auto"
             >
               {siteSettings?.homepage?.heroTitleAr && language === 'ar' ? (
                 <span className="block text-white copper-gradient-shimmer">
@@ -601,7 +598,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
               transition={{ duration: 0.5, delay: 0.38, ease: [0.16, 1, 0.3, 1] }}
-              className="text-sm sm:text-base md:text-lg text-[#b8b8be] max-w-xl leading-relaxed font-normal"
+              className="text-sm sm:text-base md:text-lg lg:text-xl text-[#b8b8be] max-w-2xl sm:max-w-3xl mx-auto leading-relaxed font-normal text-center"
             >
               {language === 'ar'
                 ? (siteSettings?.homepage?.heroSubtitleAr || 'مدينة حية متكاملة بُنيت بعناية لعشاق اللعب الواقعي الجاد. نظام اقتصادي متوازن، وظائف رسمية بمحاكاة كاملة، صوت ثلاثي الأبعاد محيطي، وأداء ثابت يضمن تجربة خالية من التقطيع.')
@@ -613,7 +610,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               initial={{ opacity: 0, y: 16, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ duration: 0.45, delay: 0.52, ease: [0.16, 1, 0.3, 1] }}
-              className="flex flex-wrap items-center gap-4 pt-2"
+              className="flex flex-wrap items-center justify-center gap-4 pt-2 mx-auto"
             >
               <MagneticButton onClick={handlePlayNow}>
                 <div 
@@ -644,7 +641,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               initial={{ opacity: 0, y: 20, filter: 'blur(6px)' }}
               animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
               transition={{ duration: 0.5, delay: 0.64, ease: [0.16, 1, 0.3, 1] }}
-              className="pt-3 max-w-lg"
+              className="pt-3 w-full max-w-lg mx-auto text-start"
             >
               <div className="p-4 rounded-2xl bg-[#0d0f16]/80 backdrop-blur-xl border border-white/[0.08] shadow-2xl space-y-3">
                 
@@ -719,6 +716,23 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
               </div>
             </motion.div>
+
+            {/* Scroll Down Invitation */}
+            <motion.button
+              onClick={() => {
+                document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.75, y: [0, 6, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              className="pt-2 flex flex-col items-center gap-1 text-white/40 hover:text-[#c8874b] transition-colors cursor-pointer group mx-auto"
+              aria-label="Scroll down"
+            >
+              <span className="text-[10px] tracking-widest font-mono uppercase text-white/50 group-hover:text-[#df9f64] transition-colors">
+                {language === 'ar' ? 'استكشف السيرفر' : 'EXPLORE PRIME RP'}
+              </span>
+              <ChevronDown className="w-4 h-4 text-[#c8874b] group-hover:translate-y-0.5 transition-transform" />
+            </motion.button>
 
           </div>
         </div>
