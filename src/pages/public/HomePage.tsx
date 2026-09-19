@@ -1833,7 +1833,9 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               <div className="px-4 py-2 rounded-xl bg-[#08090d]/80 backdrop-blur-md border border-white/[0.08] flex items-center gap-2 text-xs">
                 <span className="w-2 h-2 rounded-full bg-[#5865F2] animate-pulse" />
                 <span className="text-[#A1A1A1]">{language === 'ar' ? 'أعضاء الديسكورد:' : 'Discord Guild:'}</span>
-                <span className="text-white font-black font-rajdhani">5,400+ Citizens</span>
+                <span className="text-white font-black font-rajdhani">
+                  {siteSettings?.discordGuildMembers ? `${siteSettings.discordGuildMembers.toLocaleString()}+ Citizens` : (language === 'ar' ? 'مجتمع رسمي نشط' : 'Official Community')}
+                </span>
               </div>
 
               <div className="px-4 py-2 rounded-xl bg-[#08090d]/80 backdrop-blur-md border border-white/[0.08] flex items-center gap-2 text-xs">

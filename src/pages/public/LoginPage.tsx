@@ -209,11 +209,11 @@ export const LoginPage: React.FC<LoginPageProps> = ({ setCurrentTab }) => {
             </span>
           </button>
 
-          {/* Quick Demo Preview Login (Development & Preview Only) */}
-          {authConfig?.isDemoAllowed && (
+          {/* Quick Demo Preview Login (Development & Sandbox Only) */}
+          {!import.meta.env.PROD && authConfig?.isDemoAllowed && (
             <div className="pt-4 border-t border-white/[0.06]">
               <p className="text-[11px] text-[#7a8091] text-center mb-3">
-                {language === 'ar' ? 'أو تجربة المنصة ببيئة المعاينة السريعة:' : 'Or test in quick sandbox mode:'}
+                {language === 'ar' ? 'أو تجربة المنصة ببيئة المعاينة السريعة (بيئة التطوير):' : 'Or test in quick sandbox mode (Dev Only):'}
               </p>
               <div className="grid grid-cols-2 gap-2.5">
                 <button

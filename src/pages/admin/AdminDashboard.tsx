@@ -457,13 +457,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
         </div>
 
         {/* Role Preview Simulation Alert Banner */}
-        {previewRole && (
+        {!import.meta.env.PROD && previewRole && (
           <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-lg">
             <div className="flex items-center gap-2.5">
               <Eye className="w-5 h-5 text-amber-400 shrink-0" />
               <div>
                 <span className="font-black text-amber-300">
-                  {language === 'ar' ? 'وضع محاكاة الرتب نشط حالياً:' : 'Active Role Preview Simulation:'}
+                  {language === 'ar' ? 'وضع محاكاة الرتب نشط حالياً (بيئة التطوير):' : 'Active Role Preview Simulation (Dev Only):'}
                 </span>{' '}
                 <span className="text-white font-bold px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/30">
                   {effectiveUser?.role}

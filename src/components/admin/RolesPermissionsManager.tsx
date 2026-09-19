@@ -179,44 +179,46 @@ export const RolesPermissionsManager: React.FC = () => {
               <span>{language === 'ar' ? 'نظام التحكم بالرتب والصلاحيات (RBAC Core)' : 'Role-Based Access Control Architecture'}</span>
             </div>
             <h2 className="text-2xl font-black text-white tracking-tight">
-              {language === 'ar' ? 'إدارة الرتب وتوزيع الصلاحيات والمحاكاة' : 'Roles & Permissions Matrix & Live Simulator'}
+              {language === 'ar' ? 'إدارة الرتب وتوزيع الصلاحيات' : 'Roles & Permissions Matrix'}
             </h2>
             <p className="text-xs sm:text-sm text-[#8c92a4] mt-1 max-w-2xl">
               {language === 'ar'
-                ? 'تحكم دقيق في كافة وظائف المنصة وواجهات الموقع. يمكنك اختبار الواجهة فوراً بأي رتبة عبر زر المحاكاة.'
-                : 'Fine-grained authorization across all website CMS and moderation modules. Live test any role using the simulator.'}
+                ? 'تحكم دقيق في كافة وظائف المنصة وواجهات الموقع وصلاحيات الطاقم الإداري.'
+                : 'Fine-grained authorization across all website CMS and staff moderation modules.'}
             </p>
           </div>
 
-          {/* Simulator Controls */}
-          <div className="p-4 rounded-xl bg-[#090b10]/90 border border-white/[0.08] flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Eye className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-bold text-white whitespace-nowrap">
-                {language === 'ar' ? 'محاكاة الواجهة كـ:' : 'Preview Dashboard As:'}
-              </span>
-            </div>
-            <select
-              value={previewRole || ''}
-              onChange={(e) => setPreviewRole(e.target.value ? (e.target.value as UserRole) : null)}
-              className="bg-[#151824] border border-white/[0.12] rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-[#c8874b]"
-            >
-              <option value="">{language === 'ar' ? 'الرتبة الفعلية الحالية' : 'Current Real Role'}</option>
-              {ROLES_DEFINITIONS.map(r => (
-                <option key={r.role} value={r.role}>
-                  {language === 'ar' ? r.nameAr : r.nameEn} ({r.role})
-                </option>
-              ))}
-            </select>
-            {previewRole && (
-              <button
-                onClick={() => setPreviewRole(null)}
-                className="text-[11px] font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1.5 rounded-lg border border-rose-500/20 transition-all cursor-pointer"
+          {/* Simulator Controls (Dev Only) */}
+          {!import.meta.env.PROD && (
+            <div className="p-4 rounded-xl bg-[#090b10]/90 border border-white/[0.08] flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-bold text-white whitespace-nowrap">
+                  {language === 'ar' ? 'محاكاة الواجهة (بيئة التطوير):' : 'Preview Role (Dev Only):'}
+                </span>
+              </div>
+              <select
+                value={previewRole || ''}
+                onChange={(e) => setPreviewRole(e.target.value ? (e.target.value as UserRole) : null)}
+                className="bg-[#151824] border border-white/[0.12] rounded-lg px-3 py-1.5 text-xs font-bold text-white focus:outline-none focus:border-[#c8874b]"
               >
-                {language === 'ar' ? 'إلغاء المحاكاة' : 'Reset'}
-              </button>
-            )}
-          </div>
+                <option value="">{language === 'ar' ? 'الرتبة الفعلية الحالية' : 'Current Real Role'}</option>
+                {ROLES_DEFINITIONS.map(r => (
+                  <option key={r.role} value={r.role}>
+                    {language === 'ar' ? r.nameAr : r.nameEn} ({r.role})
+                  </option>
+                ))}
+              </select>
+              {previewRole && (
+                <button
+                  onClick={() => setPreviewRole(null)}
+                  className="text-[11px] font-bold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 px-2.5 py-1.5 rounded-lg border border-rose-500/20 transition-all cursor-pointer"
+                >
+                  {language === 'ar' ? 'إلغاء المحاكاة' : 'Reset'}
+                </button>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Feedback banner */}

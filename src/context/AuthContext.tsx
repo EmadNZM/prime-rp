@@ -80,10 +80,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Compute effective user taking role simulation into account (only if user is staff)
+  // Compute effective user taking role simulation into account (development only)
   const effectiveUser = useMemo(() => {
     if (!user) return null;
-    if (!previewRole) return user;
+    if (import.meta.env.PROD || !previewRole) return user;
     return {
       ...user,
       role: previewRole,
