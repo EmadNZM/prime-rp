@@ -103,59 +103,85 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
     setLanguage(language === 'ar' ? 'en' : 'ar');
   };
 
+  const [moreMenuOpen, setMoreMenuOpen] = useState<boolean>(false);
+
   const isOnline = telemetry?.online || (telemetry?.playersCount !== undefined && telemetry?.playersCount > 0);
   const playersOnline = isOnline ? (telemetry?.playersCount ?? 0) : 0;
   const maxPlayers = telemetry?.maxPlayers || 150;
 
+  // Split links into primary and secondary to guarantee zero overflow in English LTR
+  const primaryNavLinks = [
+    { id: 'home', label: t('nav.home') },
+    { id: 'store', label: t('nav.store') },
+    { id: 'rules', label: t('nav.rules') },
+    { id: 'jobs', label: t('nav.jobs') },
+    { id: 'players', label: t('nav.players') },
+    { id: 'leaderboard', label: t('nav.leaderboard') },
+  ];
+
+  const secondaryNavLinks = [
+    { id: 'about', label: language === 'ar' ? 'من نحن' : 'About' },
+    { id: 'news', label: t('nav.news') },
+    { id: 'faq', label: t('nav.faq') },
+    { id: 'support', label: t('nav.support') },
+  ];
+
+  const isSecondaryActive = secondaryNavLinks.some(link => link.id === currentTab);
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-3 sm:px-6 pt-2 pointer-events-none">
-      <div className="max-w-7xl mx-auto pointer-events-auto space-y-1.5">
+    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-2 sm:px-4 md:px-6 pt-2 pointer-events-none w-full max-w-full overflow-x-hidden">
+      <div className="max-w-7xl mx-auto pointer-events-auto space-y-1.5 w-full min-w-0">
         
-        {/* TOP BRAND MOTTO STRIP (As in the Poster) */}
-        <div className={`hidden md:flex items-center justify-between px-4 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all duration-300 ${
-          isScrolled ? 'opacity-0 h-0 overflow-hidden py-0 my-0' : 'bg-[#070707]/70 backdrop-blur-md border border-white/[0.04] text-[#A1A1A1]'
+        {/* TOP UTILITY STRIP (No Server Name, Safe Overflow) */}
+        <div className={`hidden md:flex items-center justify-between px-4 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all duration-300 w-full min-w-0 overflow-hidden ${
+          isScrolled ? 'opacity-0 h-0 overflow-hidden py-0 my-0' : 'bg-[#070707]/75 backdrop-blur-md border border-white/[0.04] text-[#A1A1A1]'
         }`}>
-          <div className="flex items-center gap-2 text-white/80 font-rajdhani">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#C8874B] animate-pulse" />
-            <span className="text-white font-black tracking-widest">PRIME RP</span>
-            <span className="text-[#666]">•</span>
-            <span className="text-[#A1A1A1] text-[10px]">PREMIUM FIVEM ROLEPLAY</span>
+          <div className="flex items-center gap-2 font-rajdhani shrink-0">
+            <span className="w-2 h-2 rounded-full bg-[#C8874B] animate-pulse" />
+            <span className="text-[#DF9F64] text-[10px] font-bold tracking-wider">
+              {language === 'ar' ? 'سيرفر فايف ام رول بلاي' : 'FIVEM ROLEPLAY'}
+            </span>
+            <span className="text-[#555]">•</span>
+            <span className="text-[#888] text-[10px] hidden sm:inline">
+              {language === 'ar' ? 'تجربة واقعية متكاملة' : 'PREMIUM COMMUNITY'}
+            </span>
           </div>
 
-          <div className="flex items-center gap-3 text-[10px] font-montserrat tracking-widest text-[#DF9F64]">
+          <div className="flex items-center gap-3 text-[10px] font-montserrat tracking-widest text-[#DF9F64] shrink-0 truncate">
             <span>A NEW ERA</span>
             <span className="text-white/20">•</span>
             <span>A REALER WORLD</span>
           </div>
 
-          <div className="text-[10px] italic text-[#888] font-serif">
+          <div className="text-[10px] italic text-[#888] font-serif shrink-0 hidden lg:block truncate">
             &ldquo;More Than a Server, A Community.&rdquo;
           </div>
         </div>
 
         <div
-          className={`flex items-center justify-between rounded-2xl transition-all duration-300 px-4 sm:px-5 py-2.5 ${
+          className={`flex items-center justify-between rounded-2xl transition-all duration-300 px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 w-full min-w-0 ${
             isScrolled
               ? 'bg-[#0b0d14]/92 backdrop-blur-2xl border border-white/[0.08] shadow-2xl shadow-black/90'
               : 'bg-[#0b0d14]/80 backdrop-blur-xl border border-white/[0.06] shadow-xl'
           }`}
         >
-          {/* BRAND LOGO */}
-          <div className="flex items-center gap-3 sm:gap-4">
+          {/* BRAND LOGO (Clean Mark - Server Name Removed from Navbar Bar) */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <button
               onClick={() => handleNavClick('home')}
               className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c8874b] rounded-xl group transition-transform hover:scale-105 cursor-pointer"
+              title={language === 'ar' ? 'الصفحة الرئيسية' : 'Home'}
             >
-              <PrimeLogo size="md" variant="navbar" showText={true} withGlow={true} />
+              <PrimeLogo size="md" variant="navbar" showText={false} withGlow={true} />
             </button>
 
             {/* LIVE SERVER TELEMETRY PILL (EchoRP / ONX Style) */}
-            <div className="hidden lg:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-[#11131c] border border-white/[0.06]">
+            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#11131c] border border-white/[0.06] shrink-0">
               <span className="relative flex h-2 w-2">
                 <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
                 <span className={`relative inline-flex rounded-full h-2 w-2 ${isOnline ? 'bg-emerald-500' : 'bg-amber-500'}`} />
               </span>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#969cad] font-rajdhani">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-[#969cad] font-rajdhani whitespace-nowrap">
                 {isOnline ? (
                   <>
                     <span className="text-white font-bold">{playersOnline}</span>
@@ -168,15 +194,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             </div>
           </div>
 
-          {/* DESKTOP NAVIGATION LINKS */}
-          <nav className="hidden xl:flex items-center gap-1 bg-[#08090d]/60 p-1 rounded-2xl border border-white/[0.04]" aria-label="Main Navigation">
-            {navLinks.map((link) => {
+          {/* DESKTOP NAVIGATION LINKS (Balanced to Never Overflow in English or Arabic) */}
+          <nav className="hidden xl:flex items-center gap-1 bg-[#08090d]/60 p-1 rounded-2xl border border-white/[0.04] min-w-0" aria-label="Main Navigation">
+            {primaryNavLinks.map((link) => {
               const active = currentTab === link.id;
               return (
                 <button
                   key={link.id}
                   onClick={() => handleNavClick(link.id)}
-                  className={`relative px-3.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer ${
+                  className={`relative px-2.5 2xl:px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer whitespace-nowrap ${
                     active
                       ? 'text-[#df9f64]'
                       : 'text-[#969cad] hover:text-white'
@@ -193,10 +219,76 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
                 </button>
               );
             })}
+
+            {/* Extra Desktop Links (Visible on ultra-wide 2xl screens) */}
+            <div className="hidden 2xl:flex items-center gap-1">
+              {secondaryNavLinks.map((link) => {
+                const active = currentTab === link.id;
+                return (
+                  <button
+                    key={link.id}
+                    onClick={() => handleNavClick(link.id)}
+                    className={`relative px-2.5 2xl:px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer whitespace-nowrap ${
+                      active
+                        ? 'text-[#df9f64]'
+                        : 'text-[#969cad] hover:text-white'
+                    }`}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="activeNavbarPill"
+                        className="absolute inset-0 bg-[#c8874b]/15 border border-[#c8874b]/40 rounded-xl shadow-[0_0_15px_rgba(200,135,75,0.2)]"
+                        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                      />
+                    )}
+                    <span className="relative z-10">{link.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* "More" Dropdown on standard xl screens to eliminate any overflow */}
+            <div className="relative 2xl:hidden">
+              <button
+                onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap ${
+                  isSecondaryActive
+                    ? 'text-[#df9f64] bg-[#c8874b]/10'
+                    : 'text-[#969cad] hover:text-white'
+                }`}
+              >
+                <span>{language === 'ar' ? 'المزيد' : 'More'}</span>
+                <ChevronDown className="w-3 h-3" />
+              </button>
+
+              {moreMenuOpen && (
+                <div
+                  className="absolute left-0 rtl:left-auto rtl:right-0 mt-2 w-44 bg-[#0d0f16]/95 border border-white/[0.08] rounded-2xl shadow-2xl py-1.5 z-50 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150"
+                  onMouseLeave={() => setMoreMenuOpen(false)}
+                >
+                  {secondaryNavLinks.map((link) => (
+                    <button
+                      key={link.id}
+                      onClick={() => {
+                        handleNavClick(link.id);
+                        setMoreMenuOpen(false);
+                      }}
+                      className={`w-full text-left rtl:text-right px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                        currentTab === link.id
+                          ? 'text-[#df9f64] bg-[#c8874b]/10'
+                          : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
+                      }`}
+                    >
+                      {link.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* RIGHT ACTION BUTTONS */}
-          <div className="flex items-center gap-2 sm:gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             {/* Direct Connect Action (EchoRP Style) */}
             <button
               onClick={() => {
@@ -206,17 +298,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
                   handleNavClick('players');
                 }
               }}
-              className="hidden md:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-[#c8874b]/20 active:scale-95 cursor-pointer"
+              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-[#c8874b]/20 active:scale-95 cursor-pointer whitespace-nowrap"
               title={language === 'ar' ? 'اتصال مباشر بالسيرفر' : 'Direct FiveM Connect'}
             >
               <Play className="w-3 h-3 fill-current" />
-              <span>{language === 'ar' ? 'دخول السيرفر' : 'Connect'}</span>
+              <span>{language === 'ar' ? 'دخول' : 'Connect'}</span>
             </button>
 
             {/* Store Shopping Cart (DusaDev Style) */}
             <button
               onClick={handleOpenCart}
-              className="relative p-2.5 rounded-xl bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b]/60 text-[#969cad] hover:text-[#df9f64] transition-all cursor-pointer group shadow-sm"
+              className="relative p-2 sm:p-2.5 rounded-xl bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b]/60 text-[#969cad] hover:text-[#df9f64] transition-all cursor-pointer group shadow-sm shrink-0"
               title={language === 'ar' ? 'سلة المشتريات' : 'Shopping Cart'}
               aria-label="Shopping Cart"
             >
@@ -231,7 +323,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             {/* Language Switcher */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-[#969cad] hover:text-[#df9f64] bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b]/50 transition-all cursor-pointer"
+              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-[#969cad] hover:text-[#df9f64] bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b]/50 transition-all cursor-pointer shrink-0"
               title="Switch Language / تغيير اللغة"
               aria-label="Switch Language"
             >

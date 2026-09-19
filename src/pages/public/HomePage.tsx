@@ -406,12 +406,18 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             className="absolute -inset-[5%] w-[110%] h-[110%] will-change-transform pointer-events-none"
           >
             <img
-              src="https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=2560&q=90"
-              alt="Prime RP Cinematic Night Backdrop"
-              className="w-full h-full object-cover object-center animate-cinematic-hero pointer-events-none transition-all duration-300"
+              src="/assets/gta-hero-night.jpg"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                if (target.src !== window.location.origin + '/assets/gta-los-santos-skyline.jpg') {
+                  target.src = '/assets/gta-los-santos-skyline.jpg';
+                }
+              }}
+              alt="Los Santos Downtown GTA Roleplay Skyline"
+              className="w-full h-full object-cover object-center animate-cinematic-hero pointer-events-none transition-all duration-500"
               style={{
-                opacity: Math.max(0.06, 0.56 - scrollFadeProgress * 0.48),
-                filter: `brightness(${Math.max(0.35, 0.95 - scrollFadeProgress * 0.6)}) contrast(1.12) blur(${scrollFadeProgress * 8}px)`
+                opacity: Math.max(0.12, 0.68 - scrollFadeProgress * 0.48),
+                filter: `brightness(${Math.max(0.42, 0.98 - scrollFadeProgress * 0.55)}) contrast(1.15) blur(${scrollFadeProgress * 8}px)`
               }}
             />
           </div>
@@ -681,21 +687,21 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
       </section>
 
       {/* ================= 2. FEATURES • VISUAL STORYTELLING (Exact Frame 2 Reference) ================= */}
-      <section id="about" className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10 scroll-mt-24">
+      <section id="about" className="py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10 scroll-mt-24">
         
-        {/* Section Header with Category Tabs (Exact Mockup 2 Header Bar) */}
+        {/* Section Header with Category Tabs */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
           <div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#c8874b]/10 text-[#df9f64] text-xs font-black mb-3 uppercase tracking-widest border border-[#c8874b]/20 font-rajdhani">
               <Sparkles className="w-3.5 h-3.5 text-[#c8874b]" />
-              <span>{language === 'ar' ? 'المميزات • سرد قصصي بصري' : 'FEATURES • VISUAL STORYTELLING'}</span>
+              <span>{language === 'ar' ? 'المميزات • عالم حي ومتكامل' : 'FEATURES • A LIVING ECOSYSTEM'}</span>
             </div>
             <h2 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight font-rajdhani">
               {language === 'ar' ? 'عالم واسع بمصائر وشخصيات حقيقية' : 'A Living City • Deep Realistic Roleplay'}
             </h2>
-            <p className="text-[#a1a1a1] text-xs sm:text-sm mt-1 max-w-xl leading-relaxed">
+            <p className="text-[#a1a1a1] text-xs sm:text-sm mt-1.5 max-w-xl leading-relaxed">
               {language === 'ar'
-                ? 'توازن واقعي بين سلطة القانون، والخدمات الإنسانية، والتجارة الحرة، وصراع العصابات المنضبط.'
+                ? 'توازن واقعي بين سلطة القانون، والخدمات الإنسانية، والتجارة الحرة، وصراع العصابات المنضبط بأعلى معايير الرول بلاي.'
                 : 'Immerse yourself in deeply scripted sectors with authentic MDTs, player-run corporations, courtroom trials, and underground racing culture.'}
             </p>
           </div>
@@ -704,90 +710,105 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
             {citySectors.map((sector) => {
               const active = activeTabSector === sector.id;
+              const SectorIcon = sector.icon;
               return (
                 <button
                   key={sector.id}
                   onClick={() => setActiveTabSector(sector.id)}
-                  className={`px-3.5 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                  className={`px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer flex items-center gap-2 ${
                     active
-                      ? 'bg-[#c8874b] text-black font-black shadow-lg shadow-[#c8874b]/20 uppercase tracking-wider'
-                      : 'bg-[#0d0f16] text-[#888] hover:text-white border border-white/[0.06]'
+                      ? 'bg-[#c8874b] text-black font-black shadow-lg shadow-[#c8874b]/25 uppercase tracking-wider'
+                      : 'bg-[#0d0f16] text-[#888] hover:text-white border border-white/[0.06] hover:border-white/[0.15]'
                   }`}
                 >
-                  {language === 'ar' ? sector.badgeAr : sector.badgeEn}
+                  <SectorIcon className="w-3.5 h-3.5" />
+                  <span>{language === 'ar' ? sector.badgeAr : sector.badgeEn}</span>
                 </button>
               );
             })}
           </div>
         </div>
 
-        {/* TOP ROW: 3 Editorial Visual Panels (Mockup 2 Upper Row) */}
+        {/* TOP ROW: 3 Editorial Visual Panels */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-6 mb-8">
           
           {/* Panel 1 (Wide): Amber Skyline Silhouette & New Era */}
-          <div className="md:col-span-6 rounded-3xl bg-[#0d0f16] border border-white/[0.08] relative overflow-hidden h-72 group">
+          <div className="md:col-span-6 rounded-3xl bg-[#0d0f16] border border-white/[0.08] hover:border-[#c8874b]/50 transition-all relative overflow-hidden h-80 group shadow-xl">
             <img
               src="https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=1200&q=80"
               alt="Metropolis Skyline"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-60"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f16] via-[#0d0f16]/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f16] via-[#0d0f16]/50 to-transparent" />
             <div className="absolute inset-0 p-6 sm:p-8 flex flex-col justify-end">
-              <span className="px-2.5 py-1 rounded-md bg-[#c8874b]/20 border border-[#c8874b]/40 text-[#df9f64] text-[10px] font-black uppercase tracking-wider self-start mb-2">
-                {language === 'ar' ? 'العالم الحي' : 'THE LIVING WORLD'}
-              </span>
-              <h3 className="text-2xl font-black text-white uppercase font-rajdhani mb-1">
+              <div className="flex items-center gap-2 mb-2.5">
+                <span className="px-2.5 py-1 rounded-md bg-[#c8874b]/20 border border-[#c8874b]/40 text-[#df9f64] text-[10px] font-black uppercase tracking-wider">
+                  {language === 'ar' ? 'العالم الحي' : 'THE LIVING WORLD'}
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-black/60 border border-white/[0.08] text-[10px] font-mono text-[#a1a1a1]">
+                  100% PLAYER DRIVEN
+                </span>
+              </div>
+              <h3 className="text-2xl sm:text-3xl font-black text-white uppercase font-rajdhani mb-2">
                 {language === 'ar' ? 'اقتصاد حر وصوت ثلاثي الأبعاد' : 'Sovereign Economy & 3D Spatial Audio'}
               </h3>
-              <p className="text-xs text-[#a1a1a1] line-clamp-2 max-w-md">
+              <p className="text-xs text-[#b8bcc8] line-clamp-2 max-w-lg leading-relaxed">
                 {language === 'ar' 
-                  ? 'كافة الشركات، العقارات، ومحطات التعديل يديرها اللاعبون بالكامل دون تدخل الإدارة.'
-                  : 'Player-run enterprises, real estate investments, and SaltyChat spatial radio.'}
+                  ? 'كافة الشركات، العقارات، ومحطات التعديل يديرها اللاعبون بالكامل دون تدخل الإدارة، مع راديو SaltyChat ثلاثي الأبعاد لنقاء صوتي واقعي.'
+                  : 'Player-run enterprises, real estate investments, and SaltyChat spatial radio for authentic proximity communication.'}
               </p>
             </div>
           </div>
 
           {/* Panel 2 (Center): High-Altitude LS Skyscraper telemetry */}
-          <div className="md:col-span-3 rounded-3xl bg-[#0d0f16] border border-white/[0.08] relative overflow-hidden h-72 group">
+          <div className="md:col-span-3 rounded-3xl bg-[#0d0f16] border border-white/[0.08] hover:border-sky-500/50 transition-all relative overflow-hidden h-80 group shadow-xl">
             <img
               src="https://images.unsplash.com/photo-1477959858617-67f30bc75b82?auto=format&fit=crop&w=800&q=80"
               alt="Night LS Lights"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-55"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f16] via-[#0d0f16]/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f16] via-[#0d0f16]/60 to-transparent" />
             <div className="absolute inset-0 p-6 flex flex-col justify-end">
-              <span className="text-[#38bdf8] font-mono text-xs font-bold mb-1">60 FPS • 128 TICK</span>
-              <h4 className="text-lg font-black text-white font-rajdhani">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[#38bdf8] font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-sky-500/10 border border-sky-500/20">
+                  60 FPS • 128 TICK
+                </span>
+              </div>
+              <h4 className="text-xl font-black text-white font-rajdhani mb-1">
                 {language === 'ar' ? 'سيرفر بدون لاق' : 'Zero Netcode Stutter'}
               </h4>
-              <p className="text-[11px] text-[#888] line-clamp-2 mt-1">
-                {language === 'ar' ? 'أداء مصقول ومعدل إطارات مستقر.' : 'Engineered for fluid pursuits.'}
+              <p className="text-xs text-[#969cad] line-clamp-2 leading-relaxed">
+                {language === 'ar' ? 'بنية برمجية محسنة تضمن سلاسة تامة أثناء المطاردات الكبرى.' : 'Custom synchronization architecture engineered for seamless high-speed pursuits.'}
               </p>
             </div>
           </div>
 
           {/* Panel 3 (Right): Police & Syndicate Encounter Portrait */}
-          <div className="md:col-span-3 rounded-3xl bg-[#0d0f16] border border-white/[0.08] relative overflow-hidden h-72 group">
+          <div className="md:col-span-3 rounded-3xl bg-[#0d0f16] border border-white/[0.08] hover:border-purple-500/50 transition-all relative overflow-hidden h-80 group shadow-xl">
             <img
               src="https://images.unsplash.com/photo-1508739773434-c26b3d09e071?auto=format&fit=crop&w=800&q=80"
               alt="Underground Noir"
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 opacity-55"
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f16] via-[#0d0f16]/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f16] via-[#0d0f16]/60 to-transparent" />
             <div className="absolute inset-0 p-6 flex flex-col justify-end">
-              <span className="text-[#a855f7] font-mono text-xs font-bold mb-1">FAIR PLAY RP</span>
-              <h4 className="text-lg font-black text-white font-rajdhani">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-purple-400 font-mono text-[10px] font-bold px-2 py-0.5 rounded bg-purple-500/10 border border-purple-500/20">
+                  FAIR PLAY RP
+                </span>
+              </div>
+              <h4 className="text-xl font-black text-white font-rajdhani mb-1">
                 {language === 'ar' ? 'قوانين صارمة وحماية' : 'Strict NLR & FearRP'}
               </h4>
-              <p className="text-[11px] text-[#888] line-clamp-2 mt-1">
-                {language === 'ar' ? 'محاكمات وجلسات قضاء علنية.' : 'Judicial due process guaranteed.'}
+              <p className="text-xs text-[#969cad] line-clamp-2 leading-relaxed">
+                {language === 'ar' ? 'محاكمات وجلسات قضاء علنية لحفظ حقوق كل مواطن.' : 'Judicial due process guaranteed by official Department of Justice magistrates.'}
               </p>
             </div>
           </div>
 
         </div>
 
-        {/* BOTTOM ROW: 4 Tall Character Archetype Cards (Mockup 2 Lower Row) */}
+        {/* BOTTOM ROW: 4 Tall Character Archetype Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {citySectors.slice(0, 4).map((sector) => {
             const Icon = sector.icon;
@@ -796,20 +817,20 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               <div
                 key={sector.id}
                 onClick={() => setActiveTabSector(sector.id)}
-                className={`group rounded-3xl bg-[#0d0f16] border overflow-hidden transition-all duration-300 cursor-pointer flex flex-col justify-between h-[420px] ${
+                className={`group rounded-3xl bg-[#0d0f16] border overflow-hidden transition-all duration-300 cursor-pointer flex flex-col justify-between h-[440px] ${
                   isSelected 
-                    ? 'border-[#c8874b] shadow-2xl shadow-[#c8874b]/15 scale-[1.01]' 
+                    ? 'border-[#c8874b] shadow-2xl shadow-[#c8874b]/20 scale-[1.01]' 
                     : 'border-white/[0.08] hover:border-[#c8874b]/60 hover:shadow-xl'
                 }`}
               >
                 {/* Upper 60% Portrait */}
-                <div className="h-[62%] relative overflow-hidden bg-[#131620]">
+                <div className="h-[60%] relative overflow-hidden bg-[#131620]">
                   <img
                     src={sector.image}
                     alt={sector.titleEn}
                     className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-700 opacity-80 group-hover:opacity-100"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f16] via-[#0d0f16]/30 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f16] via-[#0d0f16]/35 to-transparent" />
                   
                   {/* Department Pill */}
                   <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/85 backdrop-blur-md text-[10px] font-black uppercase tracking-wider border border-white/10"
@@ -821,26 +842,26 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
                   {/* Archetype Role Name */}
                   <div className="absolute bottom-3 left-4 rtl:left-auto rtl:right-4">
-                    <span className="text-base font-black text-white font-rajdhani block">
+                    <span className="text-lg font-black text-white font-rajdhani block">
                       {language === 'ar' ? sector.roleAr : sector.roleEn}
                     </span>
                   </div>
                 </div>
 
-                {/* Lower 40% Glass Container */}
-                <div className="p-5 flex-grow flex flex-col justify-between space-y-2">
-                  <p className="text-xs text-[#a1a1a1] leading-relaxed line-clamp-2">
+                {/* Lower 40% Container */}
+                <div className="p-5 flex-grow flex flex-col justify-between space-y-3">
+                  <p className="text-xs text-[#a1a1a8] leading-relaxed line-clamp-3">
                     {language === 'ar' ? sector.descAr : sector.descEn}
                   </p>
 
                   <div className="pt-2 border-t border-white/[0.05] flex items-center justify-between">
-                    <span className="text-[10px] text-[#666] font-mono">{sector.stats[0].val}</span>
+                    <span className="text-[10px] text-[#df9f64] font-mono font-bold">{sector.stats[0].val}</span>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setCurrentTab(sector.actionTab);
                       }}
-                      className="px-3 py-1.5 rounded-lg bg-[#131620] hover:bg-[#c8874b] text-[#df9f64] hover:text-black text-[11px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg bg-[#131620] hover:bg-[#c8874b] text-[#df9f64] hover:text-black text-[11px] font-bold uppercase transition-all flex items-center gap-1 cursor-pointer border border-white/[0.06] hover:border-[#c8874b]"
                     >
                       <span>{language === 'ar' ? 'التفاصيل' : 'Explore'}</span>
                       <ArrowIcon className="w-3 h-3" />
@@ -855,10 +876,10 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
       </section>
 
       {/* ================= 3. STORE • MODERN & INTERACTIVE (Exact Frame 3 Reference) ================= */}
-      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
+      <section className="py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
         
-        {/* Section Header Bar (Matching Exact Mockup 3) */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-10 gap-4">
+        {/* Section Header Bar */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
           <div>
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#c8874b]/10 text-[#df9f64] text-xs font-black mb-2 uppercase tracking-widest border border-[#c8874b]/20 font-rajdhani">
               <Crown className="w-3.5 h-3.5 text-[#c8874b]" />
@@ -867,6 +888,9 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             <h2 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight font-rajdhani">
               {language === 'ar' ? 'صالة عرض المركبات والباقات الملكية' : 'Tebex VIP Showroom & Packages'}
             </h2>
+            <p className="text-[#a1a1a1] text-xs sm:text-sm mt-1 max-w-xl">
+              {language === 'ar' ? 'تسليم تلقائي فوري داخل اللعبة بمجرد إتمام العملية عبر بوابات دفع آمنة ومعتمدة.' : 'Instant automated in-game delivery upon checkout via verified secure payment gateways.'}
+            </p>
           </div>
           <button
             onClick={() => setCurrentTab('store')}
@@ -881,7 +905,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           {/* Card 1: Overflod Autarch (White Supercar) */}
-          <div className="rounded-3xl bg-[#0d0f16] border border-white/[0.08] hover:border-[#c8874b] p-5 shadow-2xl relative overflow-hidden transition-all group flex flex-col justify-between">
+          <div className="rounded-3xl bg-[#0d0f16] border border-white/[0.08] hover:border-[#c8874b] p-5 shadow-2xl relative overflow-hidden transition-all duration-300 card-hover-lift group flex flex-col justify-between">
             <div>
               <div className="h-52 rounded-2xl overflow-hidden mb-4 relative bg-[#131620]">
                 <img
@@ -892,17 +916,21 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md text-[#38bdf8] text-[10px] font-black uppercase tracking-wider border border-white/10">
                   VEHICLES
                 </div>
+                <div className="absolute bottom-2.5 left-2.5 rtl:left-auto rtl:right-2.5 flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-white/90">340 KM/H</span>
+                  <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-[#df9f64]">AWD</span>
+                </div>
               </div>
               <h3 className="text-xl font-black text-white group-hover:text-[#df9f64] transition-colors font-rajdhani">
                 OVERFLOD AUTARCH HYPERCAR
               </h3>
-              <p className="text-xs text-[#a1a1a1] leading-relaxed mt-1 line-clamp-2">
+              <p className="text-xs text-[#a1a1a8] leading-relaxed mt-1 line-clamp-2">
                 Twin-turbo custom engine audio, carbon-fiber aerodynamics, and reserved vanity registration.
               </p>
             </div>
             <div className="pt-4 mt-4 border-t border-white/[0.06] flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-[#666] block font-bold uppercase">Price</span>
+                <span className="text-[10px] text-[#717684] block font-bold uppercase">Price</span>
                 <span className="text-2xl font-black text-[#df9f64] font-rajdhani">$34.99 <span className="text-xs font-normal text-[#888]">USD</span></span>
               </div>
               <button
@@ -916,7 +944,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
           </div>
 
           {/* Card 2: Pfister Comet S2 (Orange/Bronze Supercar) */}
-          <div className="rounded-3xl bg-[#0d0f16] border border-[#c8874b]/50 hover:border-[#df9f64] p-5 shadow-2xl relative overflow-hidden transition-all group flex flex-col justify-between">
+          <div className="rounded-3xl bg-[#0d0f16] border border-[#c8874b]/50 hover:border-[#df9f64] p-5 shadow-2xl relative overflow-hidden transition-all duration-300 card-hover-lift group flex flex-col justify-between">
             <div>
               <div className="h-52 rounded-2xl overflow-hidden mb-4 relative bg-[#131620]">
                 <img
@@ -927,17 +955,21 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2.5 py-1 rounded-md bg-[#c8874b]/20 border border-[#c8874b]/40 text-[#df9f64] text-[10px] font-black uppercase tracking-wider">
                   FEATURED
                 </div>
+                <div className="absolute bottom-2.5 left-2.5 rtl:left-auto rtl:right-2.5 flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-white/90">315 KM/H</span>
+                  <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-[#df9f64]">DRIFT TUNE</span>
+                </div>
               </div>
               <h3 className="text-xl font-black text-white group-hover:text-[#df9f64] transition-colors font-rajdhani">
                 PFISTER COMET S2 TUNER
               </h3>
-              <p className="text-xs text-[#a1a1a1] leading-relaxed mt-1 line-clamp-2">
+              <p className="text-xs text-[#a1a1a8] leading-relaxed mt-1 line-clamp-2">
                 Midnight drift tune, bespoke widebody package, anti-lag ECU map, and custom interior trim.
               </p>
             </div>
             <div className="pt-4 mt-4 border-t border-white/[0.06] flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-[#666] block font-bold uppercase">Price</span>
+                <span className="text-[10px] text-[#717684] block font-bold uppercase">Price</span>
                 <span className="text-2xl font-black text-[#df9f64] font-rajdhani">$29.99 <span className="text-xs font-normal text-[#888]">USD</span></span>
               </div>
               <button
@@ -951,7 +983,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
           </div>
 
           {/* Card 3: Enus Paragon R (Charcoal Luxury Coupe) */}
-          <div className="rounded-3xl bg-[#0d0f16] border border-white/[0.08] hover:border-[#c8874b] p-5 shadow-2xl relative overflow-hidden transition-all group flex flex-col justify-between">
+          <div className="rounded-3xl bg-[#0d0f16] border border-white/[0.08] hover:border-[#c8874b] p-5 shadow-2xl relative overflow-hidden transition-all duration-300 card-hover-lift group flex flex-col justify-between">
             <div>
               <div className="h-52 rounded-2xl overflow-hidden mb-4 relative bg-[#131620]">
                 <img
@@ -962,17 +994,21 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md text-[#a855f7] text-[10px] font-black uppercase tracking-wider border border-white/10">
                   EXECUTIVE
                 </div>
+                <div className="absolute bottom-2.5 left-2.5 rtl:left-auto rtl:right-2.5 flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-white/90">285 KM/H</span>
+                  <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-emerald-400">ARMORED</span>
+                </div>
               </div>
               <h3 className="text-xl font-black text-white group-hover:text-[#df9f64] transition-colors font-rajdhani">
                 ENUS PARAGON R ARMORED
               </h3>
-              <p className="text-xs text-[#a1a1a1] leading-relaxed mt-1 line-clamp-2">
+              <p className="text-xs text-[#a1a1a8] leading-relaxed mt-1 line-clamp-2">
                 Reinforced bullet-resistant glass, presidential leather cabin, and silent executive cruiser engine.
               </p>
             </div>
             <div className="pt-4 mt-4 border-t border-white/[0.06] flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-[#666] block font-bold uppercase">Price</span>
+                <span className="text-[10px] text-[#717684] block font-bold uppercase">Price</span>
                 <span className="text-2xl font-black text-[#df9f64] font-rajdhani">$24.99 <span className="text-xs font-normal text-[#888]">USD</span></span>
               </div>
               <button
@@ -986,7 +1022,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
           </div>
 
           {/* Card 4: Grotti Itali RSX (Silver Exotic Hypercar) */}
-          <div className="rounded-3xl bg-[#0d0f16] border border-white/[0.08] hover:border-[#c8874b] p-5 shadow-2xl relative overflow-hidden transition-all group flex flex-col justify-between">
+          <div className="rounded-3xl bg-[#0d0f16] border border-white/[0.08] hover:border-[#c8874b] p-5 shadow-2xl relative overflow-hidden transition-all duration-300 card-hover-lift group flex flex-col justify-between">
             <div>
               <div className="h-52 rounded-2xl overflow-hidden mb-4 relative bg-[#131620]">
                 <img
@@ -997,17 +1033,21 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md text-[#38bdf8] text-[10px] font-black uppercase tracking-wider border border-white/10">
                   VEHICLES
                 </div>
+                <div className="absolute bottom-2.5 left-2.5 rtl:left-auto rtl:right-2.5 flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-white/90">350 KM/H</span>
+                  <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-[#38bdf8]">V12 NA</span>
+                </div>
               </div>
               <h3 className="text-xl font-black text-white group-hover:text-[#df9f64] transition-colors font-rajdhani">
                 GROTTI ITALI RSX SPEEDSTER
               </h3>
-              <p className="text-xs text-[#a1a1a1] leading-relaxed mt-1 line-clamp-2">
+              <p className="text-xs text-[#a1a1a8] leading-relaxed mt-1 line-clamp-2">
                 Active aerodynamic wing, high-revving naturally aspirated V12 sound, and carbon ceramic brakes.
               </p>
             </div>
             <div className="pt-4 mt-4 border-t border-white/[0.06] flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-[#666] block font-bold uppercase">Price</span>
+                <span className="text-[10px] text-[#717684] block font-bold uppercase">Price</span>
                 <span className="text-2xl font-black text-[#df9f64] font-rajdhani">$39.99 <span className="text-xs font-normal text-[#888]">USD</span></span>
               </div>
               <button
@@ -1021,7 +1061,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
           </div>
 
           {/* Card 5: Prime VIP Empire Pass (Syndicate Executive Bundle) */}
-          <div className="rounded-3xl bg-[#0d0f16] border border-[#c8874b]/50 hover:border-[#df9f64] p-5 shadow-2xl relative overflow-hidden transition-all group flex flex-col justify-between">
+          <div className="rounded-3xl bg-[#0d0f16] border border-[#c8874b]/50 hover:border-[#df9f64] p-5 shadow-2xl relative overflow-hidden transition-all duration-300 card-hover-lift group flex flex-col justify-between">
             <div>
               <div className="h-52 rounded-2xl overflow-hidden mb-4 relative bg-[#131620]">
                 <img
@@ -1032,17 +1072,21 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2.5 py-1 rounded-md bg-[#c8874b]/20 border border-[#c8874b]/40 text-[#df9f64] text-[10px] font-black uppercase tracking-wider">
                   VIP PASS
                 </div>
+                <div className="absolute bottom-2.5 left-2.5 rtl:left-auto rtl:right-2.5 flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-[#df9f64]">QUEUE #1</span>
+                  <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-emerald-400">$250K CASH</span>
+                </div>
               </div>
               <h3 className="text-xl font-black text-white group-hover:text-[#df9f64] transition-colors font-rajdhani">
                 PRIME VIP EMPIRE PASS
               </h3>
-              <p className="text-xs text-[#a1a1a1] leading-relaxed mt-1 line-clamp-2">
-                Sovereign citizen status, priority queue #1, custom Discord badge, and 5-car garage.
+              <p className="text-xs text-[#a1a1a8] leading-relaxed mt-1 line-clamp-2">
+                Sovereign citizen status, priority queue #1, custom Discord badge, and 5-car garage allocation.
               </p>
             </div>
             <div className="pt-4 mt-4 border-t border-white/[0.06] flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-[#666] block font-bold uppercase">Price</span>
+                <span className="text-[10px] text-[#717684] block font-bold uppercase">Price</span>
                 <span className="text-2xl font-black text-[#df9f64] font-rajdhani">$49.99 <span className="text-xs font-normal text-[#888]">USD</span></span>
               </div>
               <button
@@ -1056,7 +1100,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
           </div>
 
           {/* Card 6: Vinewood Hills Penthouse (Luxury Estate MLO) */}
-          <div className="rounded-3xl bg-[#0d0f16] border border-white/[0.08] hover:border-[#c8874b] p-5 shadow-2xl relative overflow-hidden transition-all group flex flex-col justify-between">
+          <div className="rounded-3xl bg-[#0d0f16] border border-white/[0.08] hover:border-[#c8874b] p-5 shadow-2xl relative overflow-hidden transition-all duration-300 card-hover-lift group flex flex-col justify-between">
             <div>
               <div className="h-52 rounded-2xl overflow-hidden mb-4 relative bg-[#131620]">
                 <img
@@ -1067,17 +1111,21 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md text-[#a855f7] text-[10px] font-black uppercase tracking-wider border border-white/10">
                   PROPERTIES
                 </div>
+                <div className="absolute bottom-2.5 left-2.5 rtl:left-auto rtl:right-2.5 flex items-center gap-1.5">
+                  <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-purple-400">HELIPAD</span>
+                  <span className="px-2 py-0.5 rounded bg-black/70 backdrop-blur-md text-[10px] font-mono text-white/90">10-GARAGE</span>
+                </div>
               </div>
               <h3 className="text-xl font-black text-white group-hover:text-[#df9f64] transition-colors font-rajdhani">
                 VINEWOOD LUXURY PENTHOUSE
               </h3>
-              <p className="text-xs text-[#a1a1a1] leading-relaxed mt-1 line-clamp-2">
+              <p className="text-xs text-[#a1a1a8] leading-relaxed mt-1 line-clamp-2">
                 Custom MLO interior, private infinity pool overlooking LS, rooftop helipad, and 10-car garage.
               </p>
             </div>
             <div className="pt-4 mt-4 border-t border-white/[0.06] flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-[#666] block font-bold uppercase">Price</span>
+                <span className="text-[10px] text-[#717684] block font-bold uppercase">Price</span>
                 <span className="text-2xl font-black text-[#df9f64] font-rajdhani">$44.99 <span className="text-xs font-normal text-[#888]">USD</span></span>
               </div>
               <button
@@ -1094,9 +1142,10 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
         {/* Regular Store Grid */}
         {featuredProducts.length > 0 && (
-          <div>
-            <div className="text-xs font-bold text-[#7a8091] uppercase tracking-wider mb-4">
-              {language === 'ar' ? 'حزم وعناصر إضافية للمواطنين:' : 'Additional Citizen Packages & Items:'}
+          <div className="mt-14">
+            <div className="text-xs font-bold text-[#a1a1a8] uppercase tracking-wider mb-5 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-[#c8874b]" />
+              <span>{language === 'ar' ? 'حزم وعناصر إضافية للمواطنين:' : 'Additional Citizen Packages & Items:'}</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {featuredProducts.map((product) => {
@@ -1129,7 +1178,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
                     <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
                       <div>
-                        <span className="text-[10px] text-[#666] block font-bold uppercase tracking-wider">
+                        <span className="text-[10px] text-[#717684] block font-bold uppercase tracking-wider">
                           {language === 'ar' ? 'السعر' : 'Price'}
                         </span>
                         <span className="text-xl font-black text-[#df9f64] font-rajdhani">
@@ -1159,116 +1208,155 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
       </section>
 
       {/* ================= ARCHITECTURE PILLARS (SERVER SPECS) ================= */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
+        <div className="text-center max-w-2xl mx-auto mb-14">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#c8874b]/10 text-[#df9f64] text-xs font-black mb-3 uppercase tracking-widest border border-[#c8874b]/20 font-rajdhani">
+            <Server className="w-3.5 h-3.5 text-[#c8874b]" />
+            <span>{language === 'ar' ? 'البنية التحتية والمواصفات' : 'SYSTEM ARCHITECTURE & STANDARDS'}</span>
+          </div>
+          <h2 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight font-rajdhani">
             {t('features.title')}
           </h2>
-          <p className="text-[#969cad] text-xs sm:text-sm mt-2">
+          <p className="text-[#a1a1a8] text-xs sm:text-sm mt-2">
             {t('features.subtitle')}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-[#c8874b]/50 transition-all card-hover-lift group">
-            <div className="w-12 h-12 rounded-xl bg-[#c8874b]/10 border border-[#c8874b]/20 flex items-center justify-center mb-4 text-[#df9f64] group-hover:scale-110 transition-transform">
-              <DollarSign className="w-6 h-6" />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-[#c8874b]/60 transition-all card-hover-lift group shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-[#c8874b]/10 border border-[#c8874b]/20 flex items-center justify-center text-[#df9f64] group-hover:scale-110 transition-transform">
+                <DollarSign className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                100% PLAYER RUN
+              </span>
             </div>
-            <h3 className="text-base font-black text-white mb-1.5">{t('features.economy')}</h3>
-            <p className="text-xs text-[#7a8091] leading-relaxed">{t('features.economyDesc')}</p>
+            <h3 className="text-lg font-black text-white mb-2 font-rajdhani">{t('features.economy')}</h3>
+            <p className="text-xs text-[#a1a1a8] leading-relaxed">{t('features.economyDesc')}</p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-[#c8874b]/50 transition-all card-hover-lift group">
-            <div className="w-12 h-12 rounded-xl bg-[#c8874b]/10 border border-[#c8874b]/20 flex items-center justify-center mb-4 text-[#df9f64] group-hover:scale-110 transition-transform">
-              <Briefcase className="w-6 h-6" />
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-[#c8874b]/60 transition-all card-hover-lift group shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-[#c8874b]/10 border border-[#c8874b]/20 flex items-center justify-center text-[#df9f64] group-hover:scale-110 transition-transform">
+                <Briefcase className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                GOVERNMENT MDT
+              </span>
             </div>
-            <h3 className="text-base font-black text-white mb-1.5">{t('features.jobs')}</h3>
-            <p className="text-xs text-[#7a8091] leading-relaxed">{t('features.jobsDesc')}</p>
+            <h3 className="text-lg font-black text-white mb-2 font-rajdhani">{t('features.jobs')}</h3>
+            <p className="text-xs text-[#a1a1a8] leading-relaxed">{t('features.jobsDesc')}</p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-[#c8874b]/50 transition-all card-hover-lift group">
-            <div className="w-12 h-12 rounded-xl bg-[#c8874b]/10 border border-[#c8874b]/20 flex items-center justify-center mb-4 text-[#df9f64] group-hover:scale-110 transition-transform">
-              <Shield className="w-6 h-6" />
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-[#c8874b]/60 transition-all card-hover-lift group shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-[#c8874b]/10 border border-[#c8874b]/20 flex items-center justify-center text-[#df9f64] group-hover:scale-110 transition-transform">
+                <Shield className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+                ZERO TOLERANCE
+              </span>
             </div>
-            <h3 className="text-base font-black text-white mb-1.5">{t('features.security')}</h3>
-            <p className="text-xs text-[#7a8091] leading-relaxed">{t('features.securityDesc')}</p>
+            <h3 className="text-lg font-black text-white mb-2 font-rajdhani">{t('features.security')}</h3>
+            <p className="text-xs text-[#a1a1a8] leading-relaxed">{t('features.securityDesc')}</p>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-[#c8874b]/50 transition-all card-hover-lift group">
-            <div className="w-12 h-12 rounded-xl bg-[#c8874b]/10 border border-[#c8874b]/20 flex items-center justify-center mb-4 text-[#df9f64] group-hover:scale-110 transition-transform">
-              <Zap className="w-6 h-6" />
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-[#c8874b]/60 transition-all card-hover-lift group shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="w-12 h-12 rounded-xl bg-[#c8874b]/10 border border-[#c8874b]/20 flex items-center justify-center text-[#df9f64] group-hover:scale-110 transition-transform">
+                <Zap className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#c8874b]/15 text-[#df9f64] border border-[#c8874b]/30">
+                128 TICKRATE
+              </span>
             </div>
-            <h3 className="text-base font-black text-white mb-1.5">{t('features.performance')}</h3>
-            <p className="text-xs text-[#7a8091] leading-relaxed">{t('features.performanceDesc')}</p>
+            <h3 className="text-lg font-black text-white mb-2 font-rajdhani">{t('features.performance')}</h3>
+            <p className="text-xs text-[#a1a1a8] leading-relaxed">{t('features.performanceDesc')}</p>
           </div>
         </div>
       </section>
 
       {/* ================= FAIR PLAY & GOLDEN DIRECTIVES ================= */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold mb-3 uppercase tracking-wider border border-emerald-500/20">
+      <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
+        <div className="text-center max-w-3xl mx-auto mb-14">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-bold mb-3 uppercase tracking-wider border border-emerald-500/20">
             <CheckCircle2 className="w-3.5 h-3.5" />
             <span>{language === 'ar' ? 'مبادئ اللعب النظيف' : 'Roleplay Integrity & Code'}</span>
           </div>
-          <h2 className="text-2xl sm:text-4xl font-black text-white uppercase tracking-tight">
+          <h2 className="text-3xl sm:text-5xl font-black text-white uppercase tracking-tight font-rajdhani">
             {language === 'ar' ? 'القواعد الأساسية لتجربة رول بلاي نقية' : 'The Golden Pillars of Serious RP'}
           </h2>
-          <p className="text-[#969cad] text-xs sm:text-sm mt-2">
+          <p className="text-[#a1a1a8] text-xs sm:text-sm mt-2 leading-relaxed">
             {language === 'ar'
-              ? 'نحرص في PRIME RP على بيئة لعب تحترم السيناريوهات الدرامية وتبتعد تماماً عن الفوضى.'
+              ? 'نحرص في PRIME RP على بيئة لعب تحترم السيناريوهات الدرامية وتمنح كل شخصية مساحتها الحقيقية للتطور والتأثير.'
               : 'Fair-play standards ensure every interaction develops into memorable, character-driven storylines.'}
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-rose-500/30 transition-colors">
-            <div className="flex items-center gap-2 text-rose-400 font-black text-sm mb-3">
-              <XCircle className="w-4 h-4" />
-              <span>{language === 'ar' ? 'ممنوع RDM / VDM' : 'No RDM / VDM'}</span>
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-rose-500/40 transition-all shadow-lg flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 text-rose-400 font-black text-sm">
+                  <XCircle className="w-4 h-4" />
+                  <span>{language === 'ar' ? 'ممنوع RDM / VDM' : 'No RDM / VDM'}</span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-500/10 text-rose-400 border border-rose-500/20">STRICT</span>
+              </div>
+              <p className="text-xs text-[#a1a1a8] leading-relaxed mb-4">
+                {language === 'ar'
+                  ? 'يُحظر منعاً باتاً قتل أي لاعب أو صدمه بالمركبة دون وجود دافع درامي وسيناريو مسبق ومبرر كامل.'
+                  : 'Killing or running over citizens without prior verbal interaction and legitimate storyline context is strictly forbidden.'}
+              </p>
             </div>
-            <p className="text-xs text-[#7a8091] leading-relaxed mb-4">
-              {language === 'ar'
-                ? 'يُحظر منعاً باتاً قتل أي لاعب أو صدمه بالمركبة دون وجود دافع درامي وسيناريو مسبق ومبرر كامل.'
-                : 'Killing or running over citizens without prior verbal interaction and legitimate storyline context is strictly forbidden.'}
-            </p>
-            <div className="p-2.5 rounded-lg bg-[#08090d] border border-white/[0.05] text-[11px] text-emerald-400 font-bold">
+            <div className="p-3 rounded-xl bg-[#08090d] border border-white/[0.05] text-[11px] text-emerald-400 font-bold">
               ✓ {language === 'ar' ? 'الواجب: التحاور وبدء السيناريو أولاً' : 'Requirement: Verbal RP interaction first'}
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-amber-500/30 transition-colors">
-            <div className="flex items-center gap-2 text-amber-400 font-black text-sm mb-3">
-              <ShieldAlert className="w-4 h-4" />
-              <span>{language === 'ar' ? 'قيمة الحياة (FearRP)' : 'Fear RP & Value of Life'}</span>
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-amber-500/40 transition-all shadow-lg flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 text-amber-400 font-black text-sm">
+                  <ShieldAlert className="w-4 h-4" />
+                  <span>{language === 'ar' ? 'قيمة الحياة (FearRP)' : 'Fear RP & Value of Life'}</span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">SURVIVAL</span>
+              </div>
+              <p className="text-xs text-[#a1a1a8] leading-relaxed mb-4">
+                {language === 'ar'
+                  ? 'عندما يتم تهديدك بسلاح من قبل عدة أشخاص، يجب أن تظهر الخوف على حياة شخصيتك وتستجيب للأوامر.'
+                  : 'When faced with superior armed threats, you must fear for your character\'s survival and comply with directives.'}
+              </p>
             </div>
-            <p className="text-xs text-[#7a8091] leading-relaxed mb-4">
-              {language === 'ar'
-                ? 'عندما يتم تهديدك بسلاح من قبل عدة أشخاص، يجب أن تظهر الخوف على حياة شخصيتك وتستجيب للأوامر.'
-                : 'When faced with superior armed threats, you must fear for your character\'s survival and comply with directives.'}
-            </p>
-            <div className="p-2.5 rounded-lg bg-[#08090d] border border-white/[0.05] text-[11px] text-emerald-400 font-bold">
+            <div className="p-3 rounded-xl bg-[#08090d] border border-white/[0.05] text-[11px] text-emerald-400 font-bold">
               ✓ {language === 'ar' ? 'الواجب: الحفاظ على حياتك كأولوية' : 'Requirement: Value your life above pride'}
             </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-purple-500/30 transition-colors">
-            <div className="flex items-center gap-2 text-purple-400 font-black text-sm mb-3">
-              <Cpu className="w-4 h-4" />
-              <span>{language === 'ar' ? 'ممنوع الميتا والباور' : 'No Metagaming & Powergaming'}</span>
+          <div className="p-6 rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-purple-500/40 transition-all shadow-lg flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2 text-purple-400 font-black text-sm">
+                  <Cpu className="w-4 h-4" />
+                  <span>{language === 'ar' ? 'ممنوع الميتا والباور' : 'No Metagaming & Powergaming'}</span>
+                </div>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">REALISM</span>
+              </div>
+              <p className="text-xs text-[#a1a1a8] leading-relaxed mb-4">
+                {language === 'ar'
+                  ? 'استخدام معلومات الديسكورد داخل اللعبة أو فرض أفعال خارقة لا يمكن للطرف الآخر التفاعل معها ممنوع قطعياً.'
+                  : 'Using out-of-game knowledge or forcing unrealistic actions that give opponents no counter-play is prohibited.'}
+              </p>
             </div>
-            <p className="text-xs text-[#7a8091] leading-relaxed mb-4">
-              {language === 'ar'
-                ? 'استخدام معلومات الديسكورد داخل اللعبة أو فرض أفعال خارقة لا يمكن للطرف الآخر التفاعل معها ممنوع قطعياً.'
-                : 'Using out-of-game knowledge or forcing unrealistic actions that give opponents no counter-play is prohibited.'}
-            </p>
-            <div className="p-2.5 rounded-lg bg-[#08090d] border border-white/[0.05] text-[11px] text-emerald-400 font-bold">
+            <div className="p-3 rounded-xl bg-[#08090d] border border-white/[0.05] text-[11px] text-emerald-400 font-bold">
               ✓ {language === 'ar' ? 'الواجب: الفصل التام بين الشخصية والواقع' : 'Requirement: Strict IC vs OOC separation'}
             </div>
           </div>
         </div>
 
-        <div className="text-center mt-8">
+        <div className="text-center mt-10">
           <button
             onClick={() => setCurrentTab('rules')}
             className="inline-flex items-center gap-2 text-xs font-bold text-[#c8874b] hover:text-[#df9f64] transition-colors cursor-pointer"
@@ -1284,67 +1372,78 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c8874b]/10 text-[#df9f64] text-xs font-bold mb-2 uppercase tracking-wider border border-[#c8874b]/20">
-                <Briefcase className="w-3.5 h-3.5" />
-                <span>Careers & Recruitment</span>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#c8874b]/10 text-[#df9f64] text-xs font-black mb-3 uppercase tracking-widest border border-[#c8874b]/20 font-rajdhani">
+                <Briefcase className="w-3.5 h-3.5 text-[#c8874b]" />
+                <span>{language === 'ar' ? 'الوظائف والتوظيف الحكومي' : 'CAREERS & FACTION RECRUITMENT'}</span>
               </div>
-              <h2 className="text-3xl font-black text-white">{t('jobs.title')}</h2>
+              <h2 className="text-3xl sm:text-4xl font-black text-white uppercase tracking-tight font-rajdhani">
+                {t('jobs.title')}
+              </h2>
             </div>
             <button
               onClick={() => setCurrentTab('jobs')}
-              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#c8874b] hover:text-[#df9f64] transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-wider text-[#c8874b] hover:text-[#df9f64] transition-colors cursor-pointer group"
             >
               <span>{language === 'ar' ? 'استعراض كافة الوظائف الشاغرة' : 'View All Opportunities'}</span>
-              <ArrowIcon className="w-4 h-4" />
+              <ArrowIcon className="w-4 h-4 transition-transform group-hover:translate-x-1 rtl:group-hover:-translate-x-1" />
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {featuredJobs.map((job) => {
               const trans = job.translations[language] || job.translations.ar;
+              const isHiring = job.status === 'HIRING_OPEN';
               return (
                 <div
                   key={job.id}
-                  className="rounded-2xl bg-[#0d0f16] border border-white/[0.06] hover:border-[#c8874b]/60 p-6 flex flex-col justify-between transition-all card-hover-lift group"
+                  className="rounded-2xl bg-[#0d0f16] border border-white/[0.07] hover:border-[#c8874b]/60 p-6 flex flex-col justify-between transition-all card-hover-lift group relative overflow-hidden shadow-lg"
                 >
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-start">
-                      <span className="px-2.5 py-1 rounded-md bg-[#131620] text-[#df9f64] text-[10px] font-bold uppercase tracking-wider border border-white/[0.06]">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#c8874b]/5 rounded-bl-full pointer-events-none group-hover:bg-[#c8874b]/10 transition-colors" />
+
+                  <div className="space-y-4 relative z-10">
+                    <div className="flex justify-between items-start gap-2">
+                      <span className="px-2.5 py-1 rounded-lg bg-[#131620] text-[#df9f64] text-[10px] font-black uppercase tracking-wider border border-white/[0.08] font-rajdhani">
                         {job.category}
                       </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                        job.status === 'HIRING_OPEN'
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                          : 'bg-[#131620] text-[#777]'
+                      <span className={`text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1.5 uppercase tracking-wider ${
+                        isHiring
+                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25'
+                          : 'bg-[#131620] text-[#777] border border-white/[0.06]'
                       }`}>
-                        {job.status === 'HIRING_OPEN' ? (language === 'ar' ? 'التقديم متاح' : 'Hiring Active') : (language === 'ar' ? 'مغلق مؤقتاً' : 'Closed')}
+                        <span className={`w-1.5 h-1.5 rounded-full ${isHiring ? 'bg-emerald-400 animate-pulse' : 'bg-[#555]'}`} />
+                        {isHiring ? (language === 'ar' ? 'التقديم متاح' : 'Hiring Open') : (language === 'ar' ? 'مغلق مؤقتاً' : 'Closed')}
                       </span>
                     </div>
 
-                    <h3 className="text-lg font-black text-white group-hover:text-[#df9f64] transition-colors">
+                    <h3 className="text-xl font-black text-white group-hover:text-[#df9f64] transition-colors font-rajdhani tracking-tight">
                       {trans.name}
                     </h3>
 
-                    <p className="text-xs text-[#7a8091] line-clamp-3 leading-relaxed">
+                    <p className="text-xs text-[#969cad] line-clamp-3 leading-relaxed">
                       {trans.description}
                     </p>
 
-                    <div className="pt-2">
-                      <span className="text-xs text-[#666] block mb-0.5">
-                        {language === 'ar' ? 'الراتب التقديري:' : 'Hourly Wage:'}
-                      </span>
-                      <span className="text-lg font-black text-[#df9f64] font-rajdhani">
-                        ${job.salaryMin} - ${job.salaryMax} / hr
+                    <div className="pt-3 border-t border-white/[0.06] flex items-center justify-between">
+                      <div>
+                        <span className="text-[10px] text-[#666] block uppercase tracking-wider font-bold">
+                          {language === 'ar' ? 'الراتب المعتمد:' : 'Hourly Compensation:'}
+                        </span>
+                        <span className="text-base font-black text-[#df9f64] font-rajdhani">
+                          ${job.salaryMin} - ${job.salaryMax} <span className="text-xs text-[#969cad] font-normal">/ hr</span>
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-2 py-1 rounded-md border border-emerald-500/20">
+                        {language === 'ar' ? 'تأمين حكومي' : 'State Insured'}
                       </span>
                     </div>
                   </div>
 
-                  <div className="pt-6 border-t border-white/[0.06] mt-4">
+                  <div className="pt-5 border-t border-white/[0.06] mt-4 relative z-10">
                     <button
                       onClick={() => setCurrentTab('jobs')}
-                      className="w-full py-3 rounded-xl bg-[#131620] hover:bg-[#1c202d] text-white text-xs font-bold uppercase tracking-wider transition-all border border-white/[0.08] hover:border-[#c8874b] cursor-pointer flex items-center justify-center gap-2"
+                      className="w-full py-2.5 rounded-xl bg-[#131620] hover:bg-[#c8874b] text-white hover:text-black text-xs font-black uppercase tracking-wider transition-all border border-white/[0.08] hover:border-[#c8874b] cursor-pointer flex items-center justify-center gap-2 group-hover:shadow-md"
                     >
-                      <span>{language === 'ar' ? 'تفاصيل التقديم' : 'Application Portal'}</span>
+                      <span>{language === 'ar' ? 'تقديم طلب توظيف' : 'Submit Application'}</span>
                       <ArrowIcon className="w-3.5 h-3.5" />
                     </button>
                   </div>
@@ -1359,17 +1458,17 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
       {faqs.length > 0 && (
         <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto border-t border-white/[0.06] relative z-10">
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#c8874b]/10 text-[#df9f64] text-xs font-bold mb-3 uppercase tracking-wider border border-[#c8874b]/20">
-              <HelpCircle className="w-3.5 h-3.5" />
-              <span>{t('nav.faq')}</span>
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#c8874b]/10 text-[#df9f64] text-xs font-black mb-3 uppercase tracking-widest border border-[#c8874b]/20 font-rajdhani">
+              <HelpCircle className="w-3.5 h-3.5 text-[#c8874b]" />
+              <span>{language === 'ar' ? 'الأسئلة الشائعة والدعم الفوري' : 'FREQUENTLY ASKED QUESTIONS'}</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl font-black text-white mb-3 uppercase tracking-tight">
-              {language === 'ar' ? 'الأسئلة الشائعة وإرشادات الانضمام' : 'Frequently Asked Questions'}
+            <h2 className="text-3xl sm:text-4xl font-black text-white mb-3 uppercase tracking-tight font-rajdhani">
+              {language === 'ar' ? 'دليل الانضمام والأسئلة الأكثر تكراراً' : 'Everything You Need to Know'}
             </h2>
-            <p className="text-[#969cad] text-xs sm:text-sm">
+            <p className="text-[#969cad] text-xs sm:text-sm max-w-xl mx-auto leading-relaxed">
               {language === 'ar'
-                ? 'إجابات شاملة لأبرز أسئلة اللاعبين الجدد حول خطوات الانضمام وحل مشاكل الاتصال.'
-                : 'Direct instructions on whitelisting, keybinds, and FiveM connection setup.'}
+                ? 'إجابات مباشرة ودقيقة حول خطوات التوثيق، تثبيت الإضافات، أوامر F8، وحل مشكلات الاتصال بالسيرفر.'
+                : 'Direct answers regarding whitelist requirements, SaltyChat voice configuration, keybinds, and FiveM connect setup.'}
             </p>
           </div>
 
@@ -1380,15 +1479,22 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               return (
                 <div
                   key={faq.id}
-                  className={`rounded-xl border transition-all overflow-hidden ${
-                    isOpen ? 'bg-[#0d0f16] border-[#c8874b]/50 shadow-lg' : 'bg-[#0d0f16] border-white/[0.06] hover:border-white/[0.12]'
+                  className={`rounded-2xl border transition-all overflow-hidden ${
+                    isOpen 
+                      ? 'bg-[#0d0f16] border-[#c8874b]/50 shadow-xl shadow-black/60' 
+                      : 'bg-[#0d0f16]/90 border-white/[0.07] hover:border-white/[0.15]'
                   }`}
                 >
                   <button
                     onClick={() => setOpenFaqIndex(isOpen ? null : idx)}
                     className="w-full p-5 text-left rtl:text-right flex items-center justify-between gap-4 cursor-pointer"
                   >
-                    <span className="font-bold text-sm text-white">{trans.question}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="w-6 h-6 rounded-lg bg-[#131620] border border-white/[0.06] text-[#c8874b] text-xs font-black font-rajdhani flex items-center justify-center shrink-0">
+                        {(idx + 1).toString().padStart(2, '0')}
+                      </span>
+                      <span className="font-bold text-sm text-white">{trans.question}</span>
+                    </div>
                     <ChevronDown className={`w-4 h-4 text-[#c8874b] shrink-0 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
                   </button>
                   <AnimatePresence>
@@ -1400,7 +1506,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
                         className="overflow-hidden"
                       >
-                        <div className="p-5 pt-0 text-xs text-[#969cad] leading-relaxed border-t border-white/[0.06]">
+                        <div className="p-5 pt-0 text-xs sm:text-sm text-[#969cad] leading-relaxed border-t border-white/[0.06] bg-[#08090d]/50">
                           {trans.answer}
                         </div>
                       </motion.div>
@@ -1411,14 +1517,29 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             })}
           </div>
 
-          <div className="text-center mt-8">
-            <button
-              onClick={() => setCurrentTab('faq')}
-              className="inline-flex items-center gap-2 text-xs font-bold text-[#c8874b] hover:text-[#df9f64] transition-colors cursor-pointer"
-            >
-              <span>{language === 'ar' ? 'عرض كافة الأسئلة الشائعة' : 'View full knowledge base'}</span>
-              <ArrowIcon className="w-3.5 h-3.5" />
-            </button>
+          <div className="mt-8 p-5 rounded-2xl bg-[#0d0f16] border border-white/[0.07] flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left rtl:sm:text-right">
+            <div>
+              <h4 className="text-sm font-bold text-white mb-0.5">
+                {language === 'ar' ? 'هل لديك استفسار آخر لم تجد إجابته هنا؟' : 'Still have questions or need technical assistance?'}
+              </h4>
+              <p className="text-xs text-[#7a8091]">
+                {language === 'ar' ? 'فريق الدعم الفني متواجد على مدار 24 ساعة للإجابة على جميع الاستفسارات.' : 'Our staff team is available 24/7 on Discord to help you connect.'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                onClick={() => setCurrentTab('support')}
+                className="px-4 py-2 rounded-xl bg-[#131620] hover:bg-[#1c202d] text-white border border-white/[0.08] text-xs font-bold transition-all cursor-pointer"
+              >
+                {language === 'ar' ? 'تذاكر الدعم' : 'Support Tickets'}
+              </button>
+              <button
+                onClick={() => setCurrentTab('faq')}
+                className="px-4 py-2 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
+              >
+                {language === 'ar' ? 'قاعدة المعرفة' : 'Full Knowledge Base'}
+              </button>
+            </div>
           </div>
         </section>
       )}
