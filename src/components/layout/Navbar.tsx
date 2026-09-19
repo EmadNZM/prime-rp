@@ -174,24 +174,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             >
               <PrimeLogo size="md" variant="navbar" showText={false} withGlow={true} />
             </button>
-
-            {/* LIVE SERVER TELEMETRY PILL (EchoRP / ONX Style) */}
-            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#11131c] border border-white/[0.06] shrink-0">
-              <span className="relative flex h-2 w-2">
-                <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isOnline ? 'bg-emerald-400' : 'bg-amber-400'}`} />
-                <span className={`relative inline-flex rounded-full h-2 w-2 ${isOnline ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-              </span>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-[#969cad] font-rajdhani whitespace-nowrap">
-                {isOnline ? (
-                  <>
-                    <span className="text-white font-bold">{playersOnline}</span>
-                    <span className="text-[#555]">/{maxPlayers}</span> {language === 'ar' ? 'متصل' : 'ONLINE'}
-                  </>
-                ) : (
-                  <span className="text-amber-400">{language === 'ar' ? 'تهيئة السيرفر' : 'STANDBY'}</span>
-                )}
-              </span>
-            </div>
           </div>
 
           {/* DESKTOP NAVIGATION LINKS (Balanced to Never Overflow in English or Arabic) */}
