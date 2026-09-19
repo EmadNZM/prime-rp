@@ -57,37 +57,43 @@ export async function runCleanupAndSetup(): Promise<void> {
   `);
 
   // 6. Find real user by OWNER_DISCORD_ID
-  const ownerDiscordId = (process.env.OWNER_DISCORD_ID || '465227455159074818').trim();
-  console.log(`[CleanupAndSetup] Target OWNER_DISCORD_ID is: ${ownerDiscordId}`);
+  const ownerDiscordId = (process.env.OWNER_DISCORD_ID || '').trim();
+  let realUserId: string | null = null;
 
-  const realUserRes = await query('SELECT * FROM users WHERE discord_id = $1', [ownerDiscordId]);
-  let realUserId: string;
+  if (ownerDiscordId) {
+    console.log(`[CleanupAndSetup] Target OWNER_DISCORD_ID is: ${ownerDiscordId}`);
+    const realUserRes = await query('SELECT * FROM users WHERE discord_id = $1', [ownerDiscordId]);
 
-  if (realUserRes.rows.length > 0) {
-    realUserId = realUserRes.rows[0].id;
-    console.log(`[CleanupAndSetup] Found real user (${realUserId}) for Discord ID ${ownerDiscordId}. Promoting to OWNER.`);
-    await query(`
-      UPDATE users 
-      SET role = 'OWNER', is_owner = TRUE, is_admin = TRUE, permissions = ARRAY['*'], updated_at = NOW()
-      WHERE id = $1
-    `, [realUserId]);
+    if (realUserRes.rows.length > 0) {
+      realUserId = realUserRes.rows[0].id;
+      console.log(`[CleanupAndSetup] Found real user (${realUserId}) for Discord ID ${ownerDiscordId}. Promoting to OWNER.`);
+      await query(`
+        UPDATE users 
+        SET role = 'OWNER', is_owner = TRUE, is_admin = TRUE, permissions = ARRAY['*'], updated_at = NOW()
+        WHERE id = $1
+      `, [realUserId]);
+    } else {
+      realUserId = `usr_${Date.now()}_owner`;
+      console.log(`[CleanupAndSetup] Creating registered reservation for OWNER_DISCORD_ID ${ownerDiscordId}`);
+      await query(`
+        INSERT INTO users (id, discord_id, username, global_name, role, status, permissions, is_owner, is_admin, created_at, updated_at)
+        VALUES ($1, $2, 'ServerOwner', 'Server Owner', 'OWNER', 'ACTIVE', ARRAY['*'], TRUE, TRUE, NOW(), NOW())
+      `, [realUserId, ownerDiscordId]);
+    }
   } else {
-    realUserId = `usr_${Date.now()}_owner`;
-    console.log(`[CleanupAndSetup] Creating registered reservation for OWNER_DISCORD_ID ${ownerDiscordId}`);
-    await query(`
-      INSERT INTO users (id, discord_id, username, global_name, role, status, permissions, is_owner, is_admin, created_at, updated_at)
-      VALUES ($1, $2, 'ServerOwner', 'Server Owner', 'OWNER', 'ACTIVE', ARRAY['*'], TRUE, TRUE, NOW(), NOW())
-    `, [realUserId, ownerDiscordId]);
+    console.warn('[CleanupAndSetup] WARNING: OWNER_DISCORD_ID is not configured. No owner account will be created or promoted.');
   }
 
-  // 7. Reassign any existing orders, tickets, or reports from fake test users to real owner user before deletion
+  // 7. Reassign any existing orders, tickets, or reports from fake test users before deletion
   const fakeIds = ['usr_superadmin', 'usr_admin', 'usr_support', 'usr_citizen', 'usr_1789635511197_g3h9'];
-  for (const fakeId of fakeIds) {
-    await query('UPDATE orders SET user_id = $1 WHERE user_id = $2', [realUserId, fakeId]);
-    await query('UPDATE tickets SET user_id = $1 WHERE user_id = $2', [realUserId, fakeId]);
-    await query('UPDATE notifications SET user_id = $1 WHERE user_id = $2', [realUserId, fakeId]);
-    await query('UPDATE reports SET reporter_id = $1 WHERE reporter_id = $2', [realUserId, fakeId]);
-    await query('UPDATE sessions SET user_id = $1 WHERE user_id = $2', [realUserId, fakeId]);
+  if (realUserId) {
+    for (const fakeId of fakeIds) {
+      await query('UPDATE orders SET user_id = $1 WHERE user_id = $2', [realUserId, fakeId]);
+      await query('UPDATE tickets SET user_id = $1 WHERE user_id = $2', [realUserId, fakeId]);
+      await query('UPDATE notifications SET user_id = $1 WHERE user_id = $2', [realUserId, fakeId]);
+      await query('UPDATE reports SET reporter_id = $1 WHERE reporter_id = $2', [realUserId, fakeId]);
+      await query('UPDATE sessions SET user_id = $1 WHERE user_id = $2', [realUserId, fakeId]);
+    }
   }
 
   // 8. Safely delete the fake users
@@ -95,11 +101,20 @@ export async function runCleanupAndSetup(): Promise<void> {
   console.log(`[CleanupAndSetup] Removed ${deleteRes.rowCount} fake test users.`);
 
   // 9. Ensure all other users are strictly CITIZEN with is_owner = false, is_admin = false
-  await query(`
-    UPDATE users 
-    SET role = 'CITIZEN', is_owner = FALSE, is_admin = FALSE
-    WHERE discord_id != $1 AND role = 'OWNER'
-  `, [ownerDiscordId]);
+  if (ownerDiscordId) {
+    await query(`
+      UPDATE users 
+      SET role = 'CITIZEN', is_owner = FALSE, is_admin = FALSE
+      WHERE discord_id != $1 AND role = 'OWNER'
+    `, [ownerDiscordId]);
+  } else {
+    // If no ownerDiscordId is set, demote all existing users with role = 'OWNER'
+    await query(`
+      UPDATE users 
+      SET role = 'CITIZEN', is_owner = FALSE, is_admin = FALSE
+      WHERE role = 'OWNER'
+    `);
+  }
 
   // Seed default social links if empty
   const socialCheck = await query('SELECT COUNT(*) FROM social_links');

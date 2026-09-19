@@ -28,7 +28,8 @@ function cleanOldCodes(): void {
  * Sets a secure, HttpOnly, 30-day persistent session cookie.
  */
 export function setSessionCookies(req: Request, res: Response, sessionId: string) {
-  const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
+  const forwardedProto = req.get('x-forwarded-proto')?.split(',')[0].trim();
+  const isHttps = req.secure || forwardedProto === 'https' || process.env.NODE_ENV === 'production';
   
   res.cookie('prime_session_token', sessionId, {
     httpOnly: true,
@@ -210,7 +211,11 @@ export async function handleDiscordCallback(req: Request, res: Response) {
 
     // Strict Owner Verification:
     // Only the exact Discord ID declared in OWNER_DISCORD_ID is granted OWNER privileges.
-    const ownerDiscordId = (process.env.OWNER_DISCORD_ID || '1195214213187129495').trim();
+    // If OWNER_DISCORD_ID is missing: no user may automatically receive OWNER privileges, log clear configuration warning, fail closed.
+    const ownerDiscordId = (process.env.OWNER_DISCORD_ID || '').trim();
+    if (!ownerDiscordId) {
+      console.warn('[Security Warning] OWNER_DISCORD_ID is not configured in environment variables. No user will receive OWNER privileges (failing closed).');
+    }
     const isOwner = Boolean(ownerDiscordId && discordUser.id === ownerDiscordId);
 
     // Upsert user into PostgreSQL
@@ -225,7 +230,7 @@ export async function handleDiscordCallback(req: Request, res: Response) {
         avatar: avatarUrl,
         email: discordUser.email || existing.email,
         role: isOwner ? UserRole.OWNER : (existing.role === UserRole.OWNER ? UserRole.CITIZEN : existing.role),
-        permissions: isOwner ? ['*'] : existing.permissions,
+        permissions: isOwner ? ['*'] : existing.permissions.filter(p => p !== '*'),
         status: existing.status
       });
     } else {
@@ -283,7 +288,8 @@ export async function handleLogout(req: Request, res: Response) {
     await sessionRepository.deleteSession(sessionToken);
   }
 
-  const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
+  const forwardedProto = req.get('x-forwarded-proto')?.split(',')[0].trim();
+  const isHttps = req.secure || forwardedProto === 'https' || process.env.NODE_ENV === 'production';
   const clearOptions = {
     path: '/',
     httpOnly: true,
@@ -306,27 +312,35 @@ export async function handleLogout(req: Request, res: Response) {
  * 3. Never permits creating or assuming the OWNER role.
  */
 export async function handleDemoLogin(req: Request, res: Response) {
-  // 1. Strictly disabled in Production environments unconditionally
-  if (process.env.NODE_ENV === 'production') {
+  // 1. Strictly disabled in Production environments unconditionally and any non-development environment
+  const envMode = process.env.NODE_ENV || 'development';
+  const isDev = envMode === 'development' || envMode === 'test';
+  if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'prod' || !isDev) {
     return res.status(403).json({
-      error: 'Demo login is strictly disabled in production. Authentication must proceed exclusively via Discord OAuth.'
+      error: 'Demo login is strictly disabled in production and non-development environments. Authentication must proceed exclusively via Discord OAuth.'
     });
   }
 
   try {
     // 2. Do not trust arbitrary user input to assign roles or privileges.
-    // In dev/preview environments, only predetermined fixed test profiles can be used.
-    const requestedProfile = String(req.body?.role || req.query?.role || 'citizen').trim().toLowerCase();
+    const rawRole = String(req.body?.role || req.query?.role || 'citizen').trim().toLowerCase();
     
-    // Strictly forbid any attempt to pass or assume owner
-    if (requestedProfile.includes('owner')) {
+    // Strictly forbid any attempt to pass or assume owner, superadmin, or wildcard permissions
+    if (rawRole.includes('owner') || rawRole.includes('super') || rawRole.includes('*')) {
       return res.status(403).json({
-        error: 'Forbidden: Creating or accessing owner accounts via demo login is strictly prohibited.'
+        error: 'Forbidden: Creating or accessing owner or super-admin accounts via demo login is strictly prohibited.'
+      });
+    }
+
+    // Only approved fixed development profiles are accepted:
+    if (rawRole !== 'citizen' && rawRole !== 'admin') {
+      return res.status(400).json({
+        error: 'Invalid test profile. Only approved predefined development profiles ("citizen", "admin") are permitted.'
       });
     }
 
     // Only two predetermined non-owner preview profiles exist in dev mode:
-    const isStaffPreview = requestedProfile === 'admin';
+    const isStaffPreview = rawRole === 'admin';
     const targetId = isStaffPreview ? 'usr_admin_demo' : 'usr_citizen';
 
     let targetUser = await userRepository.findById(targetId);
@@ -342,6 +356,7 @@ export async function handleDemoLogin(req: Request, res: Response) {
           permissions: ['tickets.create', 'orders.create']
         });
       } else {
+        // Strict: Staff test profile has explicitly scoped permissions — NEVER wildcard '*'
         targetUser = await userRepository.upsert({
           discordId: '998877665544332211',
           username: 'PrimeAdmin',
@@ -349,7 +364,7 @@ export async function handleDemoLogin(req: Request, res: Response) {
           avatar: 'https://images.unsplash.com/photo-1566492031773-4f4e44671857?w=150&auto=format&fit=crop&q=80',
           role: UserRole.ADMIN,
           status: UserStatus.ACTIVE,
-          permissions: ['tickets.*', 'reports.*', 'news.*', 'jobs.*']
+          permissions: ['tickets.view', 'tickets.reply', 'reports.view', 'news.manage', 'jobs.review']
         });
       }
     }

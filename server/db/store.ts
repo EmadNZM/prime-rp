@@ -280,16 +280,16 @@ class DatabaseStore {
     );
     if (existingIndex >= 0) {
       const existing = this.data.users[existingIndex];
-      const assignedRole = userData.role !== undefined ? userData.role : existing.role;
-      const ownerDiscordId = process.env.OWNER_DISCORD_ID || '1195214213187129495';
-      const isOwner = userData.discordId === ownerDiscordId || existing.discordId === ownerDiscordId || assignedRole === 'OWNER';
+      const ownerDiscordId = (process.env.OWNER_DISCORD_ID || '').trim();
+      const isOwner = Boolean(ownerDiscordId && (userData.discordId === ownerDiscordId || existing.discordId === ownerDiscordId));
+      const assignedRole = isOwner ? ('OWNER' as any) : (existing.role === 'OWNER' ? ('CITIZEN' as any) : (userData.role !== undefined ? userData.role : existing.role));
       const isAdmin = isOwner || ['SUPER_ADMIN', 'ADMIN'].includes(assignedRole);
 
       const updated: User = {
         ...existing,
         ...userData,
         role: assignedRole,
-        permissions: userData.permissions !== undefined ? userData.permissions : existing.permissions,
+        permissions: isOwner ? ['*'] : (userData.permissions !== undefined ? userData.permissions.filter(p => p !== '*') : existing.permissions.filter(p => p !== '*')),
         status: userData.status !== undefined ? userData.status : existing.status,
         isAdmin: Boolean(isAdmin),
         isOwner: Boolean(isOwner),
@@ -302,12 +302,12 @@ class DatabaseStore {
     } else {
       // STRICT REQUIREMENT: Any newly registered user is ALWAYS a standard CITIZEN!
       // The administration grants elevated roles/permissions from the admin panel.
-      const ownerDiscordId = process.env.OWNER_DISCORD_ID || '1195214213187129495';
-      const isOwner = userData.discordId === ownerDiscordId || userData.role === 'OWNER';
-      const newUserRole = isOwner ? ('OWNER' as any) : (userData.role || ('CITIZEN' as any));
+      const ownerDiscordId = (process.env.OWNER_DISCORD_ID || '').trim();
+      const isOwner = Boolean(ownerDiscordId && userData.discordId === ownerDiscordId);
+      const newUserRole = isOwner ? ('OWNER' as any) : (userData.role === 'OWNER' ? ('CITIZEN' as any) : (userData.role || ('CITIZEN' as any)));
       const isAdmin = isOwner || ['SUPER_ADMIN', 'ADMIN'].includes(newUserRole);
 
-      const defaultPermissions = isOwner || newUserRole === 'SUPER_ADMIN'
+      const defaultPermissions = isOwner
         ? ['*']
         : newUserRole === 'ADMIN'
         ? ['users.view', 'users.edit', 'news.*', 'rules.*', 'jobs.*', 'tickets.*', 'audit.view']

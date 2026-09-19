@@ -1,31 +1,56 @@
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Environment Configuration & Strict Validation
+// Environment Configuration & Strict Security Validation
 // Validates all required server-side environment variables without exposing secrets.
 
 export interface EnvironmentStatus {
-  isValid: boolean;
-  missingVariables: string[];
-  database: 'configured' | 'missing';
-  discord: 'configured' | 'missing';
-  fivem: 'configured' | 'missing';
+  isProductionReady: boolean;
+  missingCritical: string[];
+  missingOptional: string[];
+  critical: {
+    database: 'configured' | 'missing';
+    discordOAuth: 'configured' | 'missing';
+    discordBot: 'configured' | 'missing';
+    ownerId: 'configured' | 'missing';
+    sessionSecret: 'configured' | 'missing';
+  };
+  optional: {
+    fivem: 'configured' | 'missing';
+    payments: 'configured' | 'missing';
+  };
 }
 
-export const REQUIRED_ENV_VARS = [
+export const CRITICAL_SECURITY_ENV_VARS = [
   'DATABASE_URL',
   'DISCORD_CLIENT_ID',
   'DISCORD_CLIENT_SECRET',
   'DISCORD_REDIRECT_URI',
   'DISCORD_GUILD_ID',
   'DISCORD_BOT_TOKEN',
+  'OWNER_DISCORD_ID',
+  'SESSION_SECRET'
+] as const;
+
+export const OPTIONAL_INTEGRATION_ENV_VARS = [
   'FIVEM_SERVER_IP',
   'FIVEM_SERVER_PORT'
 ] as const;
 
-export function getMissingEnvironmentVariables(): string[] {
+export function getMissingCriticalVariables(): string[] {
   const missing: string[] = [];
-  for (const key of REQUIRED_ENV_VARS) {
+  for (const key of CRITICAL_SECURITY_ENV_VARS) {
+    const val = process.env[key];
+    if (!val || val.trim() === '') {
+      missing.push(key);
+    }
+  }
+  return missing;
+}
+
+export function getMissingOptionalVariables(): string[] {
+  const missing: string[] = [];
+  for (const key of OPTIONAL_INTEGRATION_ENV_VARS) {
     const val = process.env[key];
     if (!val || val.trim() === '') {
       missing.push(key);
@@ -35,40 +60,68 @@ export function getMissingEnvironmentVariables(): string[] {
 }
 
 export function validateEnvironment(): EnvironmentStatus {
-  const missing = getMissingEnvironmentVariables();
+  const missingCritical = getMissingCriticalVariables();
+  const missingOptional = getMissingOptionalVariables();
 
   const hasDb = Boolean(process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '');
-  const hasDiscord = Boolean(
-    process.env.DISCORD_CLIENT_ID &&
-    process.env.DISCORD_CLIENT_SECRET &&
-    process.env.DISCORD_REDIRECT_URI &&
-    process.env.DISCORD_GUILD_ID &&
-    process.env.DISCORD_BOT_TOKEN
+  const hasDiscordOAuth = Boolean(
+    process.env.DISCORD_CLIENT_ID?.trim() &&
+    process.env.DISCORD_CLIENT_SECRET?.trim() &&
+    process.env.DISCORD_REDIRECT_URI?.trim()
   );
+  const hasDiscordBot = Boolean(
+    process.env.DISCORD_GUILD_ID?.trim() &&
+    process.env.DISCORD_BOT_TOKEN?.trim()
+  );
+  const hasOwnerId = Boolean(process.env.OWNER_DISCORD_ID && process.env.OWNER_DISCORD_ID.trim() !== '');
+  const hasSessionSecret = Boolean(process.env.SESSION_SECRET && process.env.SESSION_SECRET.trim() !== '');
+
   const hasFiveM = Boolean(
-    process.env.FIVEM_SERVER_IP &&
-    process.env.FIVEM_SERVER_PORT
+    process.env.FIVEM_SERVER_IP?.trim() &&
+    process.env.FIVEM_SERVER_PORT?.trim()
+  );
+  const hasPayments = Boolean(
+    process.env.STRIPE_SECRET_KEY?.trim() ||
+    process.env.PAYPAL_CLIENT_ID?.trim() ||
+    process.env.TEBEX_SECRET_KEY?.trim()
   );
 
   return {
-    isValid: missing.length === 0,
-    missingVariables: missing,
-    database: hasDb ? 'configured' : 'missing',
-    discord: hasDiscord ? 'configured' : 'missing',
-    fivem: hasFiveM ? 'configured' : 'missing'
+    isProductionReady: missingCritical.length === 0,
+    missingCritical,
+    missingOptional,
+    critical: {
+      database: hasDb ? 'configured' : 'missing',
+      discordOAuth: hasDiscordOAuth ? 'configured' : 'missing',
+      discordBot: hasDiscordBot ? 'configured' : 'missing',
+      ownerId: hasOwnerId ? 'configured' : 'missing',
+      sessionSecret: hasSessionSecret ? 'configured' : 'missing'
+    },
+    optional: {
+      fivem: hasFiveM ? 'configured' : 'missing',
+      payments: hasPayments ? 'configured' : 'missing'
+    }
   };
 }
 
 export function checkEnvironmentOrWarn(): void {
-  const missing = getMissingEnvironmentVariables();
-  if (missing.length > 0) {
+  const isProd = process.env.NODE_ENV === 'production';
+  const missingCritical = getMissingCriticalVariables();
+  const missingOptional = getMissingOptionalVariables();
+
+  if (missingCritical.length > 0) {
     console.warn('====================================================');
-    console.warn('[Environment Warning] Missing required environment variables:');
-    missing.forEach((v) => console.warn(`  - ${v}`));
-    console.warn('Please provide them in Google AI Studio or .env configuration.');
+    console.warn(`[Security Alert] Missing CRITICAL configuration (${isProd ? 'PRODUCTION BLOCKER' : 'Development'}):`);
+    missingCritical.forEach((v) => console.warn(`  - [CRITICAL] ${v}`));
+    console.warn('Missing critical configuration will prevent the service from reaching "ready" state in production.');
     console.warn('====================================================');
   } else {
-    console.log('[Environment] All 8 required environment variables detected and validated.');
+    console.log('[Environment] All critical production security variables configured.');
+  }
+
+  if (missingOptional.length > 0) {
+    console.log('[Environment] Optional integrations unconfigured (FiveM/Payments will run in disabled/mock status):');
+    missingOptional.forEach((v) => console.log(`  - [OPTIONAL] ${v}`));
   }
 }
 
@@ -90,6 +143,12 @@ export const env = {
   },
   get DISCORD_BOT_TOKEN(): string {
     return process.env.DISCORD_BOT_TOKEN || '';
+  },
+  get OWNER_DISCORD_ID(): string {
+    return (process.env.OWNER_DISCORD_ID || '').trim();
+  },
+  get SESSION_SECRET(): string {
+    return (process.env.SESSION_SECRET || '').trim();
   },
   get FIVEM_SERVER_IP(): string {
     return (process.env.FIVEM_SERVER_IP || '').trim();

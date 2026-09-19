@@ -25,7 +25,8 @@ export async function attachUser(req: Request, res: Response, next: NextFunction
 
     if (user) {
       if (user.status === UserStatus.BANNED) {
-        const isHttps = req.secure || req.get('x-forwarded-proto') === 'https';
+        const forwardedProto = req.get('x-forwarded-proto')?.split(',')[0].trim();
+        const isHttps = req.secure || forwardedProto === 'https' || process.env.NODE_ENV === 'production';
         const clearOpts = { path: '/', secure: isHttps, httpOnly: true, sameSite: 'lax' as const };
         res.clearCookie('prime_session_token', clearOpts);
         res.clearCookie('prime_session_userId', clearOpts);

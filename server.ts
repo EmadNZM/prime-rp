@@ -31,22 +31,80 @@ async function startServer() {
     console.error('[Prime RP Server] Error initializing PostgreSQL:', err.message);
   }
 
-  // Basic Middlewares
-  app.use(express.json({ limit: '25mb' }));
-  app.use(express.urlencoded({ extended: true, limit: '25mb' }));
+  // Basic Middlewares with hardened payload limits (mitigate DoS)
+  app.use(express.json({ limit: '1mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '1mb' }));
   app.use(cookieParser());
 
-  // Health Check Endpoint (always returns 200 so container probes succeed)
+  // 1. Liveness Probe: Tests if the process is responsive
+  app.get('/api/health/live', (req, res) => {
+    return res.status(200).json({
+      status: 'live',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString()
+    });
+  });
+
+  // 2. Readiness Probe: Tests if dependencies & configurations are ready
+  // In production: FAIL-CLOSED (503) if database is disconnected or critical security env vars are missing
+  app.get('/api/health/ready', async (req, res) => {
+    const dbHealth = await checkDatabaseHealth();
+    const envStatus = validateEnvironment();
+    const isProd = process.env.NODE_ENV === 'production';
+
+    if (isProd) {
+      const isReady = dbHealth.connected && envStatus.isProductionReady;
+      if (!isReady) {
+        return res.status(503).json({
+          status: 'not_ready',
+          ready: false,
+          environment: 'production',
+          database: dbHealth.connected ? 'connected' : 'unavailable',
+          configuration: envStatus.isProductionReady ? 'ready' : 'incomplete_critical_vars',
+          missingCritical: envStatus.missingCritical
+        });
+      }
+
+      return res.status(200).json({
+        status: 'ready',
+        ready: true,
+        environment: 'production',
+        database: 'connected',
+        configuration: 'ready'
+      });
+    }
+
+    // Development / preview environment: allows fallback in dev mode
+    return res.status(200).json({
+      status: 'ready',
+      ready: true,
+      environment: process.env.NODE_ENV || 'development',
+      database: dbHealth.connected ? 'connected' : 'fallback_store',
+      configuration: envStatus.isProductionReady ? 'ready' : 'development_mode',
+      discordOAuth: envStatus.critical.discordOAuth,
+      ownerConfigured: envStatus.critical.ownerId === 'configured'
+    });
+  });
+
+  // 3. Consolidated Health Check Endpoint (safe from secret leaks, fail-closed in production)
   app.get('/api/health', async (req, res) => {
     const dbHealth = await checkDatabaseHealth();
     const envStatus = validateEnvironment();
-    const isHealthy = dbHealth.connected;
+    const isProd = process.env.NODE_ENV === 'production';
+
+    if (isProd && (!dbHealth.connected || !envStatus.isProductionReady)) {
+      return res.status(503).json({
+        status: 'unhealthy',
+        database: dbHealth.connected ? 'connected' : 'disconnected',
+        isProductionReady: false
+      });
+    }
 
     return res.status(200).json({
-      status: isHealthy ? 'ok' : 'ready',
+      status: 'ok',
       database: dbHealth.connected ? 'connected' : 'fallback_store',
-      discord: envStatus.discord,
-      fivem: envStatus.fivem
+      isProductionReady: envStatus.isProductionReady,
+      environment: isProd ? 'production' : (process.env.NODE_ENV || 'development')
     });
   });
 

@@ -5,13 +5,10 @@ import { db } from '../store';
 
 export class UserRepository {
   private static mapRowToUser(row: any): User {
-    const ownerDiscordId = process.env.OWNER_DISCORD_ID?.trim();
-    const isOwner = Boolean(
-      (ownerDiscordId && row.discord_id === ownerDiscordId) ||
-      row.is_owner === true ||
-      row.role === 'OWNER'
-    );
-    const role = isOwner ? UserRole.OWNER : (row.role as UserRole);
+    const ownerDiscordId = (process.env.OWNER_DISCORD_ID || '').trim();
+    // Strict Owner Identity: Only the exact Discord ID declared in OWNER_DISCORD_ID can be owner
+    const isOwner = Boolean(ownerDiscordId && row.discord_id === ownerDiscordId);
+    const role = isOwner ? UserRole.OWNER : (row.role === 'OWNER' ? UserRole.CITIZEN : (row.role as UserRole));
     const isAdmin = Boolean(isOwner || row.is_admin === true || role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN);
 
     return {
@@ -26,7 +23,7 @@ export class UserRepository {
       status: row.status as UserStatus,
       isAdmin,
       isOwner,
-      permissions: isOwner ? ['*'] : (Array.isArray(row.permissions) ? row.permissions : []),
+      permissions: isOwner ? ['*'] : (Array.isArray(row.permissions) ? row.permissions.filter((p: string) => p !== '*') : []),
       bio: row.bio || undefined,
       lastLogin: row.last_login ? new Date(row.last_login).toISOString() : new Date().toISOString(),
       lastLoginAt: row.last_login_at ? new Date(row.last_login_at).toISOString() : (row.last_login ? new Date(row.last_login).toISOString() : new Date().toISOString()),
@@ -85,14 +82,14 @@ export class UserRepository {
     permissions?: string[];
     bio?: string;
   }): Promise<User> {
-    const ownerDiscordId = process.env.OWNER_DISCORD_ID?.trim();
+    const ownerDiscordId = (process.env.OWNER_DISCORD_ID || '').trim();
     const isOwner = Boolean(ownerDiscordId && data.discordId === ownerDiscordId);
 
     if (!isPostgresConnected()) {
       const existing = db.getUserByDiscordId(data.discordId);
       if (existing) {
         const role = isOwner ? UserRole.OWNER : (existing.role === UserRole.OWNER ? UserRole.CITIZEN : existing.role);
-        const permissions = isOwner ? ['*'] : existing.permissions;
+        const permissions = isOwner ? ['*'] : existing.permissions.filter(p => p !== '*');
         const isAdmin = isOwner || role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
 
         const updated = db.updateUser(existing.id, {
@@ -141,7 +138,7 @@ export class UserRepository {
 
     if (existing) {
       const role = isOwner ? UserRole.OWNER : (existing.role === UserRole.OWNER ? UserRole.CITIZEN : existing.role);
-      const permissions = isOwner ? ['*'] : existing.permissions;
+      const permissions = isOwner ? ['*'] : existing.permissions.filter(p => p !== '*');
       const isAdmin = isOwner || role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN;
 
       const res = await query(
@@ -208,8 +205,8 @@ export class UserRepository {
       throw new Error('Cannot change the role of the Server Owner.');
     }
 
-    let perms = customPermissions;
-    if (!perms) {
+    let perms = customPermissions ? customPermissions.filter(p => p !== '*' && typeof p === 'string') : undefined;
+    if (!perms || perms.length === 0) {
       if (role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN) perms = ['users.view', 'users.edit', 'news.*', 'rules.*', 'jobs.*', 'tickets.*', 'audit.view'];
       else if (role === UserRole.MODERATOR) perms = ['tickets.view', 'tickets.reply', 'rules.*', 'jobs.*'];
       else if (role === UserRole.SUPPORT) perms = ['tickets.view', 'tickets.reply', 'tickets.close'];
@@ -270,8 +267,8 @@ export class UserRepository {
 
     const clean = identifier.trim();
 
-    let perms = customPermissions;
-    if (!perms) {
+    let perms = customPermissions ? customPermissions.filter(p => p !== '*' && typeof p === 'string') : undefined;
+    if (!perms || perms.length === 0) {
       if (role === UserRole.ADMIN || role === UserRole.SUPER_ADMIN) perms = ['users.view', 'users.edit', 'news.*', 'rules.*', 'jobs.*', 'tickets.*', 'audit.view'];
       else if (role === UserRole.MODERATOR) perms = ['tickets.view', 'tickets.reply', 'rules.*', 'jobs.*'];
       else if (role === UserRole.SUPPORT) perms = ['tickets.view', 'tickets.reply', 'tickets.close'];
@@ -287,7 +284,7 @@ export class UserRepository {
         u => u.discordId === clean || u.username.toLowerCase() === clean.toLowerCase()
       );
       if (existing) {
-        const ownerDiscordId = process.env.OWNER_DISCORD_ID?.trim();
+        const ownerDiscordId = (process.env.OWNER_DISCORD_ID || '').trim();
         if (existing.isOwner || (ownerDiscordId && existing.discordId === ownerDiscordId)) {
           throw new Error('Cannot modify Server Owner role.');
         }
@@ -328,7 +325,7 @@ export class UserRepository {
 
     if (findRes.rows.length > 0) {
       const user = findRes.rows[0];
-      const ownerDiscordId = process.env.OWNER_DISCORD_ID?.trim();
+      const ownerDiscordId = (process.env.OWNER_DISCORD_ID || '').trim();
       if (user.is_owner || (ownerDiscordId && user.discord_id === ownerDiscordId)) {
         throw new Error('Cannot modify Server Owner role.');
       }
