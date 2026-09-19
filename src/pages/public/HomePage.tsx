@@ -406,7 +406,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             className="absolute -inset-[5%] w-[110%] h-[110%] will-change-transform pointer-events-none"
           >
             <img
-              src="/assets/gta-hero-night.jpg"
+              src={siteSettings?.homepage?.heroImage || "/assets/gta-hero-night.jpg"}
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
                 if (target.src !== window.location.origin + '/assets/gta-los-santos-skyline.jpg') {
@@ -499,6 +499,30 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         >
           <div className="w-full max-w-2xl space-y-6 text-left rtl:text-right">
             
+            {/* Optional Announcement Banner from Homepage CMS */}
+            {siteSettings?.homepage?.announcementActive && siteSettings?.homepage?.announcementText && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-3 rounded-xl bg-[#c8874b]/15 border border-[#c8874b]/30 text-xs text-[#df9f64] font-bold flex items-center justify-between gap-3 shadow-lg"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#c8874b] shrink-0" />
+                  <span>{siteSettings.homepage.announcementText}</span>
+                </div>
+                {siteSettings.homepage.announcementLink && (
+                  <a
+                    href={siteSettings.homepage.announcementLink}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-2.5 py-1 rounded-lg bg-[#c8874b] text-black text-[10px] font-black uppercase tracking-wider shrink-0 hover:bg-[#df9f64]"
+                  >
+                    {language === 'ar' ? 'عرض المزيد' : 'Learn More'}
+                  </a>
+                )}
+              </motion.div>
+            )}
+
             {/* Stagger 1: Small Status / Badge */}
             <motion.div
               initial={{ opacity: 0, y: -16, filter: 'blur(8px)' }}
@@ -539,7 +563,9 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               </span>
               <span className="text-white/20">•</span>
               <span className="text-[#df9f64] font-black uppercase tracking-widest text-[11px] font-rajdhani">
-                {language === 'ar' ? 'عصر جديد • واقع لا مثيل له' : 'A NEW ERA • A REALER WORLD'}
+                {language === 'ar' 
+                  ? (siteSettings?.homepage?.heroBadgeTextAr || 'عصر جديد • واقع لا مثيل له')
+                  : (siteSettings?.homepage?.heroBadgeTextEn || 'A NEW ERA • A REALER WORLD')}
               </span>
             </motion.div>
 
@@ -550,12 +576,24 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               transition={{ duration: 0.55, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
               className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tight text-white uppercase leading-[0.96] font-rajdhani drop-shadow-2xl"
             >
-              <span className="block text-white">
-                {language === 'ar' ? 'مدينة صُنعت' : 'A CITY'}
-              </span>
-              <span className="block text-white copper-gradient-shimmer">
-                {language === 'ar' ? 'بأيديكم' : 'BUILT BY YOU'}
-              </span>
+              {siteSettings?.homepage?.heroTitleAr && language === 'ar' ? (
+                <span className="block text-white copper-gradient-shimmer">
+                  {siteSettings.homepage.heroTitleAr}
+                </span>
+              ) : siteSettings?.homepage?.heroTitleEn && language === 'en' ? (
+                <span className="block text-white copper-gradient-shimmer">
+                  {siteSettings.homepage.heroTitleEn}
+                </span>
+              ) : (
+                <>
+                  <span className="block text-white">
+                    {language === 'ar' ? 'مدينة صُنعت' : 'A CITY'}
+                  </span>
+                  <span className="block text-white copper-gradient-shimmer">
+                    {language === 'ar' ? 'بأيديكم' : 'BUILT BY YOU'}
+                  </span>
+                </>
+              )}
             </motion.h1>
 
             {/* Stagger 3: Narrative Hero Subtitle */}
@@ -566,8 +604,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
               className="text-sm sm:text-base md:text-lg text-[#b8b8be] max-w-xl leading-relaxed font-normal"
             >
               {language === 'ar'
-                ? 'مدينة حية متكاملة بُنيت بعناية لعشاق اللعب الواقعي الجاد. نظام اقتصادي متوازن، وظائف رسمية بمحاكاة كاملة، صوت ثلاثي الأبعاد محيطي، وأداء ثابت يضمن تجربة خالية من التقطيع.'
-                : 'A living, breathing metropolis built for authentic storylines, dedicated community, custom MDT systems, 3D spatial radio, and seamless 60 FPS netcode.'}
+                ? (siteSettings?.homepage?.heroSubtitleAr || 'مدينة حية متكاملة بُنيت بعناية لعشاق اللعب الواقعي الجاد. نظام اقتصادي متوازن، وظائف رسمية بمحاكاة كاملة، صوت ثلاثي الأبعاد محيطي، وأداء ثابت يضمن تجربة خالية من التقطيع.')
+                : (siteSettings?.homepage?.heroSubtitleEn || 'A living, breathing metropolis built for authentic storylines, dedicated community, custom MDT systems, 3D spatial radio, and seamless 60 FPS netcode.')}
             </motion.p>
 
             {/* Stagger 4: Integrated CTA Buttons with Hover Glow & Micro-motion */}

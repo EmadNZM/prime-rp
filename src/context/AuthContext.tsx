@@ -1,15 +1,21 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole } from '../types';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { User, UserRole, PermissionId } from '../types';
 import { apiClient } from '../services/apiClient';
+import { hasUserPermission, getUserEffectivePermissions, DEFAULT_ROLE_PERMISSIONS } from '../utils/permissions';
 
 interface AuthContextType {
   user: User | null;
+  effectiveUser: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   isAdmin: boolean;
   isStaff: boolean;
   isOwner: boolean;
   hasDiscordOauth: boolean;
+  previewRole: UserRole | null;
+  setPreviewRole: (role: UserRole | null) => void;
+  hasPermission: (permission: PermissionId) => boolean;
+  effectivePermissions: PermissionId[];
   loginWithDiscord: () => void;
   demoLogin: (role?: 'admin' | 'citizen') => Promise<void>;
   logout: () => Promise<void>;
@@ -20,6 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [previewRole, setPreviewRole] = useState<UserRole | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [hasDiscordOauth, setHasDiscordOauth] = useState<boolean>(false);
 
@@ -67,18 +74,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await apiClient.logout();
       setUser(null);
+      setPreviewRole(null);
     } catch (err) {
       console.error('Logout error:', err);
     }
   };
 
-  const isAuthenticated = Boolean(user);
-  const isOwner = Boolean(user && (user.isOwner || user.role === UserRole.OWNER));
+  // Compute effective user taking role simulation into account (only if user is staff)
+  const effectiveUser = useMemo(() => {
+    if (!user) return null;
+    if (!previewRole) return user;
+    return {
+      ...user,
+      role: previewRole,
+      isOwner: previewRole === UserRole.OWNER,
+      isAdmin: [UserRole.OWNER, UserRole.SUPER_ADMIN, UserRole.ADMIN].includes(previewRole),
+      permissions: DEFAULT_ROLE_PERMISSIONS[previewRole] || []
+    };
+  }, [user, previewRole]);
+
+  const isAuthenticated = Boolean(effectiveUser);
+  const isOwner = Boolean(effectiveUser && (effectiveUser.isOwner || effectiveUser.role === UserRole.OWNER));
   const isAdmin = Boolean(
-    user && (isOwner || user.isAdmin || user.role === UserRole.SUPER_ADMIN || user.role === UserRole.ADMIN)
+    effectiveUser && (isOwner || effectiveUser.isAdmin || effectiveUser.role === UserRole.SUPER_ADMIN || effectiveUser.role === UserRole.ADMIN)
   );
   const isStaff = Boolean(
-    user &&
+    effectiveUser &&
       (isAdmin ||
         [
           UserRole.OWNER,
@@ -88,19 +109,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           UserRole.SUPPORT,
           UserRole.EDITOR,
           UserRole.STORE_MANAGER
-        ].includes(user.role))
+        ].includes(effectiveUser.role))
   );
+
+  const effectivePermissions = useMemo(() => {
+    return getUserEffectivePermissions(effectiveUser);
+  }, [effectiveUser]);
+
+  const hasPermission = (permission: PermissionId): boolean => {
+    return hasUserPermission(effectiveUser, permission);
+  };
 
   return (
     <AuthContext.Provider
       value={{
         user,
+        effectiveUser,
         isAuthenticated,
         isLoading,
         isAdmin,
         isStaff,
         isOwner,
         hasDiscordOauth,
+        previewRole,
+        setPreviewRole,
+        hasPermission,
+        effectivePermissions,
         loginWithDiscord,
         demoLogin,
         logout,

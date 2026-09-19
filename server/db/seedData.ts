@@ -1,4 +1,4 @@
-import { UserRole, UserStatus, NewsItem, RuleCategory, JobItem, ProductItem, FAQItem, SiteSettings } from '../../src/types';
+import { UserRole, UserStatus, NewsItem, RuleCategory, JobItem, ProductItem, FAQItem, SiteSettings, LeaderboardEntry } from '../../src/types';
 
 export const initialSiteSettings: SiteSettings = {
   siteName: 'PRIME RP',
@@ -17,8 +17,148 @@ export const initialSiteSettings: SiteSettings = {
     footer: '/assets/prime-logo.png',
     login: '/assets/prime-logo.png',
     favicon: '/assets/prime-logo.png'
+  },
+  homepage: {
+    announcement: {
+      enabled: true,
+      textAr: 'مرحباً بكم في Prime RP V3.0! انضم إلى مجتمع الديسكورد وتعرف على التحديثات الحصرية وفعاليات المدينة.',
+      textEn: 'Welcome to Prime RP V3.0! Join our Discord community for exclusive city events and updates.',
+      type: 'info',
+      badgeAr: 'إعلان السيرفر',
+      badgeEn: 'Announcement',
+      link: 'https://discord.gg/primerp'
+    },
+    hero: {
+      titleLine1Ar: 'مدينة صُنعت',
+      titleLine1En: 'A CITY',
+      titleLine2Ar: 'بأيديكم',
+      titleLine2En: 'BUILT BY YOU',
+      subtitleAr: 'مدينة حية متكاملة بُنيت بعناية لعشاق اللعب الواقعي الجاد. نظام اقتصادي متوازن، وظائف رسمية بمحاكاة كاملة، صوت ثلاثي الأبعاد محيطي، وأداء ثابت يضمن تجربة خالية من التقطيع.',
+      subtitleEn: 'A living, breathing metropolis built for authentic storylines, dedicated community, custom MDT systems, 3D spatial radio, and seamless 60 FPS netcode.',
+      mottoAr: 'عصر جديد • واقع لا مثيل له',
+      mottoEn: 'A NEW ERA • A REALER WORLD',
+      badgeAr: 'السيرفر الواقعي الأقوى',
+      badgeEn: 'PREMIUM FIVEM ROLEPLAY',
+      bgImage: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1920&auto=format&fit=crop&q=80',
+      ctaConnectAr: 'دخول السيرفر الآن',
+      ctaConnectEn: 'CONNECT NOW',
+      ctaDiscordAr: 'مجتمع الديسكورد',
+      ctaDiscordEn: 'JOIN DISCORD'
+    },
+    stats: {
+      totalCitizens: '+15,000',
+      activeFactions: '12',
+      satisfactionRate: '99.4%',
+      fpsPerformance: '60 FPS'
+    }
   }
 };
+
+export const initialLeaderboard: LeaderboardEntry[] = [
+  // Playtime
+  {
+    id: 'lb_1',
+    category: 'playtime',
+    rank: 1,
+    name: 'سلطان القحطاني (Sultan)',
+    metric: '1,420 ساعة',
+    subtitle: 'مواطن ذهبي • حي ريتشمان',
+    badge: 'Legendary Citizen'
+  },
+  {
+    id: 'lb_2',
+    category: 'playtime',
+    rank: 2,
+    name: 'فهد العتيبي (Falcon)',
+    metric: '1,180 ساعة',
+    subtitle: 'تاجر سيارات كلاسيكية',
+    badge: 'Veteran'
+  },
+  {
+    id: 'lb_3',
+    category: 'playtime',
+    rank: 3,
+    name: 'عبدالله الشمري (NightHawk)',
+    metric: '950 ساعة',
+    subtitle: 'مالك كافيه المدينة',
+    badge: 'Elite'
+  },
+  // Wealth
+  {
+    id: 'lb_4',
+    category: 'wealth',
+    rank: 1,
+    name: 'منصور الراشد (Manso0r)',
+    metric: '$18,450,000',
+    subtitle: 'مجموعة الراشد للاستثمار العقاري',
+    badge: 'Billionaire'
+  },
+  {
+    id: 'lb_5',
+    category: 'wealth',
+    rank: 2,
+    name: 'خالد الدوسري (KD7)',
+    metric: '$12,800,000',
+    subtitle: 'مستثمر ومالك أسطول شحن',
+    badge: 'Tycoon'
+  },
+  {
+    id: 'lb_6',
+    category: 'wealth',
+    rank: 3,
+    name: 'فيصل بن نايف (Faisal)',
+    metric: '$9,150,000',
+    subtitle: 'مؤسس شركة أمن وسلامة',
+    badge: 'High Roller'
+  },
+  // Law
+  {
+    id: 'lb_7',
+    category: 'law',
+    rank: 1,
+    name: 'اللواء / طلال الحربي (Talal)',
+    metric: '480 قضية محلولة',
+    subtitle: 'قائد العمليات الخاصة SWAT',
+    badge: 'Honor Medal'
+  },
+  {
+    id: 'lb_8',
+    category: 'law',
+    rank: 2,
+    name: 'العقيد / عمر الغامدي (Omar)',
+    metric: '390 قضية محلولة',
+    subtitle: 'مدير شعبة التحقيقات الجنائية CID',
+    badge: 'Distinguished Service'
+  },
+  {
+    id: 'lb_9',
+    category: 'law',
+    rank: 3,
+    name: 'الملازم / يوسف الشهري (Yousef)',
+    metric: '285 قضية محلولة',
+    subtitle: 'وحدة الاستجابة السريعة HP',
+    badge: 'Commended'
+  },
+  // Most Wanted
+  {
+    id: 'lb_10',
+    category: 'wanted',
+    rank: 1,
+    name: 'الظل الأسود (The Ghost)',
+    metric: 'مكافأة: $500,000',
+    subtitle: 'مطلوب في قضايا سطو كبرى',
+    badge: 'Most Wanted'
+  },
+  {
+    id: 'lb_11',
+    category: 'wanted',
+    rank: 2,
+    name: 'جاكوب (Viper)',
+    metric: 'مكافأة: $350,000',
+    subtitle: 'ملاحق من قِبل مكافحة التهريب',
+    badge: 'Dangerous'
+  }
+];
 
 export const initialUsers: any[] = [];
 

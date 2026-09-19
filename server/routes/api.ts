@@ -13,8 +13,10 @@ import {
   settingsRepository,
   faqRepository,
   reportRepository,
-  socialLinksRepository
+  socialLinksRepository,
+  leaderboardRepository
 } from '../db/repositories';
+import { ROLES_DEFINITIONS, PERMISSIONS_CATALOG } from '../../src/utils/permissions';
 import { 
   handleDiscordLogin, 
   handleDiscordCallback, 
@@ -26,7 +28,8 @@ import {
   attachUser, 
   requireAuth, 
   requireRole, 
-  requireOwner 
+  requireOwner,
+  requirePermission
 } from '../middleware/authMiddleware';
 import { UserRole } from '../../src/types';
 import { fiveMService } from '../services/fivemService';
@@ -122,9 +125,16 @@ router.get('/fivem/players', async (req: Request, res: Response) => {
   }
 });
 
-// Leaderboard: Empty state until in-game database sync is configured
+// Leaderboard: Dynamic categorized rankings with in-game sync & CMS management
 router.get('/leaderboard', async (req: Request, res: Response) => {
-  return res.json([]);
+  try {
+    const category = req.query.category ? String(req.query.category) : undefined;
+    const items = await leaderboardRepository.getByCategory(category);
+    return res.json(items);
+  } catch (err: any) {
+    console.error('[API] /leaderboard error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch leaderboard' });
+  }
 });
 
 // ---------------- PUBLIC CONTENT (NEWS, RULES, JOBS, PRODUCTS, FAQ, SOCIALS) ----------------
@@ -1149,7 +1159,7 @@ router.delete('/admin/products/:id', requireAuth, requireRole([UserRole.SUPER_AD
 });
 
 // ---------------- ADMIN: FAQ CMS ----------------
-router.post('/admin/faq', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]), async (req: Request, res: Response) => {
+router.post('/admin/faq', requireAuth, requirePermission('manage_faq'), async (req: Request, res: Response) => {
   try {
     const item = await faqRepository.save(req.body);
     await auditLogRepository.log({
@@ -1168,7 +1178,17 @@ router.post('/admin/faq', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRo
   }
 });
 
-router.delete('/admin/faq/:id', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN]), async (req: Request, res: Response) => {
+router.get('/admin/faq', requireAuth, requirePermission('manage_faq'), async (req: Request, res: Response) => {
+  try {
+    const items = await faqRepository.getAll();
+    return res.json(items);
+  } catch (err: any) {
+    console.error('[API] /admin/faq error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch FAQ items' });
+  }
+});
+
+router.delete('/admin/faq/:id', requireAuth, requirePermission('manage_faq'), async (req: Request, res: Response) => {
   try {
     const success = await faqRepository.delete(req.params.id);
     if (success) {
@@ -1187,6 +1207,59 @@ router.delete('/admin/faq/:id', requireAuth, requireRole([UserRole.SUPER_ADMIN, 
   } catch (err: any) {
     console.error('[API] /admin/faq delete error:', err.message);
     return res.status(500).json({ error: 'Failed to delete FAQ item' });
+  }
+});
+
+// ---------------- ADMIN: LEADERBOARD CMS ----------------
+router.get('/admin/leaderboard', requireAuth, requirePermission('manage_leaderboard'), async (req: Request, res: Response) => {
+  try {
+    const category = req.query.category ? String(req.query.category) : undefined;
+    const items = await leaderboardRepository.getByCategory(category);
+    return res.json(items);
+  } catch (err: any) {
+    console.error('[API] /admin/leaderboard error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch admin leaderboard' });
+  }
+});
+
+router.post('/admin/leaderboard', requireAuth, requirePermission('manage_leaderboard'), async (req: Request, res: Response) => {
+  try {
+    const item = await leaderboardRepository.save(req.body);
+    await auditLogRepository.log({
+      adminId: req.user!.id,
+      adminName: req.user!.globalName || req.user!.username,
+      action: 'LEADERBOARD_UPDATED',
+      entity: 'LeaderboardEntry',
+      entityId: item.id,
+      metadata: `Saved leaderboard record: ${item.name} (${item.category})`,
+      ip: req.ip || '127.0.0.1'
+    });
+    return res.status(201).json(item);
+  } catch (err: any) {
+    console.error('[API] /admin/leaderboard save error:', err.message);
+    return res.status(500).json({ error: 'Failed to save leaderboard entry' });
+  }
+});
+
+router.delete('/admin/leaderboard/:id', requireAuth, requirePermission('manage_leaderboard'), async (req: Request, res: Response) => {
+  try {
+    const success = await leaderboardRepository.delete(req.params.id);
+    if (success) {
+      await auditLogRepository.log({
+        adminId: req.user!.id,
+        adminName: req.user!.globalName || req.user!.username,
+        action: 'LEADERBOARD_DELETED',
+        entity: 'LeaderboardEntry',
+        entityId: req.params.id,
+        metadata: `Deleted leaderboard entry #${req.params.id}`,
+        ip: req.ip || '127.0.0.1'
+      });
+      return res.json({ success: true, message: 'Leaderboard entry deleted' });
+    }
+    return res.status(404).json({ error: 'Leaderboard entry not found' });
+  } catch (err: any) {
+    console.error('[API] /admin/leaderboard delete error:', err.message);
+    return res.status(500).json({ error: 'Failed to delete leaderboard entry' });
   }
 });
 
@@ -1259,6 +1332,77 @@ router.post('/admin/settings', requireAuth, requireOwner, async (req: Request, r
   } catch (err: any) {
     console.error('[API] /admin/settings error:', err.message);
     return res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
+// ---------------- ADMIN: HOMEPAGE CMS ----------------
+router.post('/admin/homepage', requireAuth, requirePermission('manage_homepage'), async (req: Request, res: Response) => {
+  try {
+    const homepageData = req.body;
+    const current = await settingsRepository.getSettings();
+    const updated = await settingsRepository.updateSettings({
+      ...current,
+      homepage: {
+        ...(current.homepage || {}),
+        ...homepageData
+      }
+    });
+
+    await auditLogRepository.log({
+      adminId: req.user!.id,
+      adminName: req.user!.globalName || req.user!.username,
+      action: 'HOMEPAGE_CMS_UPDATED',
+      entity: 'HomepageCMS',
+      entityId: 'global',
+      metadata: 'Updated homepage hero, announcement banners, and live counters',
+      ip: req.ip || '127.0.0.1'
+    });
+
+    return res.json(updated.homepage);
+  } catch (err: any) {
+    console.error('[API] /admin/homepage error:', err.message);
+    return res.status(500).json({ error: 'Failed to update homepage CMS' });
+  }
+});
+
+// ---------------- ADMIN: ROLES & PERMISSIONS CONFIG ----------------
+router.get('/admin/roles-config', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const settings = await settingsRepository.getSettings();
+    return res.json({
+      roles: ROLES_DEFINITIONS,
+      permissions: PERMISSIONS_CATALOG,
+      customRolePermissions: settings.rolePermissions || {}
+    });
+  } catch (err: any) {
+    console.error('[API] /admin/roles-config error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch roles configuration' });
+  }
+});
+
+router.post('/admin/roles-config', requireAuth, requirePermission('manage_roles'), async (req: Request, res: Response) => {
+  try {
+    const { rolePermissions } = req.body;
+    const current = await settingsRepository.getSettings();
+    const updated = await settingsRepository.updateSettings({
+      ...current,
+      rolePermissions: rolePermissions || {}
+    });
+
+    await auditLogRepository.log({
+      adminId: req.user!.id,
+      adminName: req.user!.globalName || req.user!.username,
+      action: 'ROLES_PERMISSIONS_UPDATED',
+      entity: 'RolePermissions',
+      entityId: 'global',
+      metadata: 'Updated default permissions matrix for roles',
+      ip: req.ip || '127.0.0.1'
+    });
+
+    return res.json({ success: true, rolePermissions: updated.rolePermissions });
+  } catch (err: any) {
+    console.error('[API] /admin/roles-config save error:', err.message);
+    return res.status(500).json({ error: 'Failed to update roles configuration' });
   }
 });
 

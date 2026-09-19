@@ -66,8 +66,9 @@ export const apiClient = {
     return res.json();
   },
 
-  async getLeaderboard() {
-    const res = await apiFetch('/api/leaderboard');
+  async getLeaderboard(category?: string) {
+    const url = category ? `/api/leaderboard?category=${encodeURIComponent(category)}` : '/api/leaderboard';
+    const res = await apiFetch(url);
     if (!res.ok) return [];
     return res.json();
   },
@@ -359,6 +360,11 @@ export const apiClient = {
     return res.json();
   },
 
+  async getAdminFAQ() {
+    const res = await apiFetch('/api/admin/faq');
+    return res.json();
+  },
+
   async saveFAQ(data: any) {
     const res = await apiFetch('/api/admin/faq', {
       method: 'POST',
@@ -387,6 +393,47 @@ export const apiClient = {
 
   async getAuditLogs() {
     const res = await apiFetch('/api/admin/audit-logs');
+    return res.json();
+  },
+
+  async getAdminLeaderboard(category?: string) {
+    const url = category ? `/api/admin/leaderboard?category=${encodeURIComponent(category)}` : '/api/admin/leaderboard';
+    const res = await apiFetch(url);
+    if (!res.ok) return [];
+    return res.json();
+  },
+
+  async saveLeaderboardItem(data: any) {
+    const res = await apiFetch('/api/admin/leaderboard', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async deleteLeaderboardItem(id: string) {
+    const res = await apiFetch(`/api/admin/leaderboard/${id}`, { method: 'DELETE' });
+    return res.json();
+  },
+
+  async getRolesConfig() {
+    const res = await apiFetch('/api/admin/roles-config');
+    return res.json();
+  },
+
+  async saveRolesConfig(data: any) {
+    const res = await apiFetch('/api/admin/roles-config', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+    return res.json();
+  },
+
+  async saveHomepageCMS(data: any) {
+    const res = await apiFetch('/api/admin/homepage', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
     return res.json();
   },
 

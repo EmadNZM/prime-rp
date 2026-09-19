@@ -14,3 +14,4 @@ export * from './FAQRepository';
 export * from './ReportRepository';
 export * from './SocialLinksRepository';
 export * from './DiscordTokenRepository';
+export * from './LeaderboardRepository';

@@ -20,6 +20,10 @@ import { LogoManagerSettings } from '../../components/admin/LogoManagerSettings'
 import { ReportsManager } from '../../components/admin/ReportsManager';
 import { SocialLinksManager } from '../../components/admin/SocialLinksManager';
 import { JobsManager } from '../../components/admin/JobsManager';
+import { RolesPermissionsManager } from '../../components/admin/RolesPermissionsManager';
+import { HomepageCMSManager } from '../../components/admin/HomepageCMSManager';
+import { LeaderboardManager } from '../../components/admin/LeaderboardManager';
+import { FAQManager } from '../../components/admin/FAQManager';
 import { 
   LayoutDashboard, 
   Users, 
@@ -37,7 +41,13 @@ import {
   Check, 
   AlertTriangle, 
   Lock,
-  Crown
+  Crown,
+  Sliders,
+  Layout,
+  Trophy,
+  HelpCircle,
+  Eye,
+  RotateCcw
 } from 'lucide-react';
 
 interface AdminDashboardProps {
@@ -46,11 +56,11 @@ interface AdminDashboardProps {
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab }) => {
   const { t, language } = useLanguage();
-  const { user, isStaff, isOwner } = useAuth();
+  const { user, effectiveUser, isStaff, isOwner, hasPermission, previewRole, setPreviewRole } = useAuth();
   const { updateSettings: updateGlobalSettings } = useSettings();
 
   const [activeAdminTab, setActiveAdminTab] = useState<
-    'overview' | 'users' | 'reports' | 'news' | 'rules' | 'jobs' | 'store' | 'tickets' | 'audit' | 'settings'
+    'overview' | 'roles' | 'homepage' | 'leaderboard' | 'faq' | 'users' | 'reports' | 'news' | 'rules' | 'jobs' | 'store' | 'tickets' | 'audit' | 'settings'
   >('overview');
 
   const [overviewMetrics, setOverviewMetrics] = useState<any>(null);
@@ -446,38 +456,91 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
           </button>
         </div>
 
+        {/* Role Preview Simulation Alert Banner */}
+        {previewRole && (
+          <div className="mb-6 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs shadow-lg">
+            <div className="flex items-center gap-2.5">
+              <Eye className="w-5 h-5 text-amber-400 shrink-0" />
+              <div>
+                <span className="font-black text-amber-300">
+                  {language === 'ar' ? 'وضع محاكاة الرتب نشط حالياً:' : 'Active Role Preview Simulation:'}
+                </span>{' '}
+                <span className="text-white font-bold px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/30">
+                  {effectiveUser?.role}
+                </span>{' '}
+                <span className="text-amber-200/70">
+                  ({language === 'ar' ? `رتبتك الحقيقية: ${user?.role}` : `Your real role: ${user?.role}`})
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setPreviewRole(null)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-xs transition-all cursor-pointer shrink-0"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              <span>{language === 'ar' ? 'إلغاء المحاكاة واستعادة الرتبة' : 'Exit Simulation'}</span>
+            </button>
+          </div>
+        )}
+
         {/* Horizontal Navigation Tabs */}
         <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-8 border-b border-white/[0.06]">
           {[
-            { id: 'overview', label: t('admin.overview'), icon: LayoutDashboard },
-            { id: 'users', label: t('admin.users'), icon: Users },
-            { id: 'reports', label: language === 'ar' ? 'البلاغات والشكاوى' : 'Reports & Violations', icon: AlertTriangle },
-            { id: 'news', label: t('admin.news'), icon: Newspaper },
-            { id: 'rules', label: t('admin.rules'), icon: BookOpen },
-            { id: 'jobs', label: t('admin.jobs'), icon: Briefcase },
-            { id: 'store', label: t('admin.store'), icon: ShoppingBag },
-            { id: 'tickets', label: t('admin.ticketsCMS') || t('admin.tickets'), icon: Ticket },
-            { id: 'audit', label: t('admin.auditLogs'), icon: FileText },
-            { id: 'settings', label: t('admin.siteSettings') || t('admin.settings'), icon: Settings }
-          ].map((item) => {
-            const Icon = item.icon;
-            const active = activeAdminTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setActiveAdminTab(item.id as any)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
-                  active
-                    ? 'bg-[#c8874b] text-black shadow-lg shadow-[#c8874b]/20 font-black uppercase tracking-wider'
-                    : 'bg-[#0d0f16] text-[#969cad] hover:text-white hover:bg-[#131620] border border-white/[0.06]'
-                }`}
-              >
-                <Icon className="w-4 h-4" />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+            { id: 'overview', label: t('admin.overview'), icon: LayoutDashboard, perm: null },
+            { id: 'roles', label: language === 'ar' ? 'الرتب والصلاحيات' : 'Roles & RBAC', icon: Sliders, perm: 'manage_roles' },
+            { id: 'homepage', label: language === 'ar' ? 'واجهة الموقع' : 'Homepage CMS', icon: Layout, perm: 'manage_homepage' },
+            { id: 'leaderboard', label: language === 'ar' ? 'لوحة الشرف' : 'Leaderboard', icon: Trophy, perm: 'manage_leaderboard' },
+            { id: 'faq', label: language === 'ar' ? 'الأسئلة الشائعة' : 'FAQ CMS', icon: HelpCircle, perm: 'manage_faq' },
+            { id: 'users', label: t('admin.users'), icon: Users, perm: 'manage_users' },
+            { id: 'reports', label: language === 'ar' ? 'البلاغات والشكاوى' : 'Reports & Violations', icon: AlertTriangle, perm: 'manage_reports' },
+            { id: 'news', label: t('admin.news'), icon: Newspaper, perm: 'manage_news' },
+            { id: 'rules', label: t('admin.rules'), icon: BookOpen, perm: 'manage_rules' },
+            { id: 'jobs', label: t('admin.jobs'), icon: Briefcase, perm: 'manage_jobs' },
+            { id: 'store', label: t('admin.store'), icon: ShoppingBag, perm: 'manage_store' },
+            { id: 'tickets', label: t('admin.ticketsCMS') || t('admin.tickets'), icon: Ticket, perm: 'manage_tickets' },
+            { id: 'audit', label: t('admin.auditLogs'), icon: FileText, perm: 'view_audit_logs' },
+            { id: 'settings', label: t('admin.siteSettings') || t('admin.settings'), icon: Settings, perm: 'manage_settings' }
+          ]
+            .filter((item) => !item.perm || hasPermission(item.perm as any))
+            .map((item) => {
+              const Icon = item.icon;
+              const active = activeAdminTab === item.id;
+              return (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveAdminTab(item.id as any)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all cursor-pointer ${
+                    active
+                      ? 'bg-[#c8874b] text-black shadow-lg shadow-[#c8874b]/20 font-black uppercase tracking-wider'
+                      : 'bg-[#0d0f16] text-[#969cad] hover:text-white hover:bg-[#131620] border border-white/[0.06]'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
         </div>
+
+        {/* TAB: ROLES & PERMISSIONS MANAGER */}
+        {activeAdminTab === 'roles' && hasPermission('manage_roles') && (
+          <RolesPermissionsManager />
+        )}
+
+        {/* TAB: HOMEPAGE CMS MANAGER */}
+        {activeAdminTab === 'homepage' && hasPermission('manage_homepage') && (
+          <HomepageCMSManager />
+        )}
+
+        {/* TAB: LEADERBOARD CMS MANAGER */}
+        {activeAdminTab === 'leaderboard' && hasPermission('manage_leaderboard') && (
+          <LeaderboardManager />
+        )}
+
+        {/* TAB: FAQ CMS MANAGER */}
+        {activeAdminTab === 'faq' && hasPermission('manage_faq') && (
+          <FAQManager />
+        )}
 
         {/* TAB 1: OVERVIEW */}
         {activeAdminTab === 'overview' && (

@@ -10,7 +10,8 @@ import {
   initialFAQ, 
   initialSiteSettings,
   initialSocialLinks,
-  initialReports
+  initialReports,
+  initialLeaderboard
 } from './seedData';
 import { 
   User, 
@@ -28,7 +29,8 @@ import {
   SocialLinkItem,
   ReportStatus,
   JobApplication,
-  JobApplicationStatus
+  JobApplicationStatus,
+  LeaderboardEntry
 } from '../../src/types';
 
 export interface StoredSession {
@@ -65,6 +67,7 @@ interface DatabaseSchema {
   sessions: StoredSession[];
   discordTokens: StoredDiscordTokens[];
   jobApplications: JobApplication[];
+  leaderboard: LeaderboardEntry[];
 }
 
 const DATA_DIR = path.join(process.cwd(), 'data');
@@ -91,7 +94,8 @@ class DatabaseStore {
       socialLinks: [],
       sessions: [],
       discordTokens: [],
-      jobApplications: []
+      jobApplications: [],
+      leaderboard: []
     };
     this.init();
   }
@@ -115,7 +119,8 @@ class DatabaseStore {
           socialLinks: parsed.socialLinks || [...initialSocialLinks],
           sessions: parsed.sessions || [],
           discordTokens: parsed.discordTokens || [],
-          jobApplications: parsed.jobApplications || []
+          jobApplications: parsed.jobApplications || [],
+          leaderboard: parsed.leaderboard && parsed.leaderboard.length > 0 ? parsed.leaderboard : [...initialLeaderboard]
         };
       } catch (err) {
         console.error('Failed to parse database file, resetting to seed data:', err);
@@ -137,6 +142,7 @@ class DatabaseStore {
     this.data.faq = [...initialFAQ];
     this.data.reports = [...initialReports];
     this.data.socialLinks = [...initialSocialLinks];
+    this.data.leaderboard = [...initialLeaderboard];
     this.data.sessions = [];
     this.data.discordTokens = [];
     this.data.siteSettings = { ...initialSiteSettings };
@@ -1058,6 +1064,58 @@ class DatabaseStore {
     app.updatedAt = new Date().toISOString();
     this.save();
     return app;
+  }
+
+  // --- LEADERBOARD ---
+  getLeaderboard(category?: string): LeaderboardEntry[] {
+    if (!this.data.leaderboard || this.data.leaderboard.length === 0) {
+      this.data.leaderboard = [...initialLeaderboard];
+    }
+    if (category) {
+      return this.data.leaderboard
+        .filter(item => item.category === category)
+        .sort((a, b) => (a.rank || 0) - (b.rank || 0));
+    }
+    return this.data.leaderboard.sort((a, b) => (a.rank || 0) - (b.rank || 0));
+  }
+
+  saveLeaderboardEntry(entry: Partial<LeaderboardEntry> & { name: string; metric: string }): LeaderboardEntry {
+    if (!this.data.leaderboard) {
+      this.data.leaderboard = [...initialLeaderboard];
+    }
+    const id = entry.id || `lb_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+    const existingIndex = this.data.leaderboard.findIndex(i => i.id === id);
+    const updated: LeaderboardEntry = {
+      id,
+      category: (entry.category as any) || 'playtime',
+      rank: Number(entry.rank) || (this.data.leaderboard.length + 1),
+      name: entry.name,
+      metric: entry.metric,
+      subtitle: entry.subtitle || '',
+      badge: entry.badge || '',
+      avatar: entry.avatar || '',
+      discordId: entry.discordId || '',
+      createdAt: entry.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    if (existingIndex >= 0) {
+      this.data.leaderboard[existingIndex] = updated;
+    } else {
+      this.data.leaderboard.push(updated);
+    }
+    this.save();
+    return updated;
+  }
+
+  deleteLeaderboardEntry(id: string): boolean {
+    if (!this.data.leaderboard) return false;
+    const initialLength = this.data.leaderboard.length;
+    this.data.leaderboard = this.data.leaderboard.filter(i => i.id !== id);
+    if (this.data.leaderboard.length !== initialLength) {
+      this.save();
+      return true;
+    }
+    return false;
   }
 }
 

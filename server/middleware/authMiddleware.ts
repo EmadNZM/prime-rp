@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { userRepository, sessionRepository } from '../db/repositories';
 import { User, UserRole, UserStatus } from '../../src/types';
+import { db } from '../db/store';
+import { DEFAULT_ROLE_PERMISSIONS } from '../../src/utils/permissions';
 
 declare global {
   namespace Express {
@@ -89,8 +91,21 @@ export function requirePermission(permission: string) {
       return next();
     }
 
-    const hasPerm = req.user.permissions?.some((p) => {
-      if (p === permission) return true;
+    // Resolve role permissions from dynamic config or defaults
+    const siteSettings = db.getSiteSettings();
+    const configuredRolePerms = siteSettings.rolePermissions?.[req.user.role];
+    const rolePermissions: string[] = (configuredRolePerms && configuredRolePerms.length > 0)
+      ? configuredRolePerms
+      : (DEFAULT_ROLE_PERMISSIONS[req.user.role] || []);
+    
+    // Combine role permissions with any user-specific overrides
+    const effectivePermissions = Array.from(new Set([
+      ...rolePermissions,
+      ...(req.user.permissions || [])
+    ]));
+
+    const hasPerm = effectivePermissions.some((p) => {
+      if (p === permission || p === '*') return true;
       if (p.endsWith('.*')) {
         const prefix = p.replace('.*', '');
         return permission.startsWith(prefix);
@@ -105,3 +120,4 @@ export function requirePermission(permission: string) {
     next();
   };
 }
+

@@ -208,6 +208,92 @@ export interface AuditLogItem {
   createdAt: string;
 }
 
+export type PermissionId =
+  | 'manage_roles'       // نظام الرتب والصلاحيات
+  | 'manage_users'       // إدارة المواطنين وحالاتهم
+  | 'manage_homepage'    // التحكم الكامل بالصفحة الرئيسية والبنرات
+  | 'manage_store'       // التحكم بالمتجر والمنتجات والأسعار
+  | 'manage_orders'      // إدارة الطلبات والمبيعات
+  | 'manage_rules'       // إدارة القوانين والبنود والتحذيرات
+  | 'manage_jobs'        // إدارة الوظائف والتقديمات
+  | 'manage_news'        // إدارة الأخبار والمقالات
+  | 'manage_tickets'     // إدارة تذاكر الدعم الفني
+  | 'manage_reports'     // مراجعة البلاغات والشكاوى
+  | 'manage_leaderboard' // التحكم بالمتصدرين ولوحة الشرف
+  | 'manage_faq'         // إدارة الأسئلة الشائعة
+  | 'manage_settings'    // الإعدادات العامة والسيرفر والشعارات
+  | 'view_audit_logs';   // استعراض سجل الرقابة والتدقيق
+
+export interface PermissionDefinition {
+  id: PermissionId;
+  nameAr: string;
+  nameEn: string;
+  categoryAr: string;
+  categoryEn: string;
+  descriptionAr: string;
+  descriptionEn: string;
+}
+
+export interface RoleDefinition {
+  role: UserRole;
+  nameAr: string;
+  nameEn: string;
+  badgeColor: string;
+  descriptionAr: string;
+  descriptionEn: string;
+  level: number;
+  defaultPermissions: PermissionId[];
+}
+
+export interface LeaderboardEntry {
+  id: string;
+  category: 'playtime' | 'wealth' | 'law' | 'wanted';
+  rank: number;
+  name: string;
+  metric: string;
+  subtitle: string;
+  badge?: string;
+  avatar?: string;
+  discordId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface HomepageSettings {
+  announcement?: {
+    enabled: boolean;
+    textAr: string;
+    textEn: string;
+    type: 'info' | 'warning' | 'urgent' | 'success';
+    badgeAr?: string;
+    badgeEn?: string;
+    link?: string;
+  };
+  hero?: {
+    titleLine1Ar?: string;
+    titleLine1En?: string;
+    titleLine2Ar?: string;
+    titleLine2En?: string;
+    subtitleAr?: string;
+    subtitleEn?: string;
+    mottoAr?: string;
+    mottoEn?: string;
+    badgeAr?: string;
+    badgeEn?: string;
+    bgImage?: string;
+    ctaConnectAr?: string;
+    ctaConnectEn?: string;
+    ctaDiscordAr?: string;
+    ctaDiscordEn?: string;
+  };
+  stats?: {
+    totalCitizens?: string;
+    activeFactions?: string;
+    satisfactionRate?: string;
+    fpsPerformance?: string;
+  };
+}
+
 export interface SiteSettings {
   siteName: string;
   siteDescription: string;
@@ -229,6 +315,8 @@ export interface SiteSettings {
     login?: string;      // Login card logo
     favicon?: string;    // Browser favicon
   };
+  homepage?: HomepageSettings;
+  rolePermissions?: Record<string, PermissionId[]>;
 }
 
 export interface FAQItem {
