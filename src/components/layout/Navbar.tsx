@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
@@ -34,7 +34,26 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState<boolean>(false);
   const [telemetry, setTelemetry] = useState<FiveMTelemetry | null>(null);
+
+  const userDropdownRef = useRef<HTMLDivElement>(null);
+  const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
+        setMoreMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleOpenCart = () => {
     if (setIsCartOpen) {
@@ -103,8 +122,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
     setLanguage(language === 'ar' ? 'en' : 'ar');
   };
 
-  const [moreMenuOpen, setMoreMenuOpen] = useState<boolean>(false);
-
   const isOnline = telemetry?.online || (telemetry?.playersCount !== undefined && telemetry?.playersCount > 0);
   const playersOnline = isOnline ? (telemetry?.playersCount ?? 0) : 0;
   const maxPlayers = telemetry?.maxPlayers || 150;
@@ -129,8 +146,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
   const isSecondaryActive = secondaryNavLinks.some(link => link.id === currentTab);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-2 sm:px-4 md:px-6 pt-2 pointer-events-none w-full max-w-full overflow-x-hidden">
-      <div className="max-w-7xl mx-auto pointer-events-auto space-y-1.5 w-full min-w-0">
+    <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-2 sm:px-4 md:px-6 pt-2 pointer-events-none w-full max-w-full overflow-visible">
+      <div className="max-w-7xl mx-auto pointer-events-auto space-y-1.5 w-full min-w-0 overflow-visible">
         
         {/* TOP UTILITY STRIP (No Server Name, Safe Overflow) */}
         <div className={`hidden md:flex items-center justify-between px-4 py-1 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all duration-300 w-full min-w-0 overflow-hidden ${
@@ -158,23 +175,29 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
           </div>
         </div>
 
-        <div
-          className={`flex items-center justify-between rounded-2xl transition-all duration-300 px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 w-full min-w-0 ${
-            isScrolled
-              ? 'bg-[#0b0d14]/92 backdrop-blur-2xl border border-white/[0.08] shadow-2xl shadow-black/90'
-              : 'bg-[#0b0d14]/80 backdrop-blur-xl border border-white/[0.06] shadow-xl'
-          }`}
-        >
-          {/* BRAND LOGO (Clean Mark - Server Name Removed from Navbar Bar) */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <button
-              onClick={() => handleNavClick('home')}
-              className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c8874b] rounded-xl group transition-transform hover:scale-105 cursor-pointer"
-              title={language === 'ar' ? 'الصفحة الرئيسية' : 'Home'}
-            >
-              <PrimeLogo size="md" variant="navbar" showText={false} withGlow={true} />
-            </button>
-          </div>
+        {/* MAIN NAVBAR BAR - Isolated background prevents Chromium backdrop-filter clipping bug on children dropdowns */}
+        <div className="relative rounded-2xl w-full min-w-0 overflow-visible">
+          {/* Glassmorphism Background Layer */}
+          <div
+            className={`absolute inset-0 rounded-2xl pointer-events-none transition-all duration-300 ${
+              isScrolled
+                ? 'bg-[#0b0d14]/95 backdrop-blur-2xl border border-white/[0.08] shadow-2xl shadow-black/90'
+                : 'bg-[#0b0d14]/85 backdrop-blur-xl border border-white/[0.06] shadow-xl'
+            }`}
+          />
+
+          {/* Foreground Interactive Row */}
+          <div className="relative z-10 flex items-center justify-between px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 w-full min-w-0 overflow-visible">
+            {/* BRAND LOGO (Clean Mark - Server Name Removed from Navbar Bar) */}
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              <button
+                onClick={() => handleNavClick('home')}
+                className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c8874b] rounded-xl group transition-transform hover:scale-105 cursor-pointer"
+                title={language === 'ar' ? 'الصفحة الرئيسية' : 'Home'}
+              >
+                <PrimeLogo size="md" variant="navbar" showText={false} withGlow={true} />
+              </button>
+            </div>
 
           {/* DESKTOP NAVIGATION LINKS (Balanced to Never Overflow in English or Arabic) */}
           <nav className="hidden xl:flex items-center gap-1 bg-[#08090d]/60 p-1 rounded-2xl border border-white/[0.04] min-w-0" aria-label="Main Navigation">
@@ -230,42 +253,48 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             </div>
 
             {/* "More" Dropdown on standard xl screens to eliminate any overflow */}
-            <div className="relative 2xl:hidden">
+            <div className="relative 2xl:hidden" ref={moreMenuRef}>
               <button
                 onClick={() => setMoreMenuOpen(!moreMenuOpen)}
                 className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap ${
-                  isSecondaryActive
+                  isSecondaryActive || moreMenuOpen
                     ? 'text-[#df9f64] bg-[#c8874b]/10'
                     : 'text-[#969cad] hover:text-white'
                 }`}
+                aria-expanded={moreMenuOpen}
               >
                 <span>{language === 'ar' ? 'المزيد' : 'More'}</span>
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-[#df9f64]' : ''}`} />
               </button>
 
-              {moreMenuOpen && (
-                <div
-                  className="absolute left-0 rtl:left-auto rtl:right-0 mt-2 w-44 bg-[#0d0f16]/95 border border-white/[0.08] rounded-2xl shadow-2xl py-1.5 z-50 backdrop-blur-2xl animate-in fade-in zoom-in-95 duration-150"
-                  onMouseLeave={() => setMoreMenuOpen(false)}
-                >
-                  {secondaryNavLinks.map((link) => (
-                    <button
-                      key={link.id}
-                      onClick={() => {
-                        handleNavClick(link.id);
-                        setMoreMenuOpen(false);
-                      }}
-                      className={`w-full text-left rtl:text-right px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                        currentTab === link.id
-                          ? 'text-[#df9f64] bg-[#c8874b]/10'
-                          : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
-                      }`}
-                    >
-                      {link.label}
-                    </button>
-                  ))}
-                </div>
-              )}
+              <AnimatePresence>
+                {moreMenuOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    transition={{ duration: 0.15, ease: 'easeOut' }}
+                    className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-2 w-44 bg-[#0d0f17] border border-[#c8874b]/40 rounded-2xl shadow-2xl shadow-black/90 py-1.5 z-50 overflow-hidden"
+                  >
+                    {secondaryNavLinks.map((link) => (
+                      <button
+                        key={link.id}
+                        onClick={() => {
+                          handleNavClick(link.id);
+                          setMoreMenuOpen(false);
+                        }}
+                        className={`w-full text-left rtl:text-right px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                          currentTab === link.id
+                            ? 'text-[#df9f64] bg-[#c8874b]/10'
+                            : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
+                        }`}
+                      >
+                        {link.label}
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </nav>
 
@@ -315,10 +344,16 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
 
             {/* User Session / Discord Login */}
             {isAuthenticated && user ? (
-              <div className="relative">
+              <div className="relative" ref={userDropdownRef}>
                 <button
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 p-1.5 pl-3 rtl:pl-1.5 rtl:pr-3 rounded-xl bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b] transition-all focus:outline-none cursor-pointer"
+                  onClick={() => setUserDropdownOpen((prev) => !prev)}
+                  className={`flex items-center gap-2 p-1.5 pl-3 rtl:pl-1.5 rtl:pr-3 rounded-xl bg-[#11131c] border transition-all focus:outline-none cursor-pointer ${
+                    userDropdownOpen
+                      ? 'border-[#c8874b] shadow-[0_0_15px_rgba(200,135,75,0.25)]'
+                      : 'border-white/[0.06] hover:border-[#c8874b]/70'
+                  }`}
+                  aria-expanded={userDropdownOpen}
+                  aria-haspopup="true"
                 >
                   <span className="text-xs font-bold text-white max-w-[90px] truncate hidden sm:inline">
                     {user.globalName || user.username}
@@ -326,77 +361,103 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
                   <img
                     src={user.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=80'}
                     alt={user.username}
-                    className="w-7 h-7 rounded-lg border border-[#c8874b] object-cover"
+                    className="w-7 h-7 rounded-lg border border-[#c8874b] object-cover shrink-0"
                   />
-                  <ChevronDown className="w-3 h-3 text-[#969cad]" />
+                  <ChevronDown className={`w-3.5 h-3.5 text-[#969cad] transition-transform duration-200 ${userDropdownOpen ? 'rotate-180 text-[#df9f64]' : ''}`} />
                 </button>
 
                 {/* Dropdown Menu */}
-                {userDropdownOpen && (
-                  <div
-                    className="absolute right-0 rtl:right-auto rtl:left-0 mt-2 w-56 bg-[#0d0f16] border border-white/[0.08] rounded-2xl shadow-2xl py-2 z-50 text-sm animate-in fade-in zoom-in-95 duration-150 backdrop-blur-2xl"
-                    onMouseLeave={() => setUserDropdownOpen(false)}
-                  >
-                    <div className="px-4 py-3 border-b border-white/[0.06]">
-                      <p className="text-[10px] text-[#666] uppercase tracking-wider font-semibold">
-                        {language === 'ar' ? 'المواطن المصادق' : 'Authenticated Citizen'}
-                      </p>
-                      <p className="font-black text-white truncate text-sm mt-0.5">
-                        {user.globalName || user.username}
-                      </p>
-                      <span className="inline-block mt-1 px-2 py-0.5 text-[10px] font-black rounded-md bg-[#c8874b]/15 text-[#df9f64] border border-[#c8874b]/30 uppercase font-rajdhani">
-                        {user.role}
-                      </span>
-                    </div>
-
-                    <button
-                      onClick={() => handleNavClick('dashboard')}
-                      className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#969cad] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
+                <AnimatePresence>
+                  {userDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15, ease: 'easeOut' }}
+                      className="absolute top-full right-0 rtl:right-auto rtl:left-0 mt-2.5 w-64 bg-[#0d0f17] border border-[#c8874b]/40 rounded-2xl shadow-2xl shadow-black/95 py-2 z-[9999] text-sm overflow-hidden"
                     >
-                      <UserIcon className="w-4 h-4 text-[#c8874b]" />
-                      <span>{t('userDashboard.overview')}</span>
-                    </button>
+                      <div className="px-4 py-3 border-b border-white/[0.06]">
+                        <p className="text-[10px] text-[#888] uppercase tracking-wider font-semibold">
+                          {language === 'ar' ? 'المواطن المصادق' : 'Authenticated Citizen'}
+                        </p>
+                        <p className="font-black text-white truncate text-sm mt-0.5">
+                          {user.globalName || user.username}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <span className="inline-block px-2 py-0.5 text-[10px] font-black rounded-md bg-[#c8874b]/15 text-[#df9f64] border border-[#c8874b]/30 uppercase font-rajdhani">
+                            {user.role}
+                          </span>
+                          {user.isOwner && (
+                            <span className="inline-block px-2 py-0.5 text-[10px] font-black rounded-md bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase font-rajdhani">
+                              OWNER
+                            </span>
+                          )}
+                        </div>
+                      </div>
 
-                    <button
-                      onClick={() => handleNavClick('tickets')}
-                      className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#969cad] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
-                    >
-                      <Ticket className="w-4 h-4 text-[#c8874b]" />
-                      <span>{t('nav.tickets')}</span>
-                    </button>
+                      <div className="py-1">
+                        <button
+                          onClick={() => {
+                            handleNavClick('dashboard');
+                            setUserDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#969cad] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
+                        >
+                          <UserIcon className="w-4 h-4 text-[#c8874b]" />
+                          <span>{t('userDashboard.overview')}</span>
+                        </button>
 
-                    <button
-                      onClick={() => handleNavClick('orders')}
-                      className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#969cad] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
-                    >
-                      <ShoppingBag className="w-4 h-4 text-[#c8874b]" />
-                      <span>{t('nav.orders')}</span>
-                    </button>
+                        <button
+                          onClick={() => {
+                            handleNavClick('tickets');
+                            setUserDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#969cad] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
+                        >
+                          <Ticket className="w-4 h-4 text-[#c8874b]" />
+                          <span>{t('nav.tickets')}</span>
+                        </button>
 
-                    {isStaff && (
-                      <button
-                        onClick={() => handleNavClick('admin')}
-                        className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#df9f64] hover:bg-[#c8874b]/10 transition-colors font-bold border-t border-white/[0.06] cursor-pointer text-xs"
-                      >
-                        <ShieldCheck className="w-4 h-4 text-[#c8874b]" />
-                        <span>{t('nav.adminPanel')}</span>
-                      </button>
-                    )}
+                        <button
+                          onClick={() => {
+                            handleNavClick('orders');
+                            setUserDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#969cad] hover:text-white hover:bg-white/[0.04] transition-colors cursor-pointer text-xs font-semibold"
+                        >
+                          <ShoppingBag className="w-4 h-4 text-[#c8874b]" />
+                          <span>{t('nav.orders')}</span>
+                        </button>
 
-                    <div className="border-t border-white/[0.06] mt-1 pt-1">
-                      <button
-                        onClick={() => {
-                          logout();
-                          setUserDropdownOpen(false);
-                        }}
-                        className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-rose-400 hover:bg-rose-500/10 transition-colors text-xs font-semibold cursor-pointer"
-                      >
-                        <LogOut className="w-3.5 h-3.5" />
-                        <span>{t('nav.logout')}</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
+                        {isStaff && (
+                          <button
+                            onClick={() => {
+                              handleNavClick('admin');
+                              setUserDropdownOpen(false);
+                            }}
+                            className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-[#df9f64] hover:bg-[#c8874b]/10 transition-colors font-bold border-t border-white/[0.06] cursor-pointer text-xs"
+                          >
+                            <ShieldCheck className="w-4 h-4 text-[#c8874b]" />
+                            <span>{t('nav.adminPanel')}</span>
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="border-t border-white/[0.06] mt-1 pt-1">
+                        <button
+                          onClick={() => {
+                            logout();
+                            setUserDropdownOpen(false);
+                          }}
+                          className="w-full flex items-center gap-2.5 px-4 py-2 text-left rtl:text-right text-rose-400 hover:bg-rose-500/10 transition-colors text-xs font-semibold cursor-pointer"
+                        >
+                          <LogOut className="w-3.5 h-3.5" />
+                          <span>{t('nav.logout')}</span>
+                        </button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ) : (
               <button
@@ -419,47 +480,56 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             </button>
           </div>
         </div>
+      </div>
 
         {/* MOBILE RESPONSIVE DRAWER */}
-        {mobileMenuOpen && (
-          <div className="xl:hidden mt-2 bg-[#0b0d14]/95 backdrop-blur-2xl border border-white/[0.08] rounded-2xl px-4 pt-4 pb-5 space-y-1 shadow-2xl animate-in slide-in-from-top-2 duration-200">
-            {/* Mobile Server status bar */}
-            <div className="flex items-center justify-between p-3 rounded-xl bg-[#11131c] border border-white/[0.06] mb-3">
-              <div className="flex items-center gap-2">
-                <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
-                <span className="text-xs font-bold text-white uppercase">
-                  {isOnline ? (language === 'ar' ? 'السيرفر متاح' : 'Server Online') : (language === 'ar' ? 'قيد الصيانة' : 'Standby')}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="xl:hidden mt-2 bg-[#0b0d14]/98 backdrop-blur-2xl border border-white/[0.08] rounded-2xl px-4 pt-4 pb-5 space-y-1 shadow-2xl"
+            >
+              {/* Mobile Server status bar */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-[#11131c] border border-white/[0.06] mb-3">
+                <div className="flex items-center gap-2">
+                  <span className={`w-2.5 h-2.5 rounded-full ${isOnline ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'}`} />
+                  <span className="text-xs font-bold text-white uppercase">
+                    {isOnline ? (language === 'ar' ? 'السيرفر متاح' : 'Server Online') : (language === 'ar' ? 'قيد الصيانة' : 'Standby')}
+                  </span>
+                </div>
+                <span className="text-xs font-bold text-[#c8874b] font-rajdhani">
+                  {playersOnline} / {maxPlayers} {language === 'ar' ? 'لاعب' : 'Slots'}
                 </span>
               </div>
-              <span className="text-xs font-bold text-[#c8874b] font-rajdhani">
-                {playersOnline} / {maxPlayers} {language === 'ar' ? 'لاعب' : 'Slots'}
-              </span>
-            </div>
 
-            {navLinks.map((link) => (
-              <button
-                key={link.id}
-                onClick={() => handleNavClick(link.id)}
-                className={`w-full text-left rtl:text-right px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                  currentTab === link.id
-                    ? 'bg-[#c8874b]/15 text-[#df9f64] border border-[#c8874b]/40'
-                    : 'text-[#969cad] hover:bg-white/[0.04] hover:text-white'
-                }`}
-              >
-                {link.label}
-              </button>
-            ))}
+              {navLinks.map((link) => (
+                <button
+                  key={link.id}
+                  onClick={() => handleNavClick(link.id)}
+                  className={`w-full text-left rtl:text-right px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                    currentTab === link.id
+                      ? 'bg-[#c8874b]/15 text-[#df9f64] border border-[#c8874b]/40'
+                      : 'text-[#969cad] hover:bg-white/[0.04] hover:text-white'
+                  }`}
+                >
+                  {link.label}
+                </button>
+              ))}
 
-            {isStaff && (
-              <button
-                onClick={() => handleNavClick('admin')}
-                className="w-full text-left rtl:text-right px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-[#df9f64] bg-[#c8874b]/10 hover:bg-[#c8874b]/20 border border-[#c8874b]/30 cursor-pointer"
-              >
-                {t('nav.adminPanel')}
-              </button>
-            )}
-          </div>
-        )}
+              {isStaff && (
+                <button
+                  onClick={() => handleNavClick('admin')}
+                  className="w-full text-left rtl:text-right px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider text-[#df9f64] bg-[#c8874b]/10 hover:bg-[#c8874b]/20 border border-[#c8874b]/30 cursor-pointer"
+                >
+                  {t('nav.adminPanel')}
+                </button>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </header>
   );
