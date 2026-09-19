@@ -13,13 +13,20 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
   const { settings } = useSettings();
   const [copiedIp, setCopiedIp] = useState<boolean>(false);
 
+  const [connectNotice, setConnectNotice] = useState<string | null>(null);
+
   const handleNav = (tab: string) => {
     setCurrentTab(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCopyIp = () => {
-    const connectTarget = settings?.fiveMConnectUrl || 'play.primerp.net:30120';
+    const connectTarget = settings?.fiveMConnectUrl;
+    if (!connectTarget) {
+      setConnectNotice(language === 'ar' ? 'غير مهيأ' : 'Not Configured');
+      setTimeout(() => setConnectNotice(null), 2500);
+      return;
+    }
     navigator.clipboard.writeText(connectTarget.startsWith('connect ') ? connectTarget : `connect ${connectTarget}`);
     setCopiedIp(true);
     setTimeout(() => setCopiedIp(false), 2000);
@@ -61,7 +68,7 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
                 title={language === 'ar' ? 'نسخ أمر الاتصال بالسيرفر' : 'Copy Server Direct Connect'}
               >
                 <Terminal className="w-3.5 h-3.5 text-[#c8874b]" />
-                <span>F8 Connect</span>
+                <span>{connectNotice ? connectNotice : 'F8 Connect'}</span>
                 {copiedIp ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#777]" />}
               </button>
             </div>

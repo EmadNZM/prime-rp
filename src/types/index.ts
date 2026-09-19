@@ -139,7 +139,7 @@ export interface OrderItem {
   productName: string;
   price: number;
   currency: string;
-  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  status: 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'REFUNDED';
   createdAt: string;
 }
 

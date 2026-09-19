@@ -132,15 +132,19 @@ export const StorePage: React.FC<StorePageProps> = ({ setCurrentTab }) => {
 
     try {
       const res = await apiClient.checkoutOrder(directCheckoutProduct.id);
+      if (res.redirectUrl) {
+        window.location.href = res.redirectUrl;
+        return;
+      }
       const createdOrder = res.order || (res.id ? res : null);
       if (createdOrder) {
         setCheckoutSuccess(createdOrder);
         setDirectCheckoutProduct(null);
       } else {
-        setCheckoutError(res.error || 'Failed to process transaction');
+        setCheckoutError(res.error || (language === 'ar' ? 'بوابة الدفع الإلكتروني قيد التهيئة الإدارية.' : 'Payment gateway is pending configuration.'));
       }
     } catch (err: any) {
-      setCheckoutError(err.message || 'An error occurred during checkout');
+      setCheckoutError(err.message || (language === 'ar' ? 'حدث خطأ أثناء معالجة الطلب' : 'An error occurred during checkout'));
     } finally {
       setIsProcessingDirectCheckout(false);
     }
@@ -740,20 +744,36 @@ export const StorePage: React.FC<StorePageProps> = ({ setCurrentTab }) => {
       {checkoutSuccess && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-[#0D0D0D] border border-[#C8874B] rounded-3xl p-8 max-w-md w-full text-center relative shadow-2xl">
-            <div className="w-16 h-16 rounded-full bg-[#C8874B]/20 text-[#C8874B] flex items-center justify-center mx-auto mb-4 border border-[#C8874B]/40">
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border ${
+              checkoutSuccess.status === 'COMPLETED'
+                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                : 'bg-[#C8874B]/20 text-[#C8874B] border-[#C8874B]/40'
+            }`}>
               <Check className="w-8 h-8" />
             </div>
             <h3 className="text-2xl font-black text-white mb-2">
-              {language === 'ar' ? 'تمت عملية الشراء بنجاح!' : 'Transaction Completed!'}
+              {checkoutSuccess.status === 'COMPLETED'
+                ? (language === 'ar' ? 'تمت عملية الشراء بنجاح!' : 'Transaction Completed!')
+                : (language === 'ar' ? 'تم تسجيل طلبك بنجاح' : 'Order Recorded Successfully')}
             </h3>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold font-mono mb-4 bg-white/5 border border-white/10">
+              <span className="text-[#888]">{language === 'ar' ? 'الحالة:' : 'Status:'}</span>
+              <span className={checkoutSuccess.status === 'COMPLETED' ? 'text-emerald-400' : 'text-amber-400'}>
+                {checkoutSuccess.status || 'PENDING'}
+              </span>
+            </div>
             <p className="text-sm text-[#888] mb-4">
               {language === 'ar' ? 'رقم الفاتورة المعتمدة:' : 'Official Invoice #:'}{' '}
               <span className="text-[#C8874B] font-bold font-mono">{checkoutSuccess.orderNumber || checkoutSuccess.id}</span>
             </p>
             <p className="text-xs text-[#AAA] mb-6 leading-relaxed">
-              {language === 'ar'
-                ? 'تم تسجيل طلبك وتفعيله تلقائياً في السيرفر ومزامنة الرتب في ديسكورد. يمكنك مراجعة سجل فواتيرك عبر لوحة التحكم.'
-                : 'Your order has been authorized and dispatched to your in-game citizen record. You can review invoices on your dashboard.'}
+              {checkoutSuccess.status === 'COMPLETED'
+                ? (language === 'ar'
+                    ? 'تم تأكيد الدفع وتفعيل الباقة تلقائياً في السيرفر ومزامنة الرتب في ديسكورد.'
+                    : 'Payment confirmed and perks dispatched to your citizen profile.')
+                : (language === 'ar'
+                    ? 'تم تسجيل طلبك برقم فاتورة رسمي بحالة (انتظار الدفع). سيتم تسليم المنتج تلقائياً فور تأكيد عملية الدفع من قبل الإدارة.'
+                    : 'Your invoice is pending payment confirmation. Perks will be activated automatically once payment is verified.')}
             </p>
             <div className="flex gap-3">
               <button

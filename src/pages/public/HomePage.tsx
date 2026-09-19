@@ -124,10 +124,10 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
   const maxPlayers = telemetry?.maxPlayers || 150;
   const capacityPercent = isOnline ? Math.min(100, Math.round((playersCount / maxPlayers) * 100)) : 0;
 
-  const connectTarget = telemetry?.ip && telemetry?.port 
+  const connectTarget = (telemetry?.ip && telemetry?.port) 
     ? `${telemetry.ip}:${telemetry.port}`
-    : 'play.primerp.net:30120';
-  const connectCommand = `connect ${connectTarget}`;
+    : (siteSettings?.fiveMConnectUrl ? siteSettings.fiveMConnectUrl.replace(/^fivem:\/\/connect\//, '').replace(/^connect\s+/, '').trim() : '');
+  const connectCommand = connectTarget ? `connect ${connectTarget}` : '';
 
   // ================= 60FPS MOUSE PARALLAX & SCROLL DYNAMICS =================
   const heroSectionRef = useRef<HTMLElement | null>(null);
@@ -211,6 +211,9 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
   }, []);
 
   const handleCopyConnect = () => {
+    if (!connectCommand) {
+      return;
+    }
     navigator.clipboard.writeText(connectCommand);
     setCopiedConnect(true);
     setTimeout(() => setCopiedConnect(false), 2500);
@@ -221,7 +224,9 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
       window.location.href = siteSettings.fiveMConnectUrl;
       return;
     }
-    window.location.href = `fivem://connect/${connectTarget}`;
+    if (connectTarget) {
+      window.location.href = `fivem://connect/${connectTarget}`;
+    }
   };
 
   const ArrowIcon = isRtl ? ArrowLeft : ArrowRight;
@@ -694,7 +699,9 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
                 {/* One-click F8 Connect Pill */}
                 <div className="flex items-center justify-between pt-1 border-t border-white/[0.04] text-[11px]">
-                  <span className="text-[#888] font-mono select-all truncate">{connectCommand}</span>
+                  <span className="text-[#888] font-mono select-all truncate">
+                    {connectCommand || (language === 'ar' ? 'سيرفر FiveM قيد الإعداد' : 'FXServer Direct Connect Pending')}
+                  </span>
                   <button
                     onClick={handleCopyConnect}
                     className="inline-flex items-center gap-1 text-[#df9f64] hover:text-white font-bold ml-2 shrink-0 transition-colors cursor-pointer"
@@ -1889,7 +1896,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             <div className="pt-2 max-w-md mx-auto">
               <div className="flex items-center gap-2 p-2 rounded-xl bg-[#08090d]/90 border border-white/[0.08]">
                 <code className="text-xs text-[#df9f64] font-mono px-2 py-1 flex-grow select-all truncate">
-                  {connectCommand}
+                  {connectCommand || (language === 'ar' ? 'سيرفر FiveM قيد الإعداد' : 'FXServer Direct Connect Pending')}
                 </code>
                 <button
                   onClick={handleCopyConnect}

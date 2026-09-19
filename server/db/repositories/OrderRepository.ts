@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { query, isPostgresConnected } from '../postgres';
+import { query, isPostgresConnected, canUseFallback } from '../postgres';
 import { OrderItem } from '../../../src/types';
 import { productRepository } from './ProductRepository';
 import { db } from '../store';
@@ -21,6 +21,9 @@ export class OrderRepository {
 
   async getAll(userId?: string): Promise<OrderItem[]> {
     if (!isPostgresConnected()) {
+      if (!canUseFallback()) {
+        throw new Error('Database operation failed: PostgreSQL is required in production.');
+      }
       return db.getOrders(userId);
     }
     let sql = 'SELECT * FROM orders';
@@ -37,6 +40,9 @@ export class OrderRepository {
 
   async getById(id: string): Promise<OrderItem | null> {
     if (!isPostgresConnected()) {
+      if (!canUseFallback()) {
+        throw new Error('Database operation failed: PostgreSQL is required in production.');
+      }
       return db.getOrders().find(o => o.id === id) || null;
     }
     const res = await query('SELECT * FROM orders WHERE id = $1', [id]);
@@ -46,6 +52,9 @@ export class OrderRepository {
 
   async create(userId: string, productId: string): Promise<OrderItem | null> {
     if (!isPostgresConnected()) {
+      if (!canUseFallback()) {
+        throw new Error('Database operation failed: PostgreSQL is required in production.');
+      }
       return db.createOrder(userId, productId) || null;
     }
     const product = await productRepository.getById(productId);
@@ -68,6 +77,21 @@ export class OrderRepository {
       [`item_${id}`, id, product.id, 1, product.price]
     );
 
+    return OrderRepository.mapRowToOrder(res.rows[0]);
+  }
+
+  async updateStatus(id: string, status: string): Promise<OrderItem | null> {
+    if (!isPostgresConnected()) {
+      if (!canUseFallback()) {
+        throw new Error('Database operation failed: PostgreSQL is required in production.');
+      }
+      return db.updateOrderStatus(id, status);
+    }
+    const res = await query(
+      `UPDATE orders SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+      [status, id]
+    );
+    if (res.rows.length === 0) return null;
     return OrderRepository.mapRowToOrder(res.rows[0]);
   }
 }

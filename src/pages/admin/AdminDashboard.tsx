@@ -69,6 +69,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
   const [rulesList, setRulesList] = useState<RuleCategory[]>([]);
   const [jobsList, setJobsList] = useState<JobItem[]>([]);
   const [productsList, setProductsList] = useState<ProductItem[]>([]);
+  const [adminOrdersList, setAdminOrdersList] = useState<OrderItem[]>([]);
+  const [storeSubTab, setStoreSubTab] = useState<'products' | 'orders'>('products');
   const [ticketsList, setTicketsList] = useState<TicketItem[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLogItem[]>([]);
   const [settings, setSettings] = useState<SiteSettings | null>(null);
@@ -155,8 +157,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
         const data = await apiClient.getJobs();
         if (Array.isArray(data)) setJobsList(data);
       } else if (activeAdminTab === 'store') {
-        const data = await apiClient.getProducts();
-        if (Array.isArray(data)) setProductsList(data);
+        const [pData, oData] = await Promise.all([
+          apiClient.getProducts(),
+          apiClient.getAdminOrders().catch(() => [])
+        ]);
+        if (Array.isArray(pData)) setProductsList(pData);
+        if (Array.isArray(oData)) setAdminOrdersList(oData);
       } else if (activeAdminTab === 'tickets') {
         const data = await apiClient.getTickets();
         if (Array.isArray(data)) {
@@ -331,6 +337,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
       showToast('تم حذف المنتج من المتجر');
     } catch (err: any) {
       showToast(err.message || 'فشل حذف المنتج');
+    }
+  };
+
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: string) => {
+    try {
+      const updated = await apiClient.updateAdminOrderStatus(orderId, newStatus);
+      if (updated) {
+        setAdminOrdersList(prev => prev.map(o => o.id === orderId ? { ...o, status: newStatus } : o));
+        showToast(language === 'ar' ? `تم تحديث حالة الطلب إلى ${newStatus}` : `Order status updated to ${newStatus}`);
+      }
+    } catch (err: any) {
+      showToast(err.message || 'فشل تحديث حالة الطلب');
     }
   };
 
@@ -900,58 +918,201 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
         {/* TAB 6: STORE & PACKAGES CMS */}
         {activeAdminTab === 'store' && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-black text-white">متجر السيرفر والباقات (Store CMS)</h3>
-                <p className="text-xs text-[#888] mt-1">إدارة الباقات والسيارات والرتب المعروضة في المتجر الإلكتروني</p>
+            {/* Sub-tabs switch */}
+            <div className="flex items-center justify-between border-b border-white/[0.08] pb-4">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setStoreSubTab('products')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    storeSubTab === 'products'
+                      ? 'bg-[#c8874b] text-black shadow-lg shadow-[#c8874b]/20'
+                      : 'bg-[#11131b] text-[#969cad] hover:text-white hover:bg-[#1a1e2d]'
+                  }`}
+                >
+                  <ShoppingBag className="w-4 h-4" />
+                  <span>{language === 'ar' ? 'المنتجات والباقات' : 'Products & Packages'}</span>
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/30 font-mono">
+                    {productsList.length}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStoreSubTab('orders')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                    storeSubTab === 'orders'
+                      ? 'bg-[#c8874b] text-black shadow-lg shadow-[#c8874b]/20'
+                      : 'bg-[#11131b] text-[#969cad] hover:text-white hover:bg-[#1a1e2d]'
+                  }`}
+                >
+                  <FileText className="w-4 h-4" />
+                  <span>{language === 'ar' ? 'سجل طلبات الشراء' : 'Customer Orders'}</span>
+                  <span className="px-1.5 py-0.5 rounded-full text-[10px] bg-black/30 font-mono">
+                    {adminOrdersList.length}
+                  </span>
+                </button>
               </div>
-              <button
-                onClick={() => openProductModal()}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C8874B] text-black text-xs font-bold hover:bg-[#b0733d] transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>إضافة منتج جديد</span>
-              </button>
+
+              {storeSubTab === 'products' && (
+                <button
+                  onClick={() => openProductModal()}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#c8874b] text-black text-xs font-bold hover:bg-[#df9f64] transition-all cursor-pointer shadow-md"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{language === 'ar' ? 'إضافة منتج جديد' : 'New Product'}</span>
+                </button>
+              )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {productsList.map((product) => (
-                <div key={product.id} className="p-5 rounded-2xl bg-[#0B0B0B] border border-[#1E1E1E] flex flex-col justify-between space-y-4">
-                  <div>
-                    <div className="relative h-36 rounded-xl overflow-hidden mb-3 border border-[#222]">
-                      <img src={product.image} alt={product.translations.ar?.name} className="w-full h-full object-cover" />
-                      <span className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-bold bg-black/80 text-white">
-                        {product.category}
-                      </span>
+            {/* Products CMS Sub-tab */}
+            {storeSubTab === 'products' && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {productsList.map((product) => (
+                  <div key={product.id} className="p-5 rounded-2xl bg-[#0B0B0B] border border-[#1E1E1E] flex flex-col justify-between space-y-4">
+                    <div>
+                      <div className="relative h-36 rounded-xl overflow-hidden mb-3 border border-[#222]">
+                        <img src={product.image} alt={product.translations.ar?.name} className="w-full h-full object-cover" />
+                        <span className="absolute top-2 right-2 px-2 py-0.5 rounded text-[10px] font-bold bg-black/80 text-white">
+                          {product.category}
+                        </span>
+                      </div>
+
+                      <h4 className="text-base font-bold text-white mb-1">{product.translations.ar?.name}</h4>
+                      <p className="text-xs text-[#888] line-clamp-2 mb-3">{product.translations.ar?.description}</p>
+                      <p className="text-lg font-black text-[#C8874B]">${product.price} USD</p>
                     </div>
 
-                    <h4 className="text-base font-bold text-white mb-1">{product.translations.ar?.name}</h4>
-                    <p className="text-xs text-[#888] line-clamp-2 mb-3">{product.translations.ar?.description}</p>
-                    <p className="text-lg font-black text-[#C8874B]">${product.price} USD</p>
-                  </div>
-
-                  <div className="pt-3 border-t border-[#1C1C1C] text-xs text-[#666] flex justify-between items-center">
-                    <span className="text-[#C8874B] font-semibold">{product.category}</span>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => openProductModal(product)}
-                        className="p-1.5 rounded-lg bg-white/5 text-[#AAA] hover:text-white hover:bg-white/10 transition-colors"
-                        title="تعديل المنتج"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProduct(product.id)}
-                        className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors"
-                        title="حذف المنتج"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    <div className="pt-3 border-t border-[#1C1C1C] text-xs text-[#666] flex justify-between items-center">
+                      <span className="text-[#C8874B] font-semibold">{product.category}</span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => openProductModal(product)}
+                          className="p-1.5 rounded-lg bg-white/5 text-[#AAA] hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
+                          title="تعديل المنتج"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteProduct(product.id)}
+                          className="p-1.5 rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+                          title="حذف المنتج"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+
+            {/* Customer Orders Sub-tab */}
+            {storeSubTab === 'orders' && (
+              <div className="space-y-4">
+                {adminOrdersList.length === 0 ? (
+                  <div className="p-12 text-center rounded-2xl bg-[#0b0c10] border border-white/[0.06]">
+                    <ShoppingBag className="w-10 h-10 text-[#7a8091] mx-auto mb-3 opacity-40" />
+                    <p className="text-sm font-bold text-white mb-1">
+                      {language === 'ar' ? 'لا توجد طلبات شراء مسجلة حالياً' : 'No customer orders recorded yet'}
+                    </p>
+                    <p className="text-xs text-[#7a8091]">
+                      {language === 'ar' ? 'جميع طلبات الشراء عبر المتجر ستظهر هنا تلقائياً' : 'All store purchases will appear here automatically'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-2xl bg-[#0b0c10] border border-white/[0.08] overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left rtl:text-right text-xs">
+                        <thead>
+                          <tr className="border-b border-white/[0.08] bg-[#07080b] text-[#7a8091] font-semibold">
+                            <th className="py-3.5 px-4">{language === 'ar' ? 'رقم الطلب' : 'Order #'}</th>
+                            <th className="py-3.5 px-4">{language === 'ar' ? 'المنتج' : 'Product'}</th>
+                            <th className="py-3.5 px-4">{language === 'ar' ? 'المبلغ' : 'Amount'}</th>
+                            <th className="py-3.5 px-4">{language === 'ar' ? 'المشتري (المعرف)' : 'Citizen ID'}</th>
+                            <th className="py-3.5 px-4">{language === 'ar' ? 'التاريخ' : 'Date'}</th>
+                            <th className="py-3.5 px-4">{language === 'ar' ? 'الحالة' : 'Status'}</th>
+                            <th className="py-3.5 px-4 text-center">{language === 'ar' ? 'إجراءات الحالة' : 'Status Actions'}</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/[0.04]">
+                          {adminOrdersList.map((order) => {
+                            const isPending = order.status === 'PENDING';
+                            const isCompleted = order.status === 'COMPLETED';
+                            const isCancelled = order.status === 'CANCELLED';
+                            const isRefunded = order.status === 'REFUNDED';
+
+                            return (
+                              <tr key={order.id} className="hover:bg-white/[0.02] transition-colors">
+                                <td className="py-3.5 px-4 font-mono font-bold text-[#df9f64]">
+                                  {order.orderNumber}
+                                </td>
+                                <td className="py-3.5 px-4 text-white font-medium">
+                                  {order.productName}
+                                </td>
+                                <td className="py-3.5 px-4 font-mono font-bold text-white">
+                                  ${order.price} {order.currency}
+                                </td>
+                                <td className="py-3.5 px-4 font-mono text-[#969cad] text-[11px] truncate max-w-[140px]">
+                                  {order.userId}
+                                </td>
+                                <td className="py-3.5 px-4 text-[#7a8091] text-[11px]">
+                                  {new Date(order.createdAt).toLocaleDateString(language === 'ar' ? 'ar-SA' : 'en-US')}
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                                    isCompleted 
+                                      ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                      : isPending
+                                      ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                      : isRefunded
+                                      ? 'bg-purple-500/10 text-purple-400 border border-purple-500/20'
+                                      : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                  }`}>
+                                    {order.status}
+                                  </span>
+                                </td>
+                                <td className="py-3.5 px-4">
+                                  <div className="flex items-center justify-center gap-1.5">
+                                    {!isCompleted && (
+                                      <button
+                                        onClick={() => handleUpdateOrderStatus(order.id, 'COMPLETED')}
+                                        className="px-2 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold transition-all cursor-pointer"
+                                        title="قبول وتأكيد إتمام الطلب"
+                                      >
+                                        {language === 'ar' ? 'إتمام' : 'Complete'}
+                                      </button>
+                                    )}
+                                    {!isCancelled && (
+                                      <button
+                                        onClick={() => handleUpdateOrderStatus(order.id, 'CANCELLED')}
+                                        className="px-2 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-rose-400 text-[10px] font-bold transition-all cursor-pointer"
+                                        title="إلغاء الطلب"
+                                      >
+                                        {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                                      </button>
+                                    )}
+                                    {!isRefunded && (
+                                      <button
+                                        onClick={() => handleUpdateOrderStatus(order.id, 'REFUNDED')}
+                                        className="px-2 py-1 rounded-lg bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-purple-400 text-[10px] font-bold transition-all cursor-pointer"
+                                        title="استرجاع المبلغ"
+                                      >
+                                        {language === 'ar' ? 'استرجاع' : 'Refund'}
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         )}
 

@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { userRepository, sessionRepository } from '../db/repositories';
+import { userRepository, sessionRepository, settingsRepository } from '../db/repositories';
 import { User, UserRole, UserStatus } from '../../src/types';
-import { db } from '../db/store';
 import { DEFAULT_ROLE_PERMISSIONS } from '../../src/utils/permissions';
 
 declare global {
@@ -78,7 +77,7 @@ export function requireRole(allowedRoles: UserRole[]) {
 }
 
 export function requirePermission(permission: string) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required.' });
     }
@@ -93,7 +92,7 @@ export function requirePermission(permission: string) {
     }
 
     // Resolve role permissions from dynamic config or defaults
-    const siteSettings = db.getSiteSettings();
+    const siteSettings = await settingsRepository.getSettings();
     const configuredRolePerms = siteSettings.rolePermissions?.[req.user.role];
     const rolePermissions: string[] = (configuredRolePerms && configuredRolePerms.length > 0)
       ? configuredRolePerms

@@ -587,10 +587,10 @@ class DatabaseStore {
       orderNumber: `PR-${Math.floor(1000 + Math.random() * 9000)}`,
       userId,
       productId: product.id,
-      productName: product.translations.en.name,
+      productName: product.translations.ar?.name || product.translations.en?.name || 'منتج Prime RP',
       price: product.price,
       currency: product.currency,
-      status: 'COMPLETED',
+      status: 'PENDING',
       createdAt: new Date().toISOString()
     };
 
@@ -601,10 +601,18 @@ class DatabaseStore {
     this.createNotification({
       userId,
       type: 'ORDER',
-      title: 'طلب شراء ناجح',
-      message: `تم إتمام طلبك رقم ${order.orderNumber} لمنتج ${product.translations.ar.name} بنجاح.`
+      title: 'طلب شراء قيد الانتظار',
+      message: `تم تسجيل طلبك رقم ${order.orderNumber} لمنتج ${product.translations.ar?.name || product.translations.en?.name} بحالة انتظار الدفع.`
     });
 
+    return order;
+  }
+
+  updateOrderStatus(id: string, status: string): OrderItem | null {
+    const order = this.data.orders.find((o) => o.id === id);
+    if (!order) return null;
+    order.status = status as OrderItem['status'];
+    this.save();
     return order;
   }
 

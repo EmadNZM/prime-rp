@@ -1158,6 +1158,47 @@ router.delete('/admin/products/:id', requireAuth, requireRole([UserRole.SUPER_AD
   }
 });
 
+// ---------------- ADMIN: ORDERS MANAGEMENT ----------------
+router.get('/admin/orders', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STORE_MANAGER]), async (req: Request, res: Response) => {
+  try {
+    const orders = await orderRepository.getAll();
+    return res.json(orders);
+  } catch (err: any) {
+    console.error('[API] /admin/orders error:', err.message);
+    return res.status(500).json({ error: 'Failed to fetch admin orders' });
+  }
+});
+
+router.patch('/admin/orders/:id/status', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STORE_MANAGER]), async (req: Request, res: Response) => {
+  const { status } = req.body;
+  const allowedStatuses = ['PENDING', 'COMPLETED', 'CANCELLED', 'REFUNDED'];
+  if (!status || !allowedStatuses.includes(status)) {
+    return res.status(400).json({ error: `Invalid status. Allowed statuses: ${allowedStatuses.join(', ')}` });
+  }
+
+  try {
+    const updated = await orderRepository.updateStatus(req.params.id, status);
+    if (!updated) {
+      return res.status(404).json({ error: 'Order not found' });
+    }
+
+    await auditLogRepository.log({
+      adminId: req.user!.id,
+      adminName: req.user!.globalName || req.user!.username,
+      action: 'ORDER_STATUS_UPDATED',
+      entity: 'Order',
+      entityId: updated.id,
+      metadata: `Updated order ${updated.orderNumber} status to ${status}`,
+      ip: req.ip || '127.0.0.1'
+    });
+
+    return res.json(updated);
+  } catch (err: any) {
+    console.error('[API] /admin/orders/:id/status error:', err.message);
+    return res.status(500).json({ error: 'Failed to update order status' });
+  }
+});
+
 // ---------------- ADMIN: FAQ CMS ----------------
 router.post('/admin/faq', requireAuth, requirePermission('manage_faq'), async (req: Request, res: Response) => {
   try {

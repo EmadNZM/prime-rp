@@ -144,6 +144,18 @@ export function isPostgresConnected(): boolean {
   return isConnected;
 }
 
+export function canUseFallback(): boolean {
+  return process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'prod';
+}
+
+export function assertPostgresAvailable(operationDescription?: string): void {
+  if (!isConnected && !canUseFallback()) {
+    throw new Error(
+      `Database error: PostgreSQL connection is mandatory in production. In-memory or JSON fallbacks are strictly prohibited. (${operationDescription || 'Query'})`
+    );
+  }
+}
+
 export function getPostgresLastError(): string | null {
   return lastError;
 }

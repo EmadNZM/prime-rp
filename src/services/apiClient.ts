@@ -150,6 +150,19 @@ export const apiClient = {
     return res.json();
   },
 
+  async getAdminOrders() {
+    const res = await apiFetch('/api/admin/orders');
+    return res.json();
+  },
+
+  async updateAdminOrderStatus(orderId: string, status: string) {
+    const res = await apiFetch(`/api/admin/orders/${orderId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status })
+    });
+    return res.json();
+  },
+
   async checkoutOrder(productId: string) {
     const res = await apiFetch('/api/orders/checkout', {
       method: 'POST',
