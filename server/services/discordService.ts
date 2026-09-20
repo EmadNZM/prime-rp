@@ -141,6 +141,74 @@ export class DiscordService {
   }
 
   /**
+   * Assign a Discord role to a guild member (e.g. VIP perk fulfillment, Staff promotion)
+   */
+  public async addRoleToMember(discordUserId: string, roleId: string): Promise<boolean> {
+    const token = this.getBotToken();
+    const guildId = this.getGuildId();
+
+    if (!token || !guildId || !discordUserId || !roleId) {
+      return false;
+    }
+
+    try {
+      const res = await fetch(`${this.baseUrl}/guilds/${guildId}/members/${discordUserId}/roles/${roleId}`, {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bot ${token}`,
+          'User-Agent': 'PrimeRPPlatform (https://prime-rp.onrender.com, 1.0.0)'
+        }
+      });
+
+      if (res.status === 429) {
+        // Rate limited - retry once after wait
+        const retryHeader = res.headers.get('Retry-After');
+        const waitSec = retryHeader ? parseFloat(retryHeader) : 1;
+        await new Promise((r) => setTimeout(r, waitSec * 1000));
+        const retryRes = await fetch(`${this.baseUrl}/guilds/${guildId}/members/${discordUserId}/roles/${roleId}`, {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bot ${token}`,
+            'User-Agent': 'PrimeRPPlatform (https://prime-rp.onrender.com, 1.0.0)'
+          }
+        });
+        return retryRes.ok;
+      }
+
+      return res.ok || res.status === 204;
+    } catch (err: any) {
+      console.error(`[DiscordService] Error adding role ${roleId} to user ${discordUserId}:`, err.message);
+      return false;
+    }
+  }
+
+  /**
+   * Remove a Discord role from a guild member
+   */
+  public async removeRoleFromMember(discordUserId: string, roleId: string): Promise<boolean> {
+    const token = this.getBotToken();
+    const guildId = this.getGuildId();
+
+    if (!token || !guildId || !discordUserId || !roleId) {
+      return false;
+    }
+
+    try {
+      const res = await fetch(`${this.baseUrl}/guilds/${guildId}/members/${discordUserId}/roles/${roleId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bot ${token}`,
+          'User-Agent': 'PrimeRPPlatform (https://prime-rp.onrender.com, 1.0.0)'
+        }
+      });
+      return res.ok || res.status === 204;
+    } catch (err: any) {
+      console.error(`[DiscordService] Error removing role ${roleId} from user ${discordUserId}:`, err.message);
+      return false;
+    }
+  }
+
+  /**
    * Send notification to a Discord channel via bot token (or webhook if configured)
    */
   public async sendChannelMessage(channelId: string, content: string, embed?: any): Promise<boolean> {

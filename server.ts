@@ -6,6 +6,7 @@ import apiRoutes from './server/routes/api';
 import { initPostgres, checkDatabaseHealth } from './server/db/postgres';
 import { runMigrationsAndSeed } from './server/db/migrations/migrate';
 import { checkEnvironmentOrWarn, validateEnvironment } from './server/config/env';
+import { csrfProtection } from './server/middleware/csrf';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ async function startServer() {
   app.use(express.json({ limit: '1mb' }));
   app.use(express.urlencoded({ extended: true, limit: '1mb' }));
   app.use(cookieParser());
+  app.use(csrfProtection);
 
   // 1. Liveness Probe: Tests if the process is responsive
   app.get('/api/health/live', (req, res) => {
@@ -110,6 +112,19 @@ async function startServer() {
 
   // Mount API routes FIRST
   app.use('/api', apiRoutes);
+
+  // Global unhandled error handler for API routes
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error('[Unhandled Server Error]', err);
+    if (res.headersSent) {
+      return next(err);
+    }
+    return res.status(err.status || err.statusCode || 500).json({
+      success: false,
+      error: err.message || 'Internal Server Error',
+      code: err.code || 'INTERNAL_ERROR'
+    });
+  });
 
   // Vite middleware for development vs Static file server for production
   if (process.env.NODE_ENV !== 'production') {

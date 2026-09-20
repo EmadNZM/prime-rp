@@ -357,3 +357,21 @@ CREATE TABLE IF NOT EXISTS discounts (
   expires_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- 17. LEADERBOARD
+CREATE TABLE IF NOT EXISTS leaderboard (
+  id VARCHAR(100) PRIMARY KEY,
+  category VARCHAR(50) NOT NULL,
+  rank INT DEFAULT 1,
+  name VARCHAR(100) NOT NULL,
+  metric VARCHAR(100) NOT NULL,
+  subtitle VARCHAR(150),
+  badge VARCHAR(100),
+  avatar TEXT,
+  discord_id VARCHAR(100),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_leaderboard_category ON leaderboard(category, rank);
+

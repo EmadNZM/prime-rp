@@ -35,6 +35,31 @@ import { UserRole } from '../../src/types';
 import { fiveMService } from '../services/fivemService';
 import { discordService } from '../services/discordService';
 import { paymentService } from '../services/paymentService';
+import { 
+  validateBody,
+  ticketCreateSchema,
+  ticketReplySchema,
+  ticketStatusSchema,
+  reportCreateSchema,
+  reportStatusSchema,
+  jobApplicationCreateSchema,
+  jobApplicationStatusSchema,
+  checkoutCreateSchema,
+  orderStatusUpdateSchema,
+  userRoleUpdateSchema,
+  userStatusUpdateSchema,
+  leaderboardEntrySchema,
+  fivemBridgeSyncSchema
+} from '../middleware/validation';
+import {
+  authRateLimiter,
+  checkoutRateLimiter,
+  ticketRateLimiter,
+  reportRateLimiter,
+  jobAppRateLimiter,
+  adminMutationRateLimiter
+} from '../middleware/rateLimit';
+import { sendSuccess, sendError } from '../utils/response';
 
 const router = Router();
 
@@ -68,10 +93,10 @@ router.get('/auth/me', (req: Request, res: Response) => {
   });
 });
 
-router.get('/auth/discord', handleDiscordLogin);
-router.get('/auth/discord/callback', handleDiscordCallback);
+router.get('/auth/discord', authRateLimiter, handleDiscordLogin);
+router.get('/auth/discord/callback', authRateLimiter, handleDiscordCallback);
 router.post('/auth/logout', handleLogout);
-router.post('/auth/demo-login', handleDemoLogin);
+router.post('/auth/demo-login', authRateLimiter, handleDemoLogin);
 
 // ---------------- SITE SETTINGS & FIVEM STATUS ----------------
 router.get('/site-settings', async (req: Request, res: Response) => {
@@ -122,6 +147,41 @@ router.get('/fivem/players', async (req: Request, res: Response) => {
     return res.json(players);
   } catch (err: any) {
     return res.status(500).json({ error: 'Failed to fetch FiveM players' });
+  }
+});
+
+// Authenticated Server-to-Server FiveM Bridge Sync (from prime_bridge FXServer resource)
+router.post('/fivem/bridge/sync', validateBody(fivemBridgeSyncSchema), async (req: Request, res: Response) => {
+  const bridgeToken = (
+    req.headers['x-fivem-bridge-token']?.toString() ||
+    req.headers['authorization']?.replace(/^Bearer\s+/i, '') ||
+    ''
+  );
+
+  const configuredToken = process.env.FIVEM_BRIDGE_TOKEN;
+  if (!configuredToken || bridgeToken !== configuredToken) {
+    return sendError(res, 401, 'UNAUTHORIZED_BRIDGE', 'رمز مصادقة ربط FiveM غير صالح أو غير مهيأ بالسيرفر.');
+  }
+
+  try {
+    const status = fiveMService.updateFromBridge(req.body);
+
+    // If bridge sent leaderboard statistics, persist them
+    if (Array.isArray(req.body.leaderboard) && req.body.leaderboard.length > 0) {
+      for (const entry of req.body.leaderboard) {
+        await leaderboardRepository.save(entry);
+      }
+    }
+
+    return sendSuccess(res, {
+      synced: true,
+      activePlayers: status.activePlayers,
+      maxPlayers: status.maxPlayers,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err: any) {
+    console.error('[API] /fivem/bridge/sync error:', err.message);
+    return sendError(res, 500, 'BRIDGE_SYNC_FAILED', 'فشلت عملية مزامنة بيانات السيرفر.');
   }
 });
 
@@ -218,7 +278,7 @@ router.get('/jobs/:id', async (req: Request, res: Response) => {
   }
 });
 
-router.post('/jobs/:jobId/applications', requireAuth, async (req: Request, res: Response) => {
+router.post('/jobs/:jobId/applications', requireAuth, jobAppRateLimiter, validateBody(jobApplicationCreateSchema), async (req: Request, res: Response) => {
   const { characterName, characterAge, experience, dailyAvailability, answers } = req.body;
   const jobId = req.params.jobId;
 
@@ -347,11 +407,8 @@ router.get('/orders', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-router.post('/orders/checkout', requireAuth, async (req: Request, res: Response) => {
+router.post('/orders/checkout', requireAuth, checkoutRateLimiter, validateBody(checkoutCreateSchema), async (req: Request, res: Response) => {
   const { productId } = req.body;
-  if (!productId) {
-    return res.status(400).json({ error: 'Product ID is required' });
-  }
 
   try {
     const checkoutResult = await paymentService.createCheckoutSession(req.user!.id, productId);
@@ -382,6 +439,35 @@ router.post('/orders/checkout', requireAuth, async (req: Request, res: Response)
   } catch (err: any) {
     console.error('[API] /orders/checkout error:', err.message);
     return res.status(500).json({ error: 'Order checkout failed' });
+  }
+});
+
+// ---------------- PAYMENT WEBHOOKS (STRIPE & TEBEX) ----------------
+router.post('/payments/webhook/stripe', async (req: Request, res: Response) => {
+  try {
+    const sig = req.headers['stripe-signature'] as string;
+    const result = await paymentService.handleWebhook('STRIPE', req.body, sig);
+    if (!result.handled) {
+      return res.status(400).json({ error: result.message });
+    }
+    return res.status(200).json({ received: true, ...result });
+  } catch (err: any) {
+    console.error('[PaymentWebhook] Stripe error:', err.message);
+    return res.status(500).json({ error: 'Webhook processing failed' });
+  }
+});
+
+router.post('/payments/webhook/tebex', async (req: Request, res: Response) => {
+  try {
+    const sig = req.headers['x-tebex-signature'] as string;
+    const result = await paymentService.handleWebhook('TEBEX', req.body, sig);
+    if (!result.handled) {
+      return res.status(400).json({ error: result.message });
+    }
+    return res.status(200).json({ received: true, ...result });
+  } catch (err: any) {
+    console.error('[PaymentWebhook] Tebex error:', err.message);
+    return res.status(500).json({ error: 'Webhook processing failed' });
   }
 });
 
@@ -422,11 +508,8 @@ router.get('/tickets/:id', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-router.post('/tickets', requireAuth, async (req: Request, res: Response) => {
+router.post('/tickets', requireAuth, ticketRateLimiter, validateBody(ticketCreateSchema), async (req: Request, res: Response) => {
   const { subject, category, priority, message } = req.body;
-  if (!subject || !category || !message) {
-    return res.status(400).json({ error: 'Subject, category, and message are required' });
-  }
 
   try {
     const ticket = await ticketRepository.create({
@@ -465,11 +548,8 @@ router.post('/tickets', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-router.post('/tickets/:id/messages', requireAuth, async (req: Request, res: Response) => {
+router.post('/tickets/:id/messages', requireAuth, validateBody(ticketReplySchema), async (req: Request, res: Response) => {
   const { message } = req.body;
-  if (!message) {
-    return res.status(400).json({ error: 'Message text is required' });
-  }
 
   try {
     const ticket = await ticketRepository.getById(req.params.id);
@@ -512,11 +592,8 @@ router.post('/tickets/:id/messages', requireAuth, async (req: Request, res: Resp
   }
 });
 
-router.patch('/tickets/:id/status', requireAuth, async (req: Request, res: Response) => {
+router.patch('/tickets/:id/status', requireAuth, validateBody(ticketStatusSchema), async (req: Request, res: Response) => {
   const { status } = req.body;
-  if (!status) {
-    return res.status(400).json({ error: 'Status is required' });
-  }
 
   try {
     const ticket = await ticketRepository.getById(req.params.id);
@@ -611,11 +688,8 @@ router.get('/reports/:id', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-router.post('/reports', requireAuth, async (req: Request, res: Response) => {
+router.post('/reports', requireAuth, reportRateLimiter, validateBody(reportCreateSchema), async (req: Request, res: Response) => {
   const { category, reason, targetId, targetName } = req.body;
-  if (!category || !reason) {
-    return res.status(400).json({ error: 'Report category and reason are required' });
-  }
 
   try {
     const report = await reportRepository.create({
@@ -654,11 +728,8 @@ router.post('/reports', requireAuth, async (req: Request, res: Response) => {
   }
 });
 
-router.patch('/reports/:id/status', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR]), async (req: Request, res: Response) => {
+router.patch('/reports/:id/status', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR]), validateBody(reportStatusSchema), async (req: Request, res: Response) => {
   const { status, notes } = req.body;
-  if (!status) {
-    return res.status(400).json({ error: 'Status is required' });
-  }
 
   try {
     const updated = await reportRepository.updateStatus(req.params.id, status, notes);
@@ -773,11 +844,8 @@ router.get('/admin/users', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserR
   }
 });
 
-router.patch('/admin/users/:id/role', requireAuth, requireOwner, async (req: Request, res: Response) => {
+router.patch('/admin/users/:id/role', requireAuth, requireOwner, adminMutationRateLimiter, validateBody(userRoleUpdateSchema), async (req: Request, res: Response) => {
   const { role, permissions } = req.body;
-  if (!role) {
-    return res.status(400).json({ error: 'Role is required' });
-  }
 
   // Prevent any attempt to assign OWNER role via API
   if (role === UserRole.OWNER || (role as string) === 'OWNER') {
@@ -862,7 +930,7 @@ router.post('/admin/users/assign-role', requireAuth, requireOwner, async (req: R
   }
 });
 
-router.patch('/admin/users/:id/status', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR]), async (req: Request, res: Response) => {
+router.patch('/admin/users/:id/status', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR]), adminMutationRateLimiter, validateBody(userStatusUpdateSchema), async (req: Request, res: Response) => {
   const { status } = req.body;
   try {
     const targetUser = await userRepository.findById(req.params.id);
@@ -1063,12 +1131,8 @@ router.get('/admin/job-applications/:id', requireAuth, requireRole([UserRole.SUP
   }
 });
 
-router.patch('/admin/job-applications/:id/status', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR]), async (req: Request, res: Response) => {
+router.patch('/admin/job-applications/:id/status', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MODERATOR]), validateBody(jobApplicationStatusSchema), async (req: Request, res: Response) => {
   const { status, reviewNotes } = req.body;
-  const validStatuses = ['PENDING', 'UNDER_REVIEW', 'ACCEPTED', 'REJECTED'];
-  if (!status || !validStatuses.includes(status)) {
-    return res.status(400).json({ error: 'حالة الطلب غير صالحة' });
-  }
 
   try {
     const updated = await jobApplicationRepository.updateStatus(
@@ -1169,15 +1233,21 @@ router.get('/admin/orders', requireAuth, requireRole([UserRole.SUPER_ADMIN, User
   }
 });
 
-router.patch('/admin/orders/:id/status', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STORE_MANAGER]), async (req: Request, res: Response) => {
+router.patch('/admin/orders/:id/status', requireAuth, requireRole([UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STORE_MANAGER]), validateBody(orderStatusUpdateSchema), async (req: Request, res: Response) => {
   const { status } = req.body;
-  const allowedStatuses = ['PENDING', 'COMPLETED', 'CANCELLED', 'REFUNDED'];
-  if (!status || !allowedStatuses.includes(status)) {
-    return res.status(400).json({ error: `Invalid status. Allowed statuses: ${allowedStatuses.join(', ')}` });
-  }
 
   try {
-    const updated = await orderRepository.updateStatus(req.params.id, status);
+    let updated;
+    if (status === 'COMPLETED') {
+      const fulfillment = await paymentService.fulfillOrder(req.params.id, req.user!.globalName || req.user!.username);
+      if (!fulfillment.success) {
+        return res.status(400).json({ error: fulfillment.error || 'Failed to fulfill order' });
+      }
+      updated = await orderRepository.getById(req.params.id);
+    } else {
+      updated = await orderRepository.updateStatus(req.params.id, status);
+    }
+
     if (!updated) {
       return res.status(404).json({ error: 'Order not found' });
     }
@@ -1263,7 +1333,7 @@ router.get('/admin/leaderboard', requireAuth, requirePermission('manage_leaderbo
   }
 });
 
-router.post('/admin/leaderboard', requireAuth, requirePermission('manage_leaderboard'), async (req: Request, res: Response) => {
+router.post('/admin/leaderboard', requireAuth, requirePermission('manage_leaderboard'), validateBody(leaderboardEntrySchema), async (req: Request, res: Response) => {
   try {
     const item = await leaderboardRepository.save(req.body);
     await auditLogRepository.log({

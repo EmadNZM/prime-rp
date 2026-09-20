@@ -56,6 +56,7 @@ export class FiveMService {
 
   // Cache to prevent pounding the FiveM server repeatedly on high traffic
   private cachedStatus: FiveMServerStatus | null = null;
+  private cachedPlayers: FiveMPlayer[] = [];
   private lastFetchTime = 0;
   private readonly cacheDurationMs = 15000; // 15 seconds
 
@@ -66,6 +67,46 @@ export class FiveMService {
       FiveMService.instance = new FiveMService();
     }
     return FiveMService.instance;
+  }
+
+  /**
+   * Process push synchronization from the FiveM prime_bridge server resource
+   */
+  public updateFromBridge(data: {
+    serverName?: string;
+    activePlayers: number;
+    maxPlayers: number;
+    players?: Array<{ id: number; name: string; ping?: number; identifiers?: string[]; citizenId?: string; job?: string }>;
+  }): FiveMServerStatus {
+    const endpoint = this.getServerEndpoint();
+    const ip = endpoint?.ip || (process.env.FIVEM_SERVER_IP || '127.0.0.1');
+    const port = endpoint?.port || (Number(process.env.FIVEM_SERVER_PORT) || 30120);
+
+    const formattedPlayers: FiveMPlayer[] = (data.players || []).map((p) => ({
+      id: p.id,
+      name: p.name,
+      ping: p.ping || 25,
+      identifiers: p.identifiers || []
+    }));
+
+    this.cachedPlayers = formattedPlayers;
+
+    const status: FiveMServerStatus = {
+      isOnline: true,
+      activePlayers: data.activePlayers,
+      maxPlayers: data.maxPlayers,
+      serverVersion: 'FXServer (Live Bridge Connected)',
+      gameBuild: 'gta5',
+      pingMs: 15,
+      serverName: data.serverName || 'PRIME RP FiveM Server',
+      ip,
+      port,
+      status: 'online'
+    };
+
+    this.cachedStatus = status;
+    this.lastFetchTime = Date.now();
+    return status;
   }
 
   /**
@@ -208,18 +249,29 @@ export class FiveMService {
    */
   public async getPlayers(): Promise<FiveMPlayer[]> {
     const endpoint = this.getServerEndpoint();
-    if (!endpoint) {
-      return [];
+    if (endpoint) {
+      try {
+        const res = await this.fetchWithTimeout(`${endpoint.baseUrl}/players.json`);
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data)) {
+            return data;
+          }
+        }
+      } catch {
+        // Continue to bridge cache check
+      }
     }
 
-    try {
-      const res = await this.fetchWithTimeout(`${endpoint.baseUrl}/players.json`);
-      if (!res.ok) return [];
-      const data = await res.json();
-      return Array.isArray(data) ? data : [];
-    } catch {
-      return [];
-    }
+    // If HTTP direct fetch is unavailable, return cached players from FiveM Bridge resource
+    return this.cachedPlayers;
+  }
+
+  /**
+   * Query players synced via the FXServer prime_bridge resource
+   */
+  public getBridgeCachedPlayers(): FiveMPlayer[] {
+    return this.cachedPlayers;
   }
 
   /**
