@@ -94,19 +94,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
     return () => clearInterval(interval);
   }, []);
 
-  const allNavLinks = [
-    { id: 'home', label: t('nav.home') },
-    { id: 'store', label: t('nav.store') },
-    { id: 'rules', label: t('nav.rules') },
-    { id: 'jobs', label: t('nav.jobs') },
-    { id: 'players', label: t('nav.players') },
-    { id: 'leaderboard', label: t('nav.leaderboard') },
-    { id: 'news', label: t('nav.news') },
-    { id: 'faq', label: t('nav.faq') },
-    { id: 'support', label: t('nav.support') },
-  ];
-  const navLinks = allNavLinks.filter((link) => isPageVisible(link.id));
-
   const handleNavClick = (id: string) => {
     setMobileMenuOpen(false);
     setUserDropdownOpen(false);
@@ -123,25 +110,28 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
   const playersOnline = isOnline ? (telemetry?.playersCount ?? 0) : 0;
   const maxPlayers = telemetry?.maxPlayers || 150;
 
-  // Split links into primary and secondary to guarantee zero overflow in English LTR
-  const allPrimaryNavLinks = [
+  // Dynamic distribution based on page visibility
+  const allNavLinks = [
     { id: 'home', label: t('nav.home') },
     { id: 'store', label: t('nav.store') },
     { id: 'rules', label: t('nav.rules') },
     { id: 'jobs', label: t('nav.jobs') },
     { id: 'players', label: t('nav.players') },
     { id: 'leaderboard', label: t('nav.leaderboard') },
-  ];
-  const primaryNavLinks = allPrimaryNavLinks.filter((link) => isPageVisible(link.id));
-
-  const allSecondaryNavLinks = [
     { id: 'news', label: t('nav.news') },
     { id: 'faq', label: t('nav.faq') },
     { id: 'support', label: t('nav.support') },
   ];
-  const secondaryNavLinks = allSecondaryNavLinks.filter((link) => isPageVisible(link.id));
+  const navLinks = allNavLinks.filter((link) => isPageVisible(link.id));
 
-  const isSecondaryActive = secondaryNavLinks.some(link => link.id === currentTab);
+  // If 6 or fewer visible links, show all directly without dropdown.
+  // If more than 6, show first 5 directly + More dropdown on standard desktop, and show all on 2xl.
+  const MAX_PRIMARY_COUNT = 6;
+  const shouldSplit = navLinks.length > MAX_PRIMARY_COUNT;
+  const primaryNavLinks = shouldSplit ? navLinks.slice(0, 5) : navLinks;
+  const overflowNavLinks = shouldSplit ? navLinks.slice(5) : [];
+
+  const isOverflowActive = overflowNavLinks.some(link => link.id === currentTab);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-2 sm:px-4 md:px-6 pt-2 pointer-events-none w-full max-w-full overflow-visible">
@@ -184,10 +174,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             }`}
           />
 
-          {/* Foreground Interactive Row */}
-          <div className="relative z-10 flex items-center justify-between px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 w-full min-w-0 overflow-visible">
-            {/* BRAND LOGO (Clean Mark - Server Name Removed from Navbar Bar) */}
-            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Foreground Interactive Row: Perfectly Balanced 3-Column Symmetrical Grid */}
+          <div className="relative z-10 flex items-center justify-between lg:grid lg:grid-cols-[minmax(120px,1fr)_auto_minmax(120px,1fr)] px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 w-full min-w-0 overflow-visible">
+            {/* BRAND LOGO (Column 1: Start-aligned) */}
+            <div className="flex items-center justify-start gap-2 sm:gap-3 shrink-0">
               <button
                 onClick={() => handleNavClick('home')}
                 className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c8874b] rounded-xl group transition-transform hover:scale-105 cursor-pointer"
@@ -197,109 +187,120 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
               </button>
             </div>
 
-          {/* DESKTOP NAVIGATION LINKS (Balanced to Never Overflow in English or Arabic) */}
-          <nav className="hidden xl:flex items-center gap-1 bg-[#08090d]/60 p-1 rounded-2xl border border-white/[0.04] min-w-0" aria-label="Main Navigation">
-            {primaryNavLinks.map((link) => {
-              const active = currentTab === link.id;
-              return (
-                <button
-                  key={link.id}
-                  onClick={() => handleNavClick(link.id)}
-                  className={`relative px-2.5 2xl:px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer whitespace-nowrap ${
-                    active
-                      ? 'text-[#df9f64]'
-                      : 'text-[#969cad] hover:text-white'
-                  }`}
-                >
-                  {active && (
-                    <motion.span
-                      layoutId="activeNavbarPill"
-                      className="absolute inset-0 bg-[#c8874b]/15 border border-[#c8874b]/40 rounded-xl shadow-[0_0_15px_rgba(200,135,75,0.2)]"
-                      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-                    />
-                  )}
-                  <span className="relative z-10">{link.label}</span>
-                </button>
-              );
-            })}
-
-            {/* Extra Desktop Links (Visible on ultra-wide 2xl screens) */}
-            <div className="hidden 2xl:flex items-center gap-1">
-              {secondaryNavLinks.map((link) => {
-                const active = currentTab === link.id;
-                return (
-                  <button
-                    key={link.id}
-                    onClick={() => handleNavClick(link.id)}
-                    className={`relative px-2.5 2xl:px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer whitespace-nowrap ${
-                      active
-                        ? 'text-[#df9f64]'
-                        : 'text-[#969cad] hover:text-white'
-                    }`}
-                  >
-                    {active && (
-                      <motion.span
-                        layoutId="activeNavbarPill"
-                        className="absolute inset-0 bg-[#c8874b]/15 border border-[#c8874b]/40 rounded-xl shadow-[0_0_15px_rgba(200,135,75,0.2)]"
-                        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-                      />
-                    )}
-                    <span className="relative z-10">{link.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* "More" Dropdown on standard xl screens to eliminate any overflow */}
-            {secondaryNavLinks.length > 0 && (
-              <div className="relative 2xl:hidden" ref={moreMenuRef}>
-                <button
-                  onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap ${
-                    isSecondaryActive || moreMenuOpen
-                      ? 'text-[#df9f64] bg-[#c8874b]/10'
-                      : 'text-[#969cad] hover:text-white'
-                  }`}
-                  aria-expanded={moreMenuOpen}
-                >
-                  <span>{language === 'ar' ? 'المزيد' : 'More'}</span>
-                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-[#df9f64]' : ''}`} />
-                </button>
-
-                <AnimatePresence>
-                  {moreMenuOpen && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -4 }}
-                      transition={{ duration: 0.15, ease: 'easeOut' }}
-                      className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-2 w-44 bg-[#0d0f17] border border-[#c8874b]/40 rounded-2xl shadow-2xl shadow-black/90 py-1.5 z-50 overflow-hidden"
+            {/* DESKTOP NAVIGATION LINKS (Column 2: Exactly Centered, Dynamically Sized) */}
+            <div className="hidden lg:flex items-center justify-center min-w-0">
+              <nav 
+                className="flex items-center gap-1 bg-[#08090d]/70 backdrop-blur-md p-1 sm:p-1.5 rounded-2xl border border-white/[0.06] shadow-xl min-w-0" 
+                aria-label="Main Navigation"
+              >
+                {primaryNavLinks.map((link) => {
+                  const active = currentTab === link.id;
+                  return (
+                    <button
+                      key={link.id}
+                      onClick={() => handleNavClick(link.id)}
+                      className={`relative ${
+                        navLinks.length <= 4 
+                          ? 'px-3.5 sm:px-4 py-1.5' 
+                          : 'px-2.5 2xl:px-3 py-1.5'
+                      } rounded-xl text-xs font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer whitespace-nowrap ${
+                        active
+                          ? 'text-[#df9f64]'
+                          : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
+                      }`}
                     >
-                      {secondaryNavLinks.map((link) => (
+                      {active && (
+                        <motion.span
+                          layoutId="activeNavbarPill"
+                          className="absolute inset-0 bg-[#c8874b]/15 border border-[#c8874b]/40 rounded-xl shadow-[0_0_15px_rgba(200,135,75,0.2)]"
+                          transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                        />
+                      )}
+                      <span className="relative z-10">{link.label}</span>
+                    </button>
+                  );
+                })}
+
+                {/* Extra Desktop Links (Visible directly on ultra-wide 2xl screens) */}
+                {overflowNavLinks.length > 0 && (
+                  <div className="hidden 2xl:flex items-center gap-1">
+                    {overflowNavLinks.map((link) => {
+                      const active = currentTab === link.id;
+                      return (
                         <button
                           key={link.id}
-                          onClick={() => {
-                            handleNavClick(link.id);
-                            setMoreMenuOpen(false);
-                          }}
-                          className={`w-full text-left rtl:text-right px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                            currentTab === link.id
-                              ? 'text-[#df9f64] bg-[#c8874b]/10'
+                          onClick={() => handleNavClick(link.id)}
+                          className={`relative px-2.5 2xl:px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer whitespace-nowrap ${
+                            active
+                              ? 'text-[#df9f64]'
                               : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
                           }`}
                         >
-                          {link.label}
+                          {active && (
+                            <motion.span
+                              layoutId="activeNavbarPill"
+                              className="absolute inset-0 bg-[#c8874b]/15 border border-[#c8874b]/40 rounded-xl shadow-[0_0_15px_rgba(200,135,75,0.2)]"
+                              transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                            />
+                          )}
+                          <span className="relative z-10">{link.label}</span>
                         </button>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            )}
-          </nav>
+                      );
+                    })}
+                  </div>
+                )}
 
-          {/* RIGHT ACTION BUTTONS */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                {/* "More" Dropdown on lg/xl screens when overflow links exist */}
+                {overflowNavLinks.length > 0 && (
+                  <div className="relative 2xl:hidden" ref={moreMenuRef}>
+                    <button
+                      onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap ${
+                        isOverflowActive || moreMenuOpen
+                          ? 'text-[#df9f64] bg-[#c8874b]/15 border border-[#c8874b]/40'
+                          : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
+                      }`}
+                      aria-expanded={moreMenuOpen}
+                    >
+                      <span>{language === 'ar' ? 'المزيد' : 'More'}</span>
+                      <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-[#df9f64]' : ''}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {moreMenuOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -4 }}
+                          transition={{ duration: 0.15, ease: 'easeOut' }}
+                          className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-44 bg-[#0d0f17] border border-[#c8874b]/40 rounded-2xl shadow-2xl shadow-black/90 py-1.5 z-50 overflow-hidden"
+                        >
+                          {overflowNavLinks.map((link) => (
+                            <button
+                              key={link.id}
+                              onClick={() => {
+                                handleNavClick(link.id);
+                                setMoreMenuOpen(false);
+                              }}
+                              className={`w-full text-left rtl:text-right px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                                currentTab === link.id
+                                  ? 'text-[#df9f64] bg-[#c8874b]/10'
+                                  : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
+                              }`}
+                            >
+                              {link.label}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                )}
+              </nav>
+            </div>
+
+            {/* RIGHT / END ACTION BUTTONS (Column 3: End-aligned) */}
+            <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
             {/* Direct Connect Action (EchoRP Style) */}
             <button
               onClick={() => {
@@ -475,7 +476,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             {/* Mobile Menu Toggle Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden p-2 rounded-xl bg-[#11131c] border border-white/[0.06] text-[#969cad] hover:text-white cursor-pointer"
+              className="lg:hidden p-2 rounded-xl bg-[#11131c] border border-white/[0.06] text-[#969cad] hover:text-white cursor-pointer"
               aria-label="Toggle Menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -492,7 +493,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.98 }}
               transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className="xl:hidden mt-2 bg-[#0b0d14]/98 backdrop-blur-2xl border border-white/[0.08] rounded-2xl px-4 pt-4 pb-5 space-y-1 shadow-2xl"
+              className="lg:hidden mt-2 bg-[#0b0d14]/98 backdrop-blur-2xl border border-white/[0.08] rounded-2xl px-4 pt-4 pb-5 space-y-1 shadow-2xl"
             >
               {/* Mobile Server status bar */}
               <div className="flex items-center justify-between p-3 rounded-xl bg-[#11131c] border border-white/[0.06] mb-3">
