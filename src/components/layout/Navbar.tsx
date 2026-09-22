@@ -141,9 +141,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
     setLanguage(language === 'ar' ? 'en' : 'ar');
   };
 
-  const isOnline = telemetry?.online || (telemetry?.playersCount !== undefined && telemetry?.playersCount > 0);
-  const playersOnline = isOnline ? (telemetry?.playersCount ?? 0) : 0;
-  const maxPlayers = telemetry?.maxPlayers || 150;
+  const isOnline = Boolean(
+    telemetry?.isOnline || 
+    telemetry?.online || 
+    (telemetry?.activePlayers !== undefined && telemetry?.activePlayers > 0) ||
+    (telemetry?.playersCount !== undefined && telemetry?.playersCount > 0) ||
+    (settings?.serverStatus === 'ONLINE' && telemetry?.status !== 'offline')
+  );
+  const playersOnline = isOnline ? (telemetry?.activePlayers ?? telemetry?.playersCount ?? settings?.activePlayersCount ?? 0) : 0;
+  const maxPlayers = telemetry?.maxPlayers || settings?.maxPlayersCount || 150;
 
   // Dynamic distribution based on page visibility
   const allNavLinks = [

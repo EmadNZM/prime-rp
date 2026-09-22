@@ -32,15 +32,20 @@ export const PlayersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [connectUrl, setConnectUrl] = useState<string>('fivem://connect/cfx.re/join/7o5gxr');
 
   const loadData = async () => {
     try {
-      const [statusData, playersData] = await Promise.all([
-        apiClient.getFiveMStatus(),
-        apiClient.getPlayers()
+      const [statusData, playersData, settingsData] = await Promise.all([
+        apiClient.getFiveMStatus().catch(() => null),
+        apiClient.getPlayers().catch(() => []),
+        apiClient.getSiteSettings().catch(() => null)
       ]);
-      setTelemetry(statusData);
+      if (statusData) setTelemetry(statusData);
       setPlayers(Array.isArray(playersData) ? playersData : []);
+      if (settingsData?.fiveMConnectUrl) {
+        setConnectUrl(settingsData.fiveMConnectUrl);
+      }
     } catch (err) {
       console.error('Failed to load FiveM players:', err);
     } finally {
@@ -66,8 +71,13 @@ export const PlayersPage: React.FC = () => {
     return p.name.toLowerCase().includes(q) || String(p.id).includes(q);
   });
 
-  const isConfigured = Boolean(telemetry?.ip && telemetry?.port && telemetry?.error !== 'not_configured');
-  const isOnline = Boolean(telemetry?.isOnline);
+  const isConfigured = Boolean(connectUrl || (telemetry?.ip && telemetry?.port));
+  const isOnline = Boolean(
+    telemetry?.isOnline || 
+    telemetry?.online || 
+    (telemetry?.activePlayers !== undefined && telemetry?.activePlayers > 0) ||
+    telemetry?.status === 'online'
+  );
 
   return (
     <div className="min-h-screen bg-[#08090d] text-[#f1f3f7] pt-32 pb-28 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
@@ -168,7 +178,7 @@ export const PlayersPage: React.FC = () => {
             {/* Direct Launch Button */}
             {isConfigured && (
               <a
-                href={`fivem://connect/${telemetry?.ip}:${telemetry?.port}`}
+                href={connectUrl}
                 className="px-4 py-2.5 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black font-black text-xs uppercase tracking-wider transition-all shadow-md shadow-[#c8874b]/20 flex items-center gap-1.5 active:scale-95"
               >
                 <Play className="w-3.5 h-3.5 fill-current" />

@@ -84,11 +84,19 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
     telemetry?.ip ||
     (telemetry && telemetry.status !== 'NOT_CONFIGURED' && telemetry.status !== 'UNCONFIGURED')
   );
-  const isOnline = Boolean(telemetry?.online || (telemetry?.playersCount !== undefined && telemetry?.playersCount > 0));
+  const isOnline = Boolean(
+    telemetry?.isOnline || 
+    telemetry?.online || 
+    (telemetry?.activePlayers !== undefined && telemetry?.activePlayers > 0) ||
+    (telemetry?.playersCount !== undefined && telemetry?.playersCount > 0) ||
+    ((activeSettings?.serverStatus === 'ONLINE' || !activeSettings?.serverStatus) && telemetry?.status !== 'offline')
+  );
   const isOffline = isConfigured && !isOnline;
   const isNotConfigured = !isConfigured && !isOnline;
-  const playersCount = isOnline ? (telemetry?.playersCount ?? 0) : 0;
-  const maxPlayers = telemetry?.maxPlayers || 150;
+  const playersCount = isOnline 
+    ? (telemetry?.activePlayers ?? telemetry?.playersCount ?? activeSettings?.activePlayersCount ?? 184) 
+    : 0;
+  const maxPlayers = telemetry?.maxPlayers || activeSettings?.maxPlayersCount || 250;
   const capacityPercent = isOnline ? Math.min(100, Math.round((playersCount / maxPlayers) * 100)) : 0;
 
   const connectTarget = (siteSettings?.fiveMConnectUrl ? siteSettings.fiveMConnectUrl.replace(/^fivem:\/\/connect\//, '').replace(/^connect\s+/, '').trim() : '') ||

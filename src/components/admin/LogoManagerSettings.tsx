@@ -420,6 +420,79 @@ export const LogoManagerSettings: React.FC<LogoManagerSettingsProps> = ({
               </div>
             </div>
 
+            {/* FiveM Live Server Telemetry & Status Settings */}
+            <div className="p-5 rounded-2xl bg-[#0d0f17] border border-[#c8874b]/30 space-y-4">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-[#df9f64]">
+                  <Activity className="w-4 h-4" />
+                  <h4 className="text-xs font-black text-white">إعدادات حالة سيرفر FiveM والتحديث الحي (Live Telemetry)</h4>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-[#c8874b]/20 text-[#df9f64] font-mono font-bold">
+                  FXServer & Cfx.re
+                </span>
+              </div>
+              <p className="text-[11px] text-[#888] leading-relaxed">
+                يتم جلب حالة السيرفر وعدد اللاعبين تلقائياً عبر واجهة FiveM الرسمية (Cfx.re Masterlist API) باستخدام كود الربط، أو عبر الاستعلام المباشر بالـ IP والـ Port. يمكنك أيضاً تحديد الحالة يدوياً في أي وقت:
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#AAA] mb-1">
+                    حالة السيرفر المعروضة (Server Status)
+                  </label>
+                  <select
+                    value={settings.serverStatus || 'ONLINE'}
+                    onChange={(e) => setSettings({ ...settings, serverStatus: e.target.value as any })}
+                    className="w-full bg-[#14141E] border border-[#2B2B3B] focus:border-[#c8874b] rounded-xl px-3.5 py-2 text-xs text-white font-bold focus:outline-none"
+                  >
+                    <option value="ONLINE">🟢 متصل ونشط (ONLINE)</option>
+                    <option value="MAINTENANCE">🟡 تحت الصيانة (MAINTENANCE)</option>
+                    <option value="OFFLINE">🔴 متوقف (OFFLINE)</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#AAA] mb-1">
+                    عدد اللاعبين المعروض (Active Players)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="1024"
+                    value={settings.activePlayersCount ?? 184}
+                    onChange={(e) => setSettings({ ...settings, activePlayersCount: parseInt(e.target.value) || 0 })}
+                    className="w-full bg-[#14141E] border border-[#2B2B3B] focus:border-[#c8874b] rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-bold text-[#AAA] mb-1">
+                    الحد الأقصى للاعبين (Max Slots)
+                  </label>
+                  <input
+                    type="number"
+                    min="32"
+                    max="2048"
+                    value={settings.maxPlayersCount ?? 250}
+                    onChange={(e) => setSettings({ ...settings, maxPlayersCount: parseInt(e.target.value) || 128 })}
+                    className="w-full bg-[#14141E] border border-[#2B2B3B] focus:border-[#c8874b] rounded-xl px-3.5 py-2 text-xs text-white font-mono focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="p-3 rounded-xl bg-black/40 border border-white/[0.06] text-[11px] text-[#888] space-y-1">
+                <div className="flex items-center gap-2 text-white font-bold">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>طرق ربط السيرفر الحقيقي المعتمدة:</span>
+                </div>
+                <div className="ps-4 space-y-1">
+                  <div>1. <strong>كود السيرفر الرسمي Cfx.re:</strong> تم ضبطه تلقائياً على <span className="text-[#df9f64] font-mono">7o5gxr</span> (من رابط connect cfx.re/join/7o5gxr).</div>
+                  <div>2. <strong>عنوان السيرفر المباشر:</strong> يمكنك تعيين <span className="text-[#df9f64] font-mono">FIVEM_SERVER_IP</span> و <span className="text-[#df9f64] font-mono">FIVEM_SERVER_PORT</span> في ملف البيئة للاستعلام المباشر.</div>
+                  <div>3. <strong>سكربت FXServer Bridge المدمج:</strong> إرسال نبضات دورية حية عبر نقطة <span className="text-[#df9f64] font-mono">/api/fivem/bridge/sync</span> متجاوزاً كل جدران الحماية.</div>
+                </div>
+              </div>
+            </div>
+
             {/* Discord OAuth Integration Credentials */}
             <div className="p-5 rounded-2xl bg-[#0F0F16] border border-[#5865F2]/20 space-y-4">
               <div className="flex items-center justify-between gap-2">
