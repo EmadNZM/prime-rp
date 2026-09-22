@@ -53,7 +53,7 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
             </p>
             <div className="pt-2 flex flex-wrap items-center gap-2.5">
               <a
-                href={settings?.discordUrl || "https://discord.gg/primerp"}
+                href={settings?.discordUrl || "https://discord.gg/primee"}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#0d0f16] border border-white/[0.08] hover:border-[#5865F2]/60 text-xs font-bold text-white transition-all shadow-sm"

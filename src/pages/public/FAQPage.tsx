@@ -246,7 +246,7 @@ export const FAQPage: React.FC<FAQPageProps> = ({ setCurrentTab }) => {
               </button>
             )}
             <a
-              href={settings?.discordUrl || "https://discord.gg/primerp"}
+              href={settings?.discordUrl || "https://discord.gg/primee"}
               target="_blank"
               rel="noopener noreferrer"
               className="px-5 py-3 rounded-xl bg-[#131620] hover:bg-[#1a1e2d] border border-white/[0.08] hover:border-[#5865F2]/50 text-white font-bold text-xs uppercase tracking-wider transition-all shrink-0 flex items-center gap-2"

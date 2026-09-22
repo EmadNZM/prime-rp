@@ -3,8 +3,8 @@ import { UserRole, UserStatus, NewsItem, RuleCategory, JobItem, ProductItem, FAQ
 export const initialSiteSettings: SiteSettings = {
   siteName: 'PRIME RP',
   siteDescription: 'المنصة الرسمية وسيرفر اللعب الواقعي الفاخر Prime RP FiveM',
-  discordUrl: 'https://discord.gg/primerp',
-  fiveMConnectUrl: '',
+  discordUrl: 'https://discord.gg/primee',
+  fiveMConnectUrl: 'fivem://connect/cfx.re/join/7o5gxr',
   contactEmail: 'support@prime-rp.com',
   maintenanceMode: false,
   activePlayersCount: 0,
@@ -26,7 +26,7 @@ export const initialSiteSettings: SiteSettings = {
       type: 'info',
       badgeAr: 'إعلان السيرفر',
       badgeEn: 'Announcement',
-      link: 'https://discord.gg/primerp'
+      link: 'https://discord.gg/primee'
     },
     hero: {
       titleLine1Ar: 'مدينة صُنعت',

@@ -91,9 +91,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
   const maxPlayers = telemetry?.maxPlayers || 150;
   const capacityPercent = isOnline ? Math.min(100, Math.round((playersCount / maxPlayers) * 100)) : 0;
 
-  const connectTarget = (telemetry?.ip && telemetry?.port) 
-    ? `${telemetry.ip}:${telemetry.port}`
-    : (siteSettings?.fiveMConnectUrl ? siteSettings.fiveMConnectUrl.replace(/^fivem:\/\/connect\//, '').replace(/^connect\s+/, '').trim() : '');
+  const connectTarget = (siteSettings?.fiveMConnectUrl ? siteSettings.fiveMConnectUrl.replace(/^fivem:\/\/connect\//, '').replace(/^connect\s+/, '').trim() : '') ||
+    ((telemetry?.ip && telemetry?.port) ? `${telemetry.ip}:${telemetry.port}` : 'cfx.re/join/7o5gxr');
 
   // ================= 60FPS MOUSE PARALLAX & SCROLL DYNAMICS =================
   const heroSectionRef = useRef<HTMLElement | null>(null);
@@ -449,7 +448,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
               <MagneticButton>
                 <a
-                  href={siteSettings?.discordUrl || 'https://discord.gg/primerp'}
+                  href={siteSettings?.discordUrl || 'https://discord.gg/primee'}
                   target="_blank"
                   rel="noreferrer"
                   className="group flex items-center gap-2.5 px-7 py-4 rounded-full bg-[#0d0f16]/85 hover:bg-[#131622] border border-white/[0.12] hover:border-[#5865F2] text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 backdrop-blur-xl shadow-lg hover:shadow-[0_0_25px_rgba(88,101,242,0.35)] cursor-pointer"
@@ -1124,7 +1123,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             {/* Action Buttons */}
             <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
               <a
-                href={siteSettings?.discordUrl || 'https://discord.gg/primerp'}
+                href={siteSettings?.discordUrl || 'https://discord.gg/primee'}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center gap-2.5 px-8 py-4 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] active:scale-95 text-white font-black text-xs uppercase tracking-wider transition-all shadow-xl shadow-[#5865F2]/25 cursor-pointer"

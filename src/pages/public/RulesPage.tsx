@@ -283,7 +283,7 @@ export const RulesPage: React.FC = () => {
               : 'Save video proof of the scenario and open a moderation ticket through our player support portal.'}
           </p>
           <a
-            href="https://discord.gg/primerp"
+            href="https://discord.gg/primee"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#131620] hover:bg-[#c8874b] text-[#df9f64] hover:text-black border border-[#c8874b]/30 font-bold text-xs uppercase tracking-wider transition-all"

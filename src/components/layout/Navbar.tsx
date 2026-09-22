@@ -37,11 +37,23 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState<boolean>(false);
+  const [copiedConnect, setCopiedConnect] = useState<boolean>(false);
   const [telemetry, setTelemetry] = useState<FiveMTelemetry | null>(null);
   const [, setVisibilityTick] = useState<number>(0);
 
   const userDropdownRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  const handleDirectConnect = () => {
+    const rawUrl = settings?.fiveMConnectUrl || 'fivem://connect/cfx.re/join/7o5gxr';
+    const targetUrl = rawUrl.startsWith('fivem://') ? rawUrl : `fivem://connect/${rawUrl.replace(/^connect\s+/, '').trim()}`;
+    window.location.href = targetUrl;
+    try {
+      navigator.clipboard.writeText('connect cfx.re/join/7o5gxr');
+      setCopiedConnect(true);
+      setTimeout(() => setCopiedConnect(false), 2500);
+    } catch {}
+  };
 
   // Helper to determine if a page should be shown with instant localStorage reactivity
   const isPageVisible = (id: string): boolean => {
@@ -197,10 +209,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             }`}
           />
 
-          {/* Foreground Interactive Row: Perfectly Balanced Centered Navigation without Overlap */}
-          <div className="relative z-10 flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 w-full min-w-0 overflow-visible">
+          {/* Foreground Row: Logo at Start, Actions at End, Center Navigation floating at 50% midpoint */}
+          <div className="relative z-10 flex items-center justify-between gap-2 sm:gap-4 px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 w-full min-w-0 overflow-visible">
             {/* BRAND LOGO (Start-aligned, never shrink) */}
-            <div className="flex items-center justify-start gap-2 sm:gap-3 shrink-0 z-10">
+            <div className="flex items-center justify-start gap-2 sm:gap-3 shrink-0 z-10 min-w-[65px]">
               <button
                 onClick={() => handleNavClick('home')}
                 className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c8874b] rounded-xl group transition-transform hover:scale-105 cursor-pointer"
@@ -210,134 +222,53 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
               </button>
             </div>
 
-            {/* DESKTOP NAVIGATION LINKS (Centered, Flexible, Zero Collision) */}
-            <div className="hidden lg:flex items-center justify-center flex-1 min-w-0 px-1">
-              <nav 
-                className="flex items-center gap-1 bg-[#08090d]/70 backdrop-blur-md p-1 sm:p-1.5 rounded-2xl border border-white/[0.06] shadow-xl shrink-0" 
-                aria-label="Main Navigation"
-              >
-                {primaryNavLinks.map((link) => {
-                  const active = currentTab === link.id;
-                  return (
-                    <button
-                      key={link.id}
-                      onClick={() => handleNavClick(link.id)}
-                      className={`relative ${
-                        navLinks.length <= 4 
-                          ? 'px-3.5 sm:px-4 py-1.5' 
-                          : 'px-2.5 xl:px-3 py-1.5'
-                      } rounded-xl text-xs font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer whitespace-nowrap ${
-                        active
-                          ? 'text-[#df9f64]'
-                          : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
-                      }`}
-                    >
-                      {active && (
-                        <motion.span
-                          layoutId="activeNavbarPill"
-                          className="absolute inset-0 bg-[#c8874b]/15 border border-[#c8874b]/40 rounded-xl shadow-[0_0_15px_rgba(200,135,75,0.2)]"
-                          transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-                        />
-                      )}
-                      <span className="relative z-10">{link.label}</span>
-                    </button>
-                  );
-                })}
-
-                {/* "More" Dropdown when overflow links exist */}
-                {overflowNavLinks.length > 0 && (
-                  <div className="relative" ref={moreMenuRef}>
-                    <button
-                      onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap ${
-                        isOverflowActive || moreMenuOpen
-                          ? 'text-[#df9f64] bg-[#c8874b]/15 border border-[#c8874b]/40'
-                          : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
-                      }`}
-                      aria-expanded={moreMenuOpen}
-                    >
-                      <span>{language === 'ar' ? 'المزيد' : 'More'}</span>
-                      <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-[#df9f64]' : ''}`} />
-                    </button>
-
-                    <AnimatePresence>
-                      {moreMenuOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -4 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -4 }}
-                          transition={{ duration: 0.15, ease: 'easeOut' }}
-                          className="absolute top-full left-1/2 -translate-x-1/2 rtl:left-auto rtl:right-0 rtl:translate-x-0 mt-2 w-44 bg-[#0d0f17] border border-[#c8874b]/40 rounded-2xl shadow-2xl shadow-black/90 py-1.5 z-50 overflow-hidden"
-                        >
-                          {overflowNavLinks.map((link) => (
-                            <button
-                              key={link.id}
-                              onClick={() => {
-                                handleNavClick(link.id);
-                                setMoreMenuOpen(false);
-                              }}
-                              className={`w-full text-left rtl:text-right px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                                currentTab === link.id
-                                  ? 'text-[#df9f64] bg-[#c8874b]/10'
-                                  : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
-                              }`}
-                            >
-                              {link.label}
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )}
-              </nav>
-            </div>
-
             {/* RIGHT / END ACTION BUTTONS (End-aligned, never shrink, always accessible) */}
             <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 z-10">
-            {/* Direct Connect Action (EchoRP Style) */}
-            <button
-              onClick={() => {
-                if (telemetry?.ip && telemetry?.port) {
-                  window.location.href = `fivem://connect/${telemetry.ip}:${telemetry.port}`;
-                } else {
-                  handleNavClick('players');
-                }
-              }}
-              className="hidden lg:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-[#c8874b]/20 active:scale-95 cursor-pointer whitespace-nowrap"
-              title={language === 'ar' ? 'اتصال مباشر بالسيرفر' : 'Direct FiveM Connect'}
-            >
-              <Play className="w-3 h-3 fill-current" />
-              <span>{language === 'ar' ? 'دخول' : 'Connect'}</span>
-            </button>
-
-            {/* Store Shopping Cart (DusaDev Style) */}
-            {isPageVisible('store') && (
+              {/* Direct Connect Action (EchoRP Style) */}
               <button
-                onClick={handleOpenCart}
-                className="relative p-2 sm:p-2.5 rounded-xl bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b]/60 text-[#969cad] hover:text-[#df9f64] transition-all cursor-pointer group shadow-sm shrink-0"
-                title={language === 'ar' ? 'سلة المشتريات' : 'Shopping Cart'}
-                aria-label="Shopping Cart"
+                onClick={handleDirectConnect}
+                className={`hidden lg:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer whitespace-nowrap shrink-0 ${
+                  copiedConnect
+                    ? 'bg-emerald-500 text-black shadow-emerald-500/30'
+                    : 'bg-[#c8874b] hover:bg-[#df9f64] text-black shadow-[#c8874b]/20'
+                }`}
+                title={language === 'ar' ? 'اتصال مباشر بالسيرفر: connect cfx.re/join/7o5gxr' : 'Direct FiveM Connect: connect cfx.re/join/7o5gxr'}
               >
-                <ShoppingBag className="w-4 h-4 transition-transform group-hover:scale-110" />
-                {totalItems > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 rtl:-right-auto rtl:-left-1.5 w-5 h-5 rounded-full bg-[#c8874b] text-black text-[10px] font-black flex items-center justify-center shadow-md shadow-[#c8874b]/40">
-                    {totalItems}
-                  </span>
-                )}
+                <Play className="w-3 h-3 fill-current" />
+                <span>
+                  {copiedConnect
+                    ? (language === 'ar' ? 'تم نسخ الرابط!' : 'Copied!')
+                    : (language === 'ar' ? 'دخول' : 'Connect')}
+                </span>
               </button>
-            )}
 
-            {/* Language Switcher */}
-            <button
-              onClick={toggleLanguage}
-              className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-[#969cad] hover:text-[#df9f64] bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b]/50 transition-all cursor-pointer shrink-0"
-              title="Switch Language / تغيير اللغة"
-              aria-label="Switch Language"
-            >
-              <Globe className="w-3.5 h-3.5 text-[#c8874b]" />
-              <span className="text-[11px]">{language === 'ar' ? 'EN' : 'عربي'}</span>
-            </button>
+              {/* Store Shopping Cart (DusaDev Style) */}
+              {isPageVisible('store') && (
+                <button
+                  onClick={handleOpenCart}
+                  className="relative p-2 sm:p-2.5 rounded-xl bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b]/60 text-[#969cad] hover:text-[#df9f64] transition-all cursor-pointer group shadow-sm shrink-0"
+                  title={language === 'ar' ? 'سلة المشتريات' : 'Shopping Cart'}
+                  aria-label="Shopping Cart"
+                >
+                  <ShoppingBag className="w-4 h-4 transition-transform group-hover:scale-110" />
+                  {totalItems > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 rtl:-right-auto rtl:-left-1.5 w-5 h-5 rounded-full bg-[#c8874b] text-black text-[10px] font-black flex items-center justify-center shadow-md shadow-[#c8874b]/40">
+                      {totalItems}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {/* Language Switcher */}
+              <button
+                onClick={toggleLanguage}
+                className="flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 sm:py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-[#969cad] hover:text-[#df9f64] bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b]/50 transition-all cursor-pointer shrink-0"
+                title="Switch Language / تغيير اللغة"
+                aria-label="Switch Language"
+              >
+                <Globe className="w-3.5 h-3.5 text-[#c8874b]" />
+                <span className="text-[11px] font-bold">{language === 'ar' ? 'EN' : 'عربي'}</span>
+              </button>
 
             {/* User Session / Discord Login */}
             {isAuthenticated && user ? (
@@ -475,6 +406,97 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             >
               {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
+          </div>
+
+          {/* DESKTOP NAVIGATION DOCK: Mathematically dead-centered on the header bar */}
+          <div className="hidden lg:flex items-center justify-center absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-20 pointer-events-auto max-w-[calc(100%-460px)]">
+            <nav
+              className={`flex items-center justify-center bg-[#08090d]/85 backdrop-blur-xl border border-white/[0.08] shadow-2xl shadow-black/80 transition-all duration-300 ${
+                primaryNavLinks.length <= 3
+                  ? 'p-1.5 sm:p-2 rounded-2xl gap-2 sm:gap-3 min-w-[340px] sm:min-w-[420px]'
+                  : primaryNavLinks.length === 4
+                  ? 'p-1.5 rounded-2xl gap-1.5 sm:gap-2 min-w-[400px] sm:min-w-[480px]'
+                  : 'p-1 sm:p-1.5 rounded-2xl gap-1 sm:gap-1.5'
+              }`}
+              aria-label="Main Navigation"
+            >
+              {primaryNavLinks.map((link) => {
+                const active = currentTab === link.id;
+                const linkPadding = primaryNavLinks.length <= 3
+                  ? 'flex-1 text-center justify-center px-6 sm:px-7 py-2.5 text-xs sm:text-sm font-black'
+                  : primaryNavLinks.length === 4
+                  ? 'flex-1 text-center justify-center px-4 sm:px-5 py-2 text-xs sm:text-sm font-bold'
+                  : 'px-3 xl:px-3.5 py-1.5 text-xs font-bold';
+
+                return (
+                  <button
+                    key={link.id}
+                    onClick={() => handleNavClick(link.id)}
+                    className={`relative ${linkPadding} rounded-xl uppercase tracking-wider transition-all duration-200 cursor-pointer whitespace-nowrap ${
+                      active
+                        ? 'text-[#df9f64]'
+                        : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                  >
+                    {active && (
+                      <motion.span
+                        layoutId="activeNavbarPill"
+                        className="absolute inset-0 bg-[#c8874b]/15 border border-[#c8874b]/40 rounded-xl shadow-[0_0_20px_rgba(200,135,75,0.25)]"
+                        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                      />
+                    )}
+                    <span className="relative z-10">{link.label}</span>
+                  </button>
+                );
+              })}
+
+              {/* "More" Dropdown when overflow links exist */}
+              {overflowNavLinks.length > 0 && (
+                <div className="relative" ref={moreMenuRef}>
+                  <button
+                    onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap ${
+                      isOverflowActive || moreMenuOpen
+                        ? 'text-[#df9f64] bg-[#c8874b]/15 border border-[#c8874b]/40'
+                        : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
+                    }`}
+                    aria-expanded={moreMenuOpen}
+                  >
+                    <span>{language === 'ar' ? 'المزيد' : 'More'}</span>
+                    <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-[#df9f64]' : ''}`} />
+                  </button>
+
+                  <AnimatePresence>
+                    {moreMenuOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.15, ease: 'easeOut' }}
+                        className="absolute top-full left-1/2 -translate-x-1/2 rtl:left-auto rtl:right-0 rtl:translate-x-0 mt-2 w-44 bg-[#0d0f17] border border-[#c8874b]/40 rounded-2xl shadow-2xl shadow-black/90 py-1.5 z-50 overflow-hidden"
+                      >
+                        {overflowNavLinks.map((link) => (
+                          <button
+                            key={link.id}
+                            onClick={() => {
+                              handleNavClick(link.id);
+                              setMoreMenuOpen(false);
+                            }}
+                            className={`w-full text-left rtl:text-right px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                              currentTab === link.id
+                                ? 'text-[#df9f64] bg-[#c8874b]/10'
+                                : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
+                            }`}
+                          >
+                            {link.label}
+                          </button>
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+            </nav>
           </div>
         </div>
       </div>

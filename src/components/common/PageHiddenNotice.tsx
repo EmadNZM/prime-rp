@@ -90,7 +90,7 @@ export const PageHiddenNotice: React.FC<PageHiddenNoticeProps> = ({
           </button>
 
           <a
-            href="https://discord.gg/primerp"
+            href="https://discord.gg/primee"
             target="_blank"
             rel="noreferrer"
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-[#141722] hover:bg-[#1a1f2e] border border-white/[0.08] hover:border-[#5865F2]/50 text-xs font-bold text-white transition-all shadow-sm"
