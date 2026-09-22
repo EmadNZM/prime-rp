@@ -294,6 +294,28 @@ export interface HomepageSettings {
   };
 }
 
+export interface PageVisibilitySettings {
+  rules: boolean;
+  jobs: boolean;
+  news: boolean;
+  store: boolean;
+  players: boolean;
+  leaderboard: boolean;
+  support: boolean;
+  faq: boolean;
+}
+
+export const DEFAULT_PAGE_VISIBILITY: PageVisibilitySettings = {
+  rules: true,
+  jobs: true,
+  news: true,
+  store: true,
+  players: true,
+  leaderboard: true,
+  support: true,
+  faq: true
+};
+
 export interface SiteSettings {
   siteName: string;
   siteDescription: string;
@@ -317,6 +339,7 @@ export interface SiteSettings {
   };
   homepage?: HomepageSettings;
   rolePermissions?: Record<string, PermissionId[]>;
+  pageVisibility?: PageVisibilitySettings;
 }
 
 export interface FAQItem {

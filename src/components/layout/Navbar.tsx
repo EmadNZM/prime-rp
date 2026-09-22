@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
+import { useSettings } from '../../context/SettingsContext';
 import { apiClient } from '../../services/apiClient';
 import { FiveMTelemetry } from '../../types';
 import { PrimeLogo } from '../common/PrimeLogo';
@@ -31,6 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
   const { t, language, setLanguage } = useLanguage();
   const { user, isAuthenticated, logout, isStaff } = useAuth();
   const { totalItems, setIsCartOpen: setCartOpenContext } = useCart();
+  const { settings } = useSettings();
   const [isScrolled, setIsScrolled] = useState<boolean>(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
@@ -39,6 +41,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
 
   const userDropdownRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  // Helper to determine if a page should be shown
+  const isPageVisible = (id: string): boolean => {
+    if (id === 'home' || id === 'about') return true;
+    if (!settings?.pageVisibility) return true;
+    return (settings.pageVisibility as any)[id] !== false;
+  };
 
   // Close dropdowns on click outside
   useEffect(() => {
@@ -85,7 +94,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
     return () => clearInterval(interval);
   }, []);
 
-  const navLinks = [
+  const allNavLinks = [
     { id: 'home', label: t('nav.home') },
     { id: 'about', label: language === 'ar' ? 'من نحن' : 'About' },
     { id: 'store', label: t('nav.store') },
@@ -97,6 +106,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
     { id: 'faq', label: t('nav.faq') },
     { id: 'support', label: t('nav.support') },
   ];
+  const navLinks = allNavLinks.filter((link) => isPageVisible(link.id));
 
   const handleNavClick = (id: string) => {
     setMobileMenuOpen(false);
@@ -127,7 +137,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
   const maxPlayers = telemetry?.maxPlayers || 150;
 
   // Split links into primary and secondary to guarantee zero overflow in English LTR
-  const primaryNavLinks = [
+  const allPrimaryNavLinks = [
     { id: 'home', label: t('nav.home') },
     { id: 'store', label: t('nav.store') },
     { id: 'rules', label: t('nav.rules') },
@@ -135,13 +145,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
     { id: 'players', label: t('nav.players') },
     { id: 'leaderboard', label: t('nav.leaderboard') },
   ];
+  const primaryNavLinks = allPrimaryNavLinks.filter((link) => isPageVisible(link.id));
 
-  const secondaryNavLinks = [
+  const allSecondaryNavLinks = [
     { id: 'about', label: language === 'ar' ? 'من نحن' : 'About' },
     { id: 'news', label: t('nav.news') },
     { id: 'faq', label: t('nav.faq') },
     { id: 'support', label: t('nav.support') },
   ];
+  const secondaryNavLinks = allSecondaryNavLinks.filter((link) => isPageVisible(link.id));
 
   const isSecondaryActive = secondaryNavLinks.some(link => link.id === currentTab);
 
@@ -253,49 +265,51 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             </div>
 
             {/* "More" Dropdown on standard xl screens to eliminate any overflow */}
-            <div className="relative 2xl:hidden" ref={moreMenuRef}>
-              <button
-                onClick={() => setMoreMenuOpen(!moreMenuOpen)}
-                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap ${
-                  isSecondaryActive || moreMenuOpen
-                    ? 'text-[#df9f64] bg-[#c8874b]/10'
-                    : 'text-[#969cad] hover:text-white'
-                }`}
-                aria-expanded={moreMenuOpen}
-              >
-                <span>{language === 'ar' ? 'المزيد' : 'More'}</span>
-                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-[#df9f64]' : ''}`} />
-              </button>
+            {secondaryNavLinks.length > 0 && (
+              <div className="relative 2xl:hidden" ref={moreMenuRef}>
+                <button
+                  onClick={() => setMoreMenuOpen(!moreMenuOpen)}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap ${
+                    isSecondaryActive || moreMenuOpen
+                      ? 'text-[#df9f64] bg-[#c8874b]/10'
+                      : 'text-[#969cad] hover:text-white'
+                  }`}
+                  aria-expanded={moreMenuOpen}
+                >
+                  <span>{language === 'ar' ? 'المزيد' : 'More'}</span>
+                  <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-[#df9f64]' : ''}`} />
+                </button>
 
-              <AnimatePresence>
-                {moreMenuOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    transition={{ duration: 0.15, ease: 'easeOut' }}
-                    className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-2 w-44 bg-[#0d0f17] border border-[#c8874b]/40 rounded-2xl shadow-2xl shadow-black/90 py-1.5 z-50 overflow-hidden"
-                  >
-                    {secondaryNavLinks.map((link) => (
-                      <button
-                        key={link.id}
-                        onClick={() => {
-                          handleNavClick(link.id);
-                          setMoreMenuOpen(false);
-                        }}
-                        className={`w-full text-left rtl:text-right px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
-                          currentTab === link.id
-                            ? 'text-[#df9f64] bg-[#c8874b]/10'
-                            : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
-                        }`}
-                      >
-                        {link.label}
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                <AnimatePresence>
+                  {moreMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15, ease: 'easeOut' }}
+                      className="absolute top-full left-0 rtl:left-auto rtl:right-0 mt-2 w-44 bg-[#0d0f17] border border-[#c8874b]/40 rounded-2xl shadow-2xl shadow-black/90 py-1.5 z-50 overflow-hidden"
+                    >
+                      {secondaryNavLinks.map((link) => (
+                        <button
+                          key={link.id}
+                          onClick={() => {
+                            handleNavClick(link.id);
+                            setMoreMenuOpen(false);
+                          }}
+                          className={`w-full text-left rtl:text-right px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer ${
+                            currentTab === link.id
+                              ? 'text-[#df9f64] bg-[#c8874b]/10'
+                              : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
+                          }`}
+                        >
+                          {link.label}
+                        </button>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
           </nav>
 
           {/* RIGHT ACTION BUTTONS */}
@@ -317,19 +331,21 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             </button>
 
             {/* Store Shopping Cart (DusaDev Style) */}
-            <button
-              onClick={handleOpenCart}
-              className="relative p-2 sm:p-2.5 rounded-xl bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b]/60 text-[#969cad] hover:text-[#df9f64] transition-all cursor-pointer group shadow-sm shrink-0"
-              title={language === 'ar' ? 'سلة المشتريات' : 'Shopping Cart'}
-              aria-label="Shopping Cart"
-            >
-              <ShoppingBag className="w-4 h-4 transition-transform group-hover:scale-110" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 rtl:-right-auto rtl:-left-1.5 w-5 h-5 rounded-full bg-[#c8874b] text-black text-[10px] font-black flex items-center justify-center shadow-md shadow-[#c8874b]/40">
-                  {totalItems}
-                </span>
-              )}
-            </button>
+            {isPageVisible('store') && (
+              <button
+                onClick={handleOpenCart}
+                className="relative p-2 sm:p-2.5 rounded-xl bg-[#11131c] border border-white/[0.06] hover:border-[#c8874b]/60 text-[#969cad] hover:text-[#df9f64] transition-all cursor-pointer group shadow-sm shrink-0"
+                title={language === 'ar' ? 'سلة المشتريات' : 'Shopping Cart'}
+                aria-label="Shopping Cart"
+              >
+                <ShoppingBag className="w-4 h-4 transition-transform group-hover:scale-110" />
+                {totalItems > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 rtl:-right-auto rtl:-left-1.5 w-5 h-5 rounded-full bg-[#c8874b] text-black text-[10px] font-black flex items-center justify-center shadow-md shadow-[#c8874b]/40">
+                    {totalItems}
+                  </span>
+                )}
+              </button>
+            )}
 
             {/* Language Switcher */}
             <button

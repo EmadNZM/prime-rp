@@ -17,6 +17,7 @@ import {
   SiteSettings 
 } from '../../types';
 import { LogoManagerSettings } from '../../components/admin/LogoManagerSettings';
+import { PageVisibilityManager } from '../../components/admin/PageVisibilityManager';
 import { ReportsManager } from '../../components/admin/ReportsManager';
 import { SocialLinksManager } from '../../components/admin/SocialLinksManager';
 import { JobsManager } from '../../components/admin/JobsManager';
@@ -1242,6 +1243,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ setCurrentTab })
         {/* TAB 9: SETTINGS, LOGOS & SOCIAL LINKS */}
         {activeAdminTab === 'settings' && settings && (
           <div className="space-y-8">
+            <PageVisibilityManager
+              settings={settings}
+              setSettings={setSettings}
+              onSave={handleSaveSettings}
+              showToast={showToast}
+              isOwner={isOwner}
+            />
             <LogoManagerSettings
               settings={settings}
               setSettings={setSettings}

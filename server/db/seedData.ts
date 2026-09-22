@@ -1,4 +1,4 @@
-import { UserRole, UserStatus, NewsItem, RuleCategory, JobItem, ProductItem, FAQItem, SiteSettings, LeaderboardEntry } from '../../src/types';
+import { UserRole, UserStatus, NewsItem, RuleCategory, JobItem, ProductItem, FAQItem, SiteSettings, LeaderboardEntry, DEFAULT_PAGE_VISIBILITY } from '../../src/types';
 
 export const initialSiteSettings: SiteSettings = {
   siteName: 'PRIME RP',
@@ -51,7 +51,8 @@ export const initialSiteSettings: SiteSettings = {
       satisfactionRate: '99.4%',
       fpsPerformance: '60 FPS'
     }
-  }
+  },
+  pageVisibility: DEFAULT_PAGE_VISIBILITY
 };
 
 export const initialLeaderboard: LeaderboardEntry[] = [

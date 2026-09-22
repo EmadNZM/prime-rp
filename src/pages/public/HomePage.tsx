@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
+import { useSettings } from '../../context/SettingsContext';
 import { PrimeLogo } from '../../components/common/PrimeLogo';
 import { MagneticButton } from '../../components/common/MagneticButton';
 import { apiClient } from '../../services/apiClient';
@@ -62,6 +63,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
   const { t, language, isRtl } = useLanguage();
   const { addToCart } = useCart();
   const { user, isAuthenticated } = useAuth();
+  const { settings: globalSettings } = useSettings();
   const [siteSettings, setSiteSettings] = useState<any>(null);
   const [telemetry, setTelemetry] = useState<FiveMTelemetry | null>(null);
   const [featuredNews, setFeaturedNews] = useState<NewsItem[]>([]);
@@ -71,6 +73,12 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
   const [copiedConnect, setCopiedConnect] = useState<boolean>(false);
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
   const [activeTabSector, setActiveTabSector] = useState<string>('police');
+
+  const activeSettings = siteSettings || globalSettings;
+  const isPageVisible = (id: string): boolean => {
+    if (!activeSettings?.pageVisibility) return true;
+    return (activeSettings.pageVisibility as any)[id] !== false;
+  };
 
   // Auto-scroll to About section if requested
   useEffect(() => {
@@ -935,7 +943,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
       </section>
 
       {/* ================= 3. STORE • MODERN & INTERACTIVE (Exact Frame 3 Reference) ================= */}
-      <section className="py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
+      {isPageVisible('store') && (
+        <section className="py-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
         
         {/* Section Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
@@ -1265,6 +1274,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         )}
 
       </section>
+      )}
 
       {/* ================= ARCHITECTURE PILLARS (SERVER SPECS) ================= */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
@@ -1415,19 +1425,21 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
           </div>
         </div>
 
-        <div className="text-center mt-10">
-          <button
-            onClick={() => setCurrentTab('rules')}
-            className="inline-flex items-center gap-2 text-xs font-bold text-[#c8874b] hover:text-[#df9f64] transition-colors cursor-pointer"
-          >
-            <span>{language === 'ar' ? 'الاطلاع على كتاب القوانين الكامل (Rules Book)' : 'Read Full City Rules & Directives'}</span>
-            <ArrowIcon className="w-3.5 h-3.5" />
-          </button>
-        </div>
+        {isPageVisible('rules') && (
+          <div className="text-center mt-10">
+            <button
+              onClick={() => setCurrentTab('rules')}
+              className="inline-flex items-center gap-2 text-xs font-bold text-[#c8874b] hover:text-[#df9f64] transition-colors cursor-pointer"
+            >
+              <span>{language === 'ar' ? 'الاطلاع على كتاب القوانين الكامل (Rules Book)' : 'Read Full City Rules & Directives'}</span>
+              <ArrowIcon className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
       </section>
 
       {/* ================= CAREERS / VACANCIES PREVIEW ================= */}
-      {featuredJobs.length > 0 && (
+      {featuredJobs.length > 0 && isPageVisible('jobs') && (
         <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-white/[0.06] relative z-10">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-12 gap-4">
             <div>
@@ -1514,7 +1526,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
       )}
 
       {/* ================= COMMUNITY FAQ ACCORDION ================= */}
-      {faqs.length > 0 && (
+      {faqs.length > 0 && isPageVisible('faq') && (
         <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto border-t border-white/[0.06] relative z-10">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#c8874b]/10 text-[#df9f64] text-xs font-black mb-3 uppercase tracking-widest border border-[#c8874b]/20 font-rajdhani">
@@ -1576,30 +1588,36 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             })}
           </div>
 
-          <div className="mt-8 p-5 rounded-2xl bg-[#0d0f16] border border-white/[0.07] flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left rtl:sm:text-right">
-            <div>
-              <h4 className="text-sm font-bold text-white mb-0.5">
-                {language === 'ar' ? 'هل لديك استفسار آخر لم تجد إجابته هنا؟' : 'Still have questions or need technical assistance?'}
-              </h4>
-              <p className="text-xs text-[#7a8091]">
-                {language === 'ar' ? 'فريق الدعم الفني متواجد على مدار 24 ساعة للإجابة على جميع الاستفسارات.' : 'Our staff team is available 24/7 on Discord to help you connect.'}
-              </p>
+          {(isPageVisible('support') || isPageVisible('faq')) && (
+            <div className="mt-8 p-5 rounded-2xl bg-[#0d0f16] border border-white/[0.07] flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left rtl:sm:text-right">
+              <div>
+                <h4 className="text-sm font-bold text-white mb-0.5">
+                  {language === 'ar' ? 'هل لديك استفسار آخر لم تجد إجابته هنا؟' : 'Still have questions or need technical assistance?'}
+                </h4>
+                <p className="text-xs text-[#7a8091]">
+                  {language === 'ar' ? 'فريق الدعم الفني متواجد على مدار 24 ساعة للإجابة على جميع الاستفسارات.' : 'Our staff team is available 24/7 on Discord to help you connect.'}
+                </p>
+              </div>
+              <div className="flex items-center gap-3 shrink-0">
+                {isPageVisible('support') && (
+                  <button
+                    onClick={() => setCurrentTab('support')}
+                    className="px-4 py-2 rounded-xl bg-[#131620] hover:bg-[#1c202d] text-white border border-white/[0.08] text-xs font-bold transition-all cursor-pointer"
+                  >
+                    {language === 'ar' ? 'تذاكر الدعم' : 'Support Tickets'}
+                  </button>
+                )}
+                {isPageVisible('faq') && (
+                  <button
+                    onClick={() => setCurrentTab('faq')}
+                    className="px-4 py-2 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
+                  >
+                    {language === 'ar' ? 'قاعدة المعرفة' : 'Full Knowledge Base'}
+                  </button>
+                )}
+              </div>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <button
-                onClick={() => setCurrentTab('support')}
-                className="px-4 py-2 rounded-xl bg-[#131620] hover:bg-[#1c202d] text-white border border-white/[0.08] text-xs font-bold transition-all cursor-pointer"
-              >
-                {language === 'ar' ? 'تذاكر الدعم' : 'Support Tickets'}
-              </button>
-              <button
-                onClick={() => setCurrentTab('faq')}
-                className="px-4 py-2 rounded-xl bg-[#c8874b] hover:bg-[#df9f64] text-black text-xs font-black uppercase tracking-wider transition-all cursor-pointer"
-              >
-                {language === 'ar' ? 'قاعدة المعرفة' : 'Full Knowledge Base'}
-              </button>
-            </div>
-          </div>
+          )}
         </section>
       )}
 
@@ -1765,41 +1783,49 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
               {/* Fast Navigation Quick Shortcuts */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <button
-                  onClick={() => setCurrentTab('jobs')}
-                  className="p-3 rounded-xl bg-[#08090d] hover:bg-[#131620] border border-white/[0.06] hover:border-[#c8874b]/50 text-left rtl:text-right transition-all cursor-pointer group"
-                >
-                  <Briefcase className="w-4 h-4 text-[#c8874b] mb-1.5 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-bold text-white block">{language === 'ar' ? 'طلبات التوظيف' : 'My Applications'}</span>
-                  <span className="text-[10px] text-[#666]">{language === 'ar' ? 'متابعة الحالة' : 'Status: Review'}</span>
-                </button>
+                {isPageVisible('jobs') && (
+                  <button
+                    onClick={() => setCurrentTab('jobs')}
+                    className="p-3 rounded-xl bg-[#08090d] hover:bg-[#131620] border border-white/[0.06] hover:border-[#c8874b]/50 text-left rtl:text-right transition-all cursor-pointer group"
+                  >
+                    <Briefcase className="w-4 h-4 text-[#c8874b] mb-1.5 group-hover:scale-110 transition-transform" />
+                    <span className="text-xs font-bold text-white block">{language === 'ar' ? 'طلبات التوظيف' : 'My Applications'}</span>
+                    <span className="text-[10px] text-[#666]">{language === 'ar' ? 'متابعة الحالة' : 'Status: Review'}</span>
+                  </button>
+                )}
 
-                <button
-                  onClick={() => setCurrentTab('support')}
-                  className="p-3 rounded-xl bg-[#08090d] hover:bg-[#131620] border border-white/[0.06] hover:border-[#c8874b]/50 text-left rtl:text-right transition-all cursor-pointer group"
-                >
-                  <MessageSquare className="w-4 h-4 text-[#5865F2] mb-1.5 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-bold text-white block">{language === 'ar' ? 'تذاكر الدعم' : 'Support Tickets'}</span>
-                  <span className="text-[10px] text-[#666]">{language === 'ar' ? 'المساعدة الفنية' : '24/7 Response'}</span>
-                </button>
+                {isPageVisible('support') && (
+                  <button
+                    onClick={() => setCurrentTab('support')}
+                    className="p-3 rounded-xl bg-[#08090d] hover:bg-[#131620] border border-white/[0.06] hover:border-[#c8874b]/50 text-left rtl:text-right transition-all cursor-pointer group"
+                  >
+                    <MessageSquare className="w-4 h-4 text-[#5865F2] mb-1.5 group-hover:scale-110 transition-transform" />
+                    <span className="text-xs font-bold text-white block">{language === 'ar' ? 'تذاكر الدعم' : 'Support Tickets'}</span>
+                    <span className="text-[10px] text-[#666]">{language === 'ar' ? 'المساعدة الفنية' : '24/7 Response'}</span>
+                  </button>
+                )}
 
-                <button
-                  onClick={() => setCurrentTab('store')}
-                  className="p-3 rounded-xl bg-[#08090d] hover:bg-[#131620] border border-white/[0.06] hover:border-[#c8874b]/50 text-left rtl:text-right transition-all cursor-pointer group"
-                >
-                  <ShoppingBag className="w-4 h-4 text-[#df9f64] mb-1.5 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-bold text-white block">{language === 'ar' ? 'فواتير المتجر' : 'Tebex Orders'}</span>
-                  <span className="text-[10px] text-[#666]">{language === 'ar' ? 'تسليم فوري' : 'Instant Delivery'}</span>
-                </button>
+                {isPageVisible('store') && (
+                  <button
+                    onClick={() => setCurrentTab('store')}
+                    className="p-3 rounded-xl bg-[#08090d] hover:bg-[#131620] border border-white/[0.06] hover:border-[#c8874b]/50 text-left rtl:text-right transition-all cursor-pointer group"
+                  >
+                    <ShoppingBag className="w-4 h-4 text-[#df9f64] mb-1.5 group-hover:scale-110 transition-transform" />
+                    <span className="text-xs font-bold text-white block">{language === 'ar' ? 'فواتير المتجر' : 'Tebex Orders'}</span>
+                    <span className="text-[10px] text-[#666]">{language === 'ar' ? 'تسليم فوري' : 'Instant Delivery'}</span>
+                  </button>
+                )}
 
-                <button
-                  onClick={() => setCurrentTab('rules')}
-                  className="p-3 rounded-xl bg-[#08090d] hover:bg-[#131620] border border-white/[0.06] hover:border-[#c8874b]/50 text-left rtl:text-right transition-all cursor-pointer group"
-                >
-                  <Shield className="w-4 h-4 text-emerald-400 mb-1.5 group-hover:scale-110 transition-transform" />
-                  <span className="text-xs font-bold text-white block">{language === 'ar' ? 'سجل السوابق' : 'Penal Record'}</span>
-                  <span className="text-[10px] text-emerald-400">{language === 'ar' ? 'سجل نظيف' : 'Clean Slate'}</span>
-                </button>
+                {isPageVisible('rules') && (
+                  <button
+                    onClick={() => setCurrentTab('rules')}
+                    className="p-3 rounded-xl bg-[#08090d] hover:bg-[#131620] border border-white/[0.06] hover:border-[#c8874b]/50 text-left rtl:text-right transition-all cursor-pointer group"
+                  >
+                    <Shield className="w-4 h-4 text-emerald-400 mb-1.5 group-hover:scale-110 transition-transform" />
+                    <span className="text-xs font-bold text-white block">{language === 'ar' ? 'سجل السوابق' : 'Penal Record'}</span>
+                    <span className="text-[10px] text-emerald-400">{language === 'ar' ? 'سجل نظيف' : 'Clean Slate'}</span>
+                  </button>
+                )}
               </div>
 
             </div>

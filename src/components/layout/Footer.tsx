@@ -32,6 +32,12 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
     setTimeout(() => setCopiedIp(false), 2000);
   };
 
+  const isPageVisible = (id: string): boolean => {
+    if (id === 'home' || id === 'legal-terms' || id === 'legal-privacy' || id === 'legal-refund') return true;
+    if (!settings?.pageVisibility) return true;
+    return (settings.pageVisibility as any)[id] !== false;
+  };
+
   return (
     <footer className="bg-[#06070a] border-t border-white/[0.06] pt-16 pb-12 text-[#969cad] relative overflow-hidden">
       {/* Background Subtle Glow */}
@@ -85,21 +91,27 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
                   {t('nav.home')}
                 </button>
               </li>
-              <li>
-                <button onClick={() => handleNav('rules')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
-                  {t('nav.rules')}
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('jobs')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
-                  {t('nav.jobs')}
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('news')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
-                  {t('nav.news')}
-                </button>
-              </li>
+              {isPageVisible('rules') && (
+                <li>
+                  <button onClick={() => handleNav('rules')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
+                    {t('nav.rules')}
+                  </button>
+                </li>
+              )}
+              {isPageVisible('jobs') && (
+                <li>
+                  <button onClick={() => handleNav('jobs')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
+                    {t('nav.jobs')}
+                  </button>
+                </li>
+              )}
+              {isPageVisible('news') && (
+                <li>
+                  <button onClick={() => handleNav('news')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
+                    {t('nav.news')}
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
 
@@ -109,31 +121,41 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
               {t('footer.community')}
             </h4>
             <ul className="space-y-2.5 text-xs">
-              <li>
-                <button onClick={() => handleNav('store')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
-                  {t('nav.store')}
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('players')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
-                  {t('nav.players')}
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('leaderboard')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
-                  {t('nav.leaderboard')}
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('support')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
-                  {t('nav.support')}
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('faq')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
-                  {t('nav.faq')}
-                </button>
-              </li>
+              {isPageVisible('store') && (
+                <li>
+                  <button onClick={() => handleNav('store')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
+                    {t('nav.store')}
+                  </button>
+                </li>
+              )}
+              {isPageVisible('players') && (
+                <li>
+                  <button onClick={() => handleNav('players')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
+                    {t('nav.players')}
+                  </button>
+                </li>
+              )}
+              {isPageVisible('leaderboard') && (
+                <li>
+                  <button onClick={() => handleNav('leaderboard')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
+                    {t('nav.leaderboard')}
+                  </button>
+                </li>
+              )}
+              {isPageVisible('support') && (
+                <li>
+                  <button onClick={() => handleNav('support')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
+                    {t('nav.support')}
+                  </button>
+                </li>
+              )}
+              {isPageVisible('faq') && (
+                <li>
+                  <button onClick={() => handleNav('faq')} className="hover:text-[#df9f64] transition-colors cursor-pointer">
+                    {t('nav.faq')}
+                  </button>
+                </li>
+              )}
             </ul>
           </div>
 
