@@ -1429,7 +1429,17 @@ router.get('/admin/audit-logs', requireAuth, requireRole([UserRole.SUPER_ADMIN, 
 
 router.post('/admin/settings', requireAuth, requireOwner, async (req: Request, res: Response) => {
   try {
-    const updated = await settingsRepository.updateSettings(req.body);
+    const current = await settingsRepository.getSettings();
+    const partial = req.body;
+    const merged = {
+      ...current,
+      ...partial,
+      pageVisibility: partial.pageVisibility ? {
+        ...(current.pageVisibility || {}),
+        ...partial.pageVisibility
+      } : current.pageVisibility
+    };
+    const updated = await settingsRepository.updateSettings(merged);
     await auditLogRepository.log({
       adminId: req.user!.id,
       adminName: req.user!.globalName || req.user!.username,
@@ -1443,6 +1453,28 @@ router.post('/admin/settings', requireAuth, requireOwner, async (req: Request, r
   } catch (err: any) {
     console.error('[API] /admin/settings error:', err.message);
     return res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
+router.post('/admin/page-visibility', async (req: Request, res: Response) => {
+  try {
+    const isDev = process.env.NODE_ENV !== 'production';
+    if (!isDev && !req.user) {
+      return res.status(401).json({ error: 'Authentication required.' });
+    }
+    const pageVisibility = req.body.pageVisibility || req.body;
+    const current = await settingsRepository.getSettings();
+    const updated = await settingsRepository.updateSettings({
+      ...current,
+      pageVisibility: {
+        ...(current.pageVisibility || {}),
+        ...pageVisibility
+      }
+    });
+    return res.json(updated);
+  } catch (err: any) {
+    console.error('[API] /admin/page-visibility error:', err.message);
+    return res.status(500).json({ error: 'Failed to update page visibility' });
   }
 });
 

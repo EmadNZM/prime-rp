@@ -51,8 +51,17 @@ export function requireOwner(req: Request, res: Response, next: NextFunction) {
   if (!req.user) {
     return res.status(401).json({ error: 'Authentication required.' });
   }
-  if (!req.user.isOwner && req.user.role !== UserRole.OWNER) {
-    return res.status(403).json({ error: 'Forbidden: Action strictly reserved for the Server Owner.' });
+  const isAuthorized =
+    req.user.isOwner ||
+    req.user.role === UserRole.OWNER ||
+    req.user.role === UserRole.SUPER_ADMIN ||
+    req.user.role === UserRole.ADMIN ||
+    req.user.isAdmin ||
+    Boolean(req.user.permissions?.includes('*')) ||
+    Boolean(req.user.permissions?.includes('settings.edit'));
+
+  if (!isAuthorized) {
+    return res.status(403).json({ error: 'Forbidden: Action strictly reserved for the Server Owner and Administrators.' });
   }
   next();
 }

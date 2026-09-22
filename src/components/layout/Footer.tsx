@@ -19,6 +19,15 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
 
   const isPageVisible = (id: string): boolean => {
     if (id === 'home' || id === 'legal-terms' || id === 'legal-privacy' || id === 'legal-refund') return true;
+    try {
+      const cached = localStorage.getItem('prime_page_visibility');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && typeof parsed === 'object' && parsed[id] !== undefined) {
+          return parsed[id] !== false;
+        }
+      }
+    } catch {}
     if (!settings?.pageVisibility) return true;
     return (settings.pageVisibility as any)[id] !== false;
   };

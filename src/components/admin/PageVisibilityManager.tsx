@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useSettings } from '../../context/SettingsContext';
 import { SiteSettings, PageVisibilitySettings, DEFAULT_PAGE_VISIBILITY } from '../../types';
+import { apiClient } from '../../services/apiClient';
 import { 
   Eye, 
   EyeOff, 
@@ -171,11 +172,19 @@ export const PageVisibilityManager: React.FC<PageVisibilityManagerProps> = ({
       pageVisibility: updatedVisibility
     };
 
+    // 1. Instant local state & localStorage update for zero latency
     setSettings(newSettings);
+    try {
+      localStorage.setItem('prime_page_visibility', JSON.stringify(updatedVisibility));
+      window.dispatchEvent(new CustomEvent('prime_page_visibility_updated'));
+    } catch {}
 
     try {
       setIsSaving(true);
-      await updateSettings({ pageVisibility: updatedVisibility });
+      await Promise.allSettled([
+        updateSettings({ pageVisibility: updatedVisibility }),
+        apiClient.updatePageVisibility(updatedVisibility)
+      ]);
       const pageInfo = PAGE_CONFIGS.find((p) => p.key === key);
       const name = language === 'ar' ? pageInfo?.titleAr : pageInfo?.titleEn;
       if (showToast) {
@@ -215,8 +224,16 @@ export const PageVisibilityManager: React.FC<PageVisibilityManagerProps> = ({
 
     setSettings(newSettings);
     try {
+      localStorage.setItem('prime_page_visibility', JSON.stringify(allVisible));
+      window.dispatchEvent(new CustomEvent('prime_page_visibility_updated'));
+    } catch {}
+
+    try {
       setIsSaving(true);
-      await updateSettings({ pageVisibility: allVisible });
+      await Promise.allSettled([
+        updateSettings({ pageVisibility: allVisible }),
+        apiClient.updatePageVisibility(allVisible)
+      ]);
       if (showToast) {
         showToast(language === 'ar' ? 'تم إظهار كافة صفحات المنصة بنجاح' : 'All pages are now visible');
       }

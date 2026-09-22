@@ -456,5 +456,18 @@ export const apiClient = {
       body: JSON.stringify(data)
     });
     return res.json();
+  },
+
+  async updatePageVisibility(pageVisibility: any) {
+    try {
+      const res = await apiFetch('/api/admin/page-visibility', {
+        method: 'POST',
+        body: JSON.stringify({ pageVisibility })
+      });
+      return await res.json();
+    } catch (e) {
+      console.warn('API page-visibility update error:', e);
+      return null;
+    }
   }
 };

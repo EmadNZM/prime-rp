@@ -38,16 +38,39 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
   const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
   const [moreMenuOpen, setMoreMenuOpen] = useState<boolean>(false);
   const [telemetry, setTelemetry] = useState<FiveMTelemetry | null>(null);
+  const [, setVisibilityTick] = useState<number>(0);
 
   const userDropdownRef = useRef<HTMLDivElement>(null);
   const moreMenuRef = useRef<HTMLDivElement>(null);
 
-  // Helper to determine if a page should be shown
+  // Helper to determine if a page should be shown with instant localStorage reactivity
   const isPageVisible = (id: string): boolean => {
     if (id === 'home') return true;
+    try {
+      const cached = localStorage.getItem('prime_page_visibility');
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        if (parsed && typeof parsed === 'object' && parsed[id] !== undefined) {
+          return parsed[id] !== false;
+        }
+      }
+    } catch {}
     if (!settings?.pageVisibility) return true;
     return (settings.pageVisibility as any)[id] !== false;
   };
+
+  // Listen to visibility updates across tabs and components
+  useEffect(() => {
+    const handleUpdate = () => {
+      setVisibilityTick((prev) => prev + 1);
+    };
+    window.addEventListener('prime_page_visibility_updated', handleUpdate);
+    window.addEventListener('storage', handleUpdate);
+    return () => {
+      window.removeEventListener('prime_page_visibility_updated', handleUpdate);
+      window.removeEventListener('storage', handleUpdate);
+    };
+  }, []);
 
   // Close dropdowns on click outside
   useEffect(() => {
@@ -124,12 +147,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
   ];
   const navLinks = allNavLinks.filter((link) => isPageVisible(link.id));
 
-  // If 6 or fewer visible links, show all directly without dropdown.
-  // If more than 6, show first 5 directly + More dropdown on standard desktop, and show all on 2xl.
-  const MAX_PRIMARY_COUNT = 6;
+  // Dynamic splitting: 5 or fewer links show all directly in center.
+  // 6 or more links show top 5 + "More" dropdown to guarantee zero collisions on all resolutions.
+  const MAX_PRIMARY_COUNT = 5;
   const shouldSplit = navLinks.length > MAX_PRIMARY_COUNT;
-  const primaryNavLinks = shouldSplit ? navLinks.slice(0, 5) : navLinks;
-  const overflowNavLinks = shouldSplit ? navLinks.slice(5) : [];
+  const primaryNavLinks = shouldSplit ? navLinks.slice(0, MAX_PRIMARY_COUNT) : navLinks;
+  const overflowNavLinks = shouldSplit ? navLinks.slice(MAX_PRIMARY_COUNT) : [];
 
   const isOverflowActive = overflowNavLinks.some(link => link.id === currentTab);
 
@@ -174,10 +197,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
             }`}
           />
 
-          {/* Foreground Interactive Row: Perfectly Balanced 3-Column Symmetrical Grid */}
-          <div className="relative z-10 flex items-center justify-between lg:grid lg:grid-cols-[minmax(120px,1fr)_auto_minmax(120px,1fr)] px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 w-full min-w-0 overflow-visible">
-            {/* BRAND LOGO (Column 1: Start-aligned) */}
-            <div className="flex items-center justify-start gap-2 sm:gap-3 shrink-0">
+          {/* Foreground Interactive Row: Perfectly Balanced Centered Navigation without Overlap */}
+          <div className="relative z-10 flex items-center justify-between gap-2 sm:gap-3 px-3 sm:px-4 lg:px-5 py-2 sm:py-2.5 w-full min-w-0 overflow-visible">
+            {/* BRAND LOGO (Start-aligned, never shrink) */}
+            <div className="flex items-center justify-start gap-2 sm:gap-3 shrink-0 z-10">
               <button
                 onClick={() => handleNavClick('home')}
                 className="flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-[#c8874b] rounded-xl group transition-transform hover:scale-105 cursor-pointer"
@@ -187,10 +210,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
               </button>
             </div>
 
-            {/* DESKTOP NAVIGATION LINKS (Column 2: Exactly Centered, Dynamically Sized) */}
-            <div className="hidden lg:flex items-center justify-center min-w-0">
+            {/* DESKTOP NAVIGATION LINKS (Centered, Flexible, Zero Collision) */}
+            <div className="hidden lg:flex items-center justify-center flex-1 min-w-0 px-1">
               <nav 
-                className="flex items-center gap-1 bg-[#08090d]/70 backdrop-blur-md p-1 sm:p-1.5 rounded-2xl border border-white/[0.06] shadow-xl min-w-0" 
+                className="flex items-center gap-1 bg-[#08090d]/70 backdrop-blur-md p-1 sm:p-1.5 rounded-2xl border border-white/[0.06] shadow-xl shrink-0" 
                 aria-label="Main Navigation"
               >
                 {primaryNavLinks.map((link) => {
@@ -202,7 +225,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
                       className={`relative ${
                         navLinks.length <= 4 
                           ? 'px-3.5 sm:px-4 py-1.5' 
-                          : 'px-2.5 2xl:px-3 py-1.5'
+                          : 'px-2.5 xl:px-3 py-1.5'
                       } rounded-xl text-xs font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer whitespace-nowrap ${
                         active
                           ? 'text-[#df9f64]'
@@ -221,38 +244,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
                   );
                 })}
 
-                {/* Extra Desktop Links (Visible directly on ultra-wide 2xl screens) */}
+                {/* "More" Dropdown when overflow links exist */}
                 {overflowNavLinks.length > 0 && (
-                  <div className="hidden 2xl:flex items-center gap-1">
-                    {overflowNavLinks.map((link) => {
-                      const active = currentTab === link.id;
-                      return (
-                        <button
-                          key={link.id}
-                          onClick={() => handleNavClick(link.id)}
-                          className={`relative px-2.5 2xl:px-3 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors duration-200 cursor-pointer whitespace-nowrap ${
-                            active
-                              ? 'text-[#df9f64]'
-                              : 'text-[#969cad] hover:text-white hover:bg-white/[0.04]'
-                          }`}
-                        >
-                          {active && (
-                            <motion.span
-                              layoutId="activeNavbarPill"
-                              className="absolute inset-0 bg-[#c8874b]/15 border border-[#c8874b]/40 rounded-xl shadow-[0_0_15px_rgba(200,135,75,0.2)]"
-                              transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-                            />
-                          )}
-                          <span className="relative z-10">{link.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* "More" Dropdown on lg/xl screens when overflow links exist */}
-                {overflowNavLinks.length > 0 && (
-                  <div className="relative 2xl:hidden" ref={moreMenuRef}>
+                  <div className="relative" ref={moreMenuRef}>
                     <button
                       onClick={() => setMoreMenuOpen(!moreMenuOpen)}
                       className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer whitespace-nowrap ${
@@ -273,7 +267,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -4 }}
                           transition={{ duration: 0.15, ease: 'easeOut' }}
-                          className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-44 bg-[#0d0f17] border border-[#c8874b]/40 rounded-2xl shadow-2xl shadow-black/90 py-1.5 z-50 overflow-hidden"
+                          className="absolute top-full left-1/2 -translate-x-1/2 rtl:left-auto rtl:right-0 rtl:translate-x-0 mt-2 w-44 bg-[#0d0f17] border border-[#c8874b]/40 rounded-2xl shadow-2xl shadow-black/90 py-1.5 z-50 overflow-hidden"
                         >
                           {overflowNavLinks.map((link) => (
                             <button
@@ -299,8 +293,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
               </nav>
             </div>
 
-            {/* RIGHT / END ACTION BUTTONS (Column 3: End-aligned) */}
-            <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0">
+            {/* RIGHT / END ACTION BUTTONS (End-aligned, never shrink, always accessible) */}
+            <div className="flex items-center justify-end gap-1.5 sm:gap-2 shrink-0 z-10">
             {/* Direct Connect Action (EchoRP Style) */}
             <button
               onClick={() => {
