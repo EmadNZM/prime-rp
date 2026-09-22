@@ -463,37 +463,31 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <div className="flex items-center justify-between text-xs font-mono">
                   <div className="flex items-center gap-2">
                     <span 
-                      className={`w-2 h-2 rounded-full ${
+                      className={`w-2.5 h-2.5 rounded-full ${
                         isOnline 
-                          ? 'bg-emerald-400 animate-pulse' 
+                          ? 'bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]' 
                           : isOffline 
-                          ? 'bg-rose-500' 
+                          ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)]' 
                           : 'bg-amber-400'
                       }`} 
                     />
-                    <span className="text-white font-bold">
-                      {isOnline 
-                        ? 'PRIME NODE #1' 
+                    <span className={`font-black uppercase tracking-wider ${
+                      isOnline 
+                        ? 'text-emerald-400' 
                         : isOffline 
-                        ? 'PRIME NODE #1 (OFFLINE)' 
-                        : 'FIVEM NODE'}
+                        ? 'text-rose-400' 
+                        : 'text-amber-400'
+                    }`}>
+                      {isOnline ? 'Online' : isOffline ? 'Offline' : 'Maintenance'}
                     </span>
-                    {isOnline && (
-                      <>
-                        <span className="text-[#666]">•</span>
-                        <span className="text-[#df9f64]">{telemetry?.pingMs || telemetry?.ping || 24}ms</span>
-                      </>
-                    )}
                   </div>
                   <div className="text-white font-bold font-rajdhani">
                     {isOnline ? (
                       <>
                         <span className="text-[#c8874b]">{playersCount}</span> / {maxPlayers} Citizens
                       </>
-                    ) : isOffline ? (
-                      <span className="text-rose-400 font-semibold">{language === 'ar' ? 'السيرفر متوقف' : 'Offline'}</span>
                     ) : (
-                      <span className="text-amber-400 font-semibold">{language === 'ar' ? 'وضع الاستعداد' : 'Standby'}</span>
+                      <span className="text-rose-400/80 font-mono text-[11px] font-semibold">0 / {maxPlayers} Citizens</span>
                     )}
                   </div>
                 </div>
