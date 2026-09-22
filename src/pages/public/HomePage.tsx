@@ -102,25 +102,26 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
   const connectTarget = (siteSettings?.fiveMConnectUrl ? siteSettings.fiveMConnectUrl.replace(/^fivem:\/\/connect\//, '').replace(/^connect\s+/, '').trim() : '') ||
     ((telemetry?.ip && telemetry?.port) ? `${telemetry.ip}:${telemetry.port}` : 'cfx.re/join/7o5gxr');
 
-  // ================= 60FPS MOUSE PARALLAX & SCROLL DYNAMICS =================
+  // ================= HIGH-PERFORMANCE 60FPS MOUSE PARALLAX =================
   const heroSectionRef = useRef<HTMLElement | null>(null);
   const heroBgRef = useRef<HTMLDivElement | null>(null);
   const heroFgRef = useRef<HTMLDivElement | null>(null);
   const heroSpotlightRef = useRef<HTMLDivElement | null>(null);
   const rawMousePos = useRef({ x: 0, y: 0, clientX: 0, clientY: 0 });
   const smoothMousePos = useRef({ x: 0, y: 0, clientX: 0, clientY: 0 });
-  const [scrollFadeProgress, setScrollFadeProgress] = useState(0);
 
   useEffect(() => {
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const isTouchDevice = 'ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+    if (prefersReducedMotion || isTouchDevice) return;
+
     let animId: number;
+    let isMouseActive = false;
 
     const onMouseMove = (e: MouseEvent) => {
-      if (prefersReducedMotion) return;
       const heroEl = heroSectionRef.current;
       if (!heroEl) return;
-      const rect = heroEl.getBoundingClientRect();
-      if (rect.bottom < 0) return; // Scrolled past hero
+      if (window.scrollY > window.innerHeight) return; // Scrolled past hero
 
       const normX = (e.clientX / window.innerWidth) * 2 - 1; // -1 to +1
       const normY = (e.clientY / window.innerHeight) * 2 - 1; // -1 to +1
@@ -131,20 +132,14 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         clientX: e.clientX,
         clientY: e.clientY
       };
-    };
-
-    const onScroll = () => {
-      const heroHeight = heroSectionRef.current?.offsetHeight || window.innerHeight;
-      const progress = Math.min(1, Math.max(0, window.scrollY / (heroHeight * 0.75)));
-      setScrollFadeProgress(progress);
+      isMouseActive = true;
     };
 
     window.addEventListener('mousemove', onMouseMove, { passive: true });
-    window.addEventListener('scroll', onScroll, { passive: true });
 
-    // Smooth RAF lerp for silky parallax & spotlight
+    // Smooth RAF lerp for silky parallax without re-rendering React components
     const lerpLoop = () => {
-      if (!prefersReducedMotion) {
+      if (isMouseActive && window.scrollY <= window.innerHeight) {
         const ease = 0.08;
         smoothMousePos.current.x += (rawMousePos.current.x - smoothMousePos.current.x) * ease;
         smoothMousePos.current.y += (rawMousePos.current.y - smoothMousePos.current.y) * ease;
@@ -153,21 +148,23 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
         // Background layer subtle inverse drift
         if (heroBgRef.current) {
-          const bgX = smoothMousePos.current.x * -16;
-          const bgY = smoothMousePos.current.y * -12;
+          const bgX = (smoothMousePos.current.x * -14).toFixed(2);
+          const bgY = (smoothMousePos.current.y * -10).toFixed(2);
           heroBgRef.current.style.transform = `translate3d(${bgX}px, ${bgY}px, 0)`;
         }
 
         // Foreground content opposing drift
         if (heroFgRef.current) {
-          const fgX = smoothMousePos.current.x * 10;
-          const fgY = smoothMousePos.current.y * 8;
+          const fgX = (smoothMousePos.current.x * 8).toFixed(2);
+          const fgY = (smoothMousePos.current.y * 6).toFixed(2);
           heroFgRef.current.style.transform = `translate3d(${fgX}px, ${fgY}px, 0)`;
         }
 
-        // Copper mouse-follow spotlight
+        // Copper mouse-follow spotlight (hardware-accelerated, zero blur recalculation)
         if (heroSpotlightRef.current) {
-          heroSpotlightRef.current.style.transform = `translate3d(${smoothMousePos.current.clientX}px, ${smoothMousePos.current.clientY}px, 0)`;
+          const spotX = smoothMousePos.current.clientX.toFixed(1);
+          const spotY = smoothMousePos.current.clientY.toFixed(1);
+          heroSpotlightRef.current.style.transform = `translate3d(${spotX}px, ${spotY}px, 0)`;
         }
       }
 
@@ -178,7 +175,6 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
 
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
-      window.removeEventListener('scroll', onScroll);
       if (animId) cancelAnimationFrame(animId);
     };
   }, []);
@@ -203,21 +199,23 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
     { id: 5, left: '67%', bottom: '20%', size: '4px', duration: '9.5s', delay: '3.4s' },
     { id: 6, left: '79%', bottom: '28%', size: '2px', duration: '13s', delay: '1.9s' },
     { id: 7, left: '89%', bottom: '15%', size: '3.5px', duration: '10s', delay: '0.3s' },
-    { id: 8, left: '21%', bottom: '38%', size: '2.5px', duration: '11.5s', delay: '4.5s' },
-    { id: 9, left: '35%', bottom: '22%', size: '3px', duration: '8.5s', delay: '2.2s' },
-    { id: 10, left: '72%', bottom: '42%', size: '4px', duration: '12.5s', delay: '1.1s' },
-    { id: 11, left: '83%', bottom: '10%', size: '3px', duration: '9s', delay: '3.8s' },
-    { id: 12, left: '93%', bottom: '30%', size: '2px', duration: '14s', delay: '0.4s' }
+    { id: 8, left: '21%', bottom: '38%', size: '2.5px', duration: '11.5s', delay: '4.5s' }
   ];
 
   return (
     <div className="min-h-screen bg-[#08090d] text-[#f1f3f7] relative overflow-hidden">
       
-      {/* ATMOSPHERIC BACKGROUND (Obsidian Canvas + Radial Copper Aurora) */}
+      {/* ATMOSPHERIC BACKGROUND (Obsidian Canvas + Radial Copper Aurora, Zero-GPU Blur) */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[950px] pointer-events-none z-0 overflow-hidden">
         <div className="w-full h-full bg-copper-glow-radial opacity-50" />
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-[#c8874b]/10 blur-[160px]" />
-        <div className="absolute top-80 right-10 w-[450px] h-[450px] rounded-full bg-[#df9f64]/6 blur-[140px]" />
+        <div 
+          className="absolute top-10 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full pointer-events-none" 
+          style={{ background: 'radial-gradient(ellipse at center, rgba(200, 135, 75, 0.08) 0%, transparent 70%)' }}
+        />
+        <div 
+          className="absolute top-80 right-10 w-[450px] h-[450px] rounded-full pointer-events-none" 
+          style={{ background: 'radial-gradient(circle at center, rgba(223, 159, 100, 0.05) 0%, transparent 70%)' }}
+        />
       </div>
       
       {/* Subtle Background Mesh Grid */}
@@ -229,13 +227,13 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         className="relative z-10 w-full min-h-[100dvh] flex items-center justify-center overflow-hidden select-none"
       >
         
-        {/* FULL-BLEED LIVING BACKGROUND CONTAINER (Edge-to-Edge, Zero Borders, Zero Boxes) */}
+        {/* FULL-BLEED LIVING BACKGROUND CONTAINER */}
         <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden z-0">
           
           {/* 1. Cinematic Background Image Layer with Pan/Zoom & Mouse Parallax */}
           <div 
             ref={heroBgRef}
-            className="absolute -inset-[5%] w-[110%] h-[110%] will-change-transform pointer-events-none"
+            className="absolute -inset-[5%] w-[110%] h-[110%] pointer-events-none"
           >
             <img
               src={siteSettings?.homepage?.heroImage || "/assets/gta-hero-night.jpg"}
@@ -246,30 +244,31 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 }
               }}
               alt="Los Santos Downtown GTA Roleplay Skyline"
-              className="w-full h-full object-cover object-center animate-cinematic-hero pointer-events-none transition-all duration-500"
+              className="w-full h-full object-cover object-center pointer-events-none transition-opacity duration-700"
               style={{
-                opacity: Math.max(0.12, 0.68 - scrollFadeProgress * 0.48),
-                filter: `brightness(${Math.max(0.42, 0.98 - scrollFadeProgress * 0.55)}) contrast(1.15) blur(${scrollFadeProgress * 8}px)`
+                opacity: 0.65,
+                filter: 'brightness(0.92) contrast(1.1)'
               }}
+              loading="eager"
+              decoding="async"
             />
           </div>
 
-          {/* 2. Mouse-Follow Spotlight (Radial Copper Aurora Glow) */}
+          {/* 2. Mouse-Follow Spotlight (Hardware-Accelerated Radial Aurora) */}
           <div
             ref={heroSpotlightRef}
-            className="fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] rounded-full pointer-events-none blur-[140px] will-change-transform transition-opacity duration-500 hidden md:block"
+            className="fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] rounded-full pointer-events-none hidden md:block"
             style={{
-              background: 'radial-gradient(circle, rgba(200, 135, 75, 0.24) 0%, rgba(200, 135, 75, 0.06) 45%, transparent 70%)',
-              opacity: Math.max(0, 0.32 - scrollFadeProgress * 0.32)
+              background: 'radial-gradient(circle, rgba(200, 135, 75, 0.16) 0%, rgba(200, 135, 75, 0.04) 45%, transparent 70%)'
             }}
           />
 
           {/* 3. Drifting Atmospheric Fog / Haze Overlay */}
           <div 
-            className="absolute inset-0 animate-fog-drift pointer-events-none"
+            className="absolute inset-0 pointer-events-none"
             style={{
               background: 'radial-gradient(ellipse 70% 50% at 50% 60%, rgba(200, 135, 75, 0.08) 0%, rgba(13, 15, 22, 0.25) 50%, transparent 80%)',
-              opacity: Math.max(0.1, 0.6 - scrollFadeProgress * 0.5)
+              opacity: 0.55
             }}
           />
 
@@ -278,39 +277,26 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             {HERO_AMBIENT_PARTICLES.map((particle) => (
               <span
                 key={particle.id}
-                className="absolute rounded-full bg-[#df9f64] pointer-events-none animate-particle-float"
+                className="absolute rounded-full bg-[#df9f64] pointer-events-none animate-particle-float opacity-60"
                 style={{
                   left: particle.left,
                   bottom: particle.bottom,
                   width: particle.size,
                   height: particle.size,
                   animationDuration: particle.duration,
-                  animationDelay: particle.delay,
-                  boxShadow: '0 0 10px rgba(200, 135, 75, 0.8)',
-                  opacity: Math.max(0, 0.65 - scrollFadeProgress * 0.65)
+                  animationDelay: particle.delay
                 }}
               />
             ))}
           </div>
 
-          {/* 5. Subtle Cinematic Film Grain Texture */}
-          <div className="absolute inset-0 pointer-events-none opacity-[0.03] mix-blend-overlay animate-film-grain">
-            <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg">
-              <filter id="hero-film-grain">
-                <feTurbulence type="fractalNoise" baseFrequency="0.85" numOctaves="3" stitchTiles="stitch" />
-                <feColorMatrix type="saturate" values="0" />
-              </filter>
-              <rect width="100%" height="100%" filter="url(#hero-film-grain)" />
-            </svg>
-          </div>
-
-          {/* 6. Seamless Symmetrical Atmospheric Vignettes (Edge-to-Edge immersion, No lopsided dark sides) */}
+          {/* 5. Seamless Symmetrical Atmospheric Vignettes */}
           {/* Top Fade (under global navbar) */}
           <div className="absolute top-0 inset-x-0 h-44 bg-gradient-to-b from-[#08090d] via-[#08090d]/70 to-transparent pointer-events-none" />
 
-          {/* Symmetrical Central Radial Vignette & Backdrop Darkening for maximum contrast & full immersion */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(8,9,13,0.5)_0%,_rgba(8,9,13,0.78)_55%,_#08090d_100%)] pointer-events-none" />
-          <div className="absolute inset-0 bg-[#08090d]/30 pointer-events-none" />
+          {/* Symmetrical Central Radial Vignette & Backdrop Darkening for maximum contrast */}
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(8,9,13,0.45)_0%,_rgba(8,9,13,0.75)_55%,_#08090d_100%)] pointer-events-none" />
+          <div className="absolute inset-0 bg-[#08090d]/25 pointer-events-none" />
 
           {/* Bottom Fade: Seamless Melt into the website page canvas */}
           <div className="absolute bottom-0 inset-x-0 h-64 sm:h-80 bg-gradient-to-t from-[#08090d] via-[#08090d]/95 via-45% to-transparent pointer-events-none" />
@@ -320,11 +306,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         {/* FOREGROUND HERO CONTENT (Full-Screen, Centered, Edge-to-Edge Balanced) */}
         <div 
           ref={heroFgRef}
-          className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 pb-16 sm:pb-20 flex flex-col items-center justify-center will-change-transform text-center"
-          style={{
-            opacity: Math.max(0, 1 - scrollFadeProgress * 1.5),
-            transform: `translate3d(0, -${scrollFadeProgress * 45}px, 0)`
-          }}
+          className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 sm:pt-36 pb-16 sm:pb-20 flex flex-col items-center justify-center text-center"
         >
           <div className="w-full max-w-4xl mx-auto flex flex-col items-center justify-center space-y-6 sm:space-y-7 text-center">
             
@@ -585,6 +567,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <img
                   src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?auto=format&fit=crop&w=800&q=80"
                   alt="Overflod Autarch"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md text-[#38bdf8] text-[10px] font-black uppercase tracking-wider border border-white/10">
@@ -624,6 +608,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <img
                   src="https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=800&q=80"
                   alt="Pfister Comet S2"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2.5 py-1 rounded-md bg-[#c8874b]/20 border border-[#c8874b]/40 text-[#df9f64] text-[10px] font-black uppercase tracking-wider">
@@ -663,6 +649,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <img
                   src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?auto=format&fit=crop&w=800&q=80"
                   alt="Enus Paragon R"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md text-[#a855f7] text-[10px] font-black uppercase tracking-wider border border-white/10">
@@ -702,6 +690,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <img
                   src="https://images.unsplash.com/photo-1617814076367-b759c7d7e738?auto=format&fit=crop&w=800&q=80"
                   alt="Grotti Itali RSX"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md text-[#38bdf8] text-[10px] font-black uppercase tracking-wider border border-white/10">
@@ -741,6 +731,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <img
                   src="https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=800&q=80"
                   alt="Prime VIP Empire Pass"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2.5 py-1 rounded-md bg-[#c8874b]/20 border border-[#c8874b]/40 text-[#df9f64] text-[10px] font-black uppercase tracking-wider">
@@ -780,6 +772,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                 <img
                   src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80"
                   alt="Vinewood Hills Mansion"
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute top-3 left-3 rtl:left-auto rtl:right-3 px-2.5 py-1 rounded-md bg-black/80 backdrop-blur-md text-[#a855f7] text-[10px] font-black uppercase tracking-wider border border-white/10">
@@ -835,6 +829,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
                         <img
                           src={product.image}
                           alt={trans.name}
+                          loading="lazy"
+                          decoding="async"
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
                         <div className="absolute top-2.5 right-2.5 rtl:right-auto rtl:left-2.5 px-2.5 py-0.5 rounded-md bg-black/85 backdrop-blur-md text-[#df9f64] text-[10px] font-bold uppercase tracking-wider border border-white/10">
@@ -1076,6 +1072,8 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             <img
               src="https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?auto=format&fit=crop&w=1600&q=80"
               alt="Los Santos Skyline Night"
+              loading="lazy"
+              decoding="async"
               className="w-full h-full object-cover object-center opacity-30 scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0d0f16] via-[#0d0f16]/75 to-[#0d0f16]/90" />

@@ -33,47 +33,32 @@ export const CustomCursor: React.FC = () => {
 
     const handleMouseMove = (e: MouseEvent) => {
       mousePos.current = { x: e.clientX, y: e.clientY };
-      if (!isVisible) setIsVisible(true);
+      setIsVisible((prev) => (prev ? prev : true));
 
       // Instant inner dot placement for zero perceived lag
       if (dotRef.current) {
         dotRef.current.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
       }
 
-      // Check interaction target type
+      // Check interaction target type efficiently
       const target = e.target as HTMLElement | null;
       if (!target) {
-        setHoverType('none');
+        setHoverType((prev) => (prev === 'none' ? prev : 'none'));
         return;
       }
 
-      const buttonTarget = target.closest('button, [role="button"], .magnetic-btn');
-      if (buttonTarget) {
-        setHoverType('button');
-        return;
+      let detected: HoverType = 'none';
+      if (target.closest('button, [role="button"], .magnetic-btn')) {
+        detected = 'button';
+      } else if (target.closest('a, [role="link"]')) {
+        detected = 'link';
+      } else if (target.closest('img, [role="img"], picture, .interactive-image')) {
+        detected = 'image';
+      } else if (target.closest('input, select, textarea, [data-cursor="pointer"], .cursor-pointer, .interactive-card, [tabindex="0"]')) {
+        detected = 'interactive';
       }
 
-      const linkTarget = target.closest('a, [role="link"]');
-      if (linkTarget) {
-        setHoverType('link');
-        return;
-      }
-
-      const imgTarget = target.closest('img, [role="img"], picture, .interactive-image');
-      if (imgTarget) {
-        setHoverType('image');
-        return;
-      }
-
-      const interactive = target.closest(
-        'input, select, textarea, [data-cursor="pointer"], .cursor-pointer, .interactive-card, [tabindex="0"]'
-      );
-      if (interactive) {
-        setHoverType('interactive');
-        return;
-      }
-
-      setHoverType('none');
+      setHoverType((prev) => (prev === detected ? prev : detected));
     };
 
     const handleMouseDown = () => setIsClicked(true);
@@ -82,8 +67,8 @@ export const CustomCursor: React.FC = () => {
     const handleMouseEnter = () => setIsVisible(true);
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true });
-    window.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mouseup', handleMouseUp);
+    window.addEventListener('mousedown', handleMouseDown, { passive: true });
+    window.addEventListener('mouseup', handleMouseUp, { passive: true });
     document.addEventListener('mouseleave', handleMouseLeave);
     document.addEventListener('mouseenter', handleMouseEnter);
 
@@ -122,7 +107,7 @@ export const CustomCursor: React.FC = () => {
         cancelAnimationFrame(animationFrameId.current);
       }
     };
-  }, [isVisible]);
+  }, []);
 
   if (!isEnabled) {
     return null;

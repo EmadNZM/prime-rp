@@ -210,23 +210,6 @@ body {
   will-change: transform, opacity;
 }
 
-@keyframes subtleFilmGrain {
-  0%, 100% { transform: translate(0, 0); }
-  10% { transform: translate(-1%, -1%); }
-  20% { transform: translate(1%, 0); }
-  30% { transform: translate(-0.5%, 1%); }
-  40% { transform: translate(1%, -1%); }
-  50% { transform: translate(-1%, 0.5%); }
-  60% { transform: translate(1%, 1%); }
-  70% { transform: translate(0, -1%); }
-  80% { transform: translate(-1%, 0); }
-  90% { transform: translate(0.5%, 0.5%); }
-}
-
-.animate-film-grain {
-  animation: subtleFilmGrain 1.2s steps(4) infinite;
-}
-
 @keyframes particleFloatSlow {
   0% {
     transform: translateY(0) translateX(0);
@@ -251,7 +234,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .animate-cinematic-hero,
   .animate-fog-drift,
-  .animate-film-grain,
   .animate-particle-float {
     animation: none !important;
   }

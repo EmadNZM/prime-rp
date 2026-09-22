@@ -12,7 +12,8 @@ import {
   Sparkles,
   Info,
   Layers,
-  ArrowRight
+  ArrowRight,
+  Activity
 } from 'lucide-react';
 
 interface LogoManagerSettingsProps {
