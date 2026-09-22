@@ -120,11 +120,11 @@ export const CustomCursor: React.FC = () => {
   if (isClicked) {
     ringStyle = 'w-6 h-6 border-[#DF9F64] bg-[#C8874B]/35 shadow-[0_0_15px_rgba(200,135,75,0.6)]';
   } else if (hoverType === 'button') {
-    ringStyle = 'w-14 h-14 border-[#C8874B] bg-[#C8874B]/15 backdrop-blur-[1px] shadow-[0_0_25px_rgba(200,135,75,0.45)]';
+    ringStyle = 'w-14 h-14 border-[#C8874B] bg-[#C8874B]/15 shadow-[0_0_20px_rgba(200,135,75,0.35)]';
   } else if (hoverType === 'link') {
-    ringStyle = 'w-12 h-12 border-[#DF9F64] bg-[#DF9F64]/10 shadow-[0_0_18px_rgba(223,159,100,0.35)]';
+    ringStyle = 'w-12 h-12 border-[#DF9F64] bg-[#DF9F64]/10 shadow-[0_0_15px_rgba(223,159,100,0.3)]';
   } else if (hoverType === 'image') {
-    ringStyle = 'w-16 h-16 border-[#C8874B]/60 bg-black/25 backdrop-blur-[2px] shadow-[0_0_20px_rgba(0,0,0,0.7)]';
+    ringStyle = 'w-16 h-16 border-[#C8874B]/60 bg-black/40 shadow-[0_0_20px_rgba(0,0,0,0.7)]';
   } else if (hoverType === 'interactive') {
     ringStyle = 'w-11 h-11 border-[#C8874B] bg-[#C8874B]/10';
   }
@@ -136,19 +136,19 @@ export const CustomCursor: React.FC = () => {
       }`}
       aria-hidden="true"
     >
-      {/* 1. Soft Ambient Mouse Follower Halo / Spotlight */}
+      {/* 1. Soft Ambient Mouse Follower Halo (Zero GPU Blur Shader) */}
       <div
         ref={glowRef}
-        className="fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-[360px] h-[360px] rounded-full blur-[75px] pointer-events-none will-change-transform opacity-30"
+        className="fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[320px] rounded-full pointer-events-none opacity-25"
         style={{
-          background: 'radial-gradient(circle, rgba(200, 135, 75, 0.28) 0%, rgba(200, 135, 75, 0.06) 45%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(200, 135, 75, 0.22) 0%, rgba(200, 135, 75, 0.05) 45%, transparent 70%)',
         }}
       />
 
       {/* 2. Trailing Luxury Dynamic Ring */}
       <div
         ref={ringRef}
-        className={`fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 rounded-full border pointer-events-none will-change-transform transition-[width,height,background-color,border-color,box-shadow] duration-200 ease-out flex items-center justify-center ${ringStyle}`}
+        className={`fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 rounded-full border pointer-events-none transition-[width,height,background-color,border-color,box-shadow] duration-200 ease-out flex items-center justify-center ${ringStyle}`}
       >
         {hoverType === 'button' && (
           <span className="w-1.5 h-1.5 rounded-full bg-[#DF9F64] animate-ping" />
@@ -158,7 +158,7 @@ export const CustomCursor: React.FC = () => {
       {/* 3. High-Precision Center Copper Dot */}
       <div
         ref={dotRef}
-        className={`fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none will-change-transform transition-[width,height,opacity,background-color] duration-150 ${
+        className={`fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 rounded-full pointer-events-none transition-[width,height,opacity,background-color] duration-150 ${
           isHovered
             ? 'w-1.5 h-1.5 bg-[#FFFFFF] opacity-95 shadow-[0_0_8px_#FFFFFF]'
             : isClicked

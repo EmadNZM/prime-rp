@@ -31,7 +31,6 @@ body {
     radial-gradient(ellipse 80% 50% at 50% -5%, rgba(200, 135, 75, 0.12), transparent),
     radial-gradient(circle at 85% 70%, rgba(200, 135, 75, 0.03), transparent 45%),
     radial-gradient(circle at 15% 40%, rgba(200, 135, 75, 0.02), transparent 50%);
-  background-attachment: fixed;
 }
 
 [dir="ltr"] body {

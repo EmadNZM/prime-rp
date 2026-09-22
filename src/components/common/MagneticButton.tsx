@@ -17,12 +17,19 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
   disabled = false,
 }) => {
   const buttonRef = useRef<HTMLDivElement | null>(null);
+  const rectRef = useRef<DOMRect | null>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
+  const handleMouseEnter = () => {
+    if (buttonRef.current) {
+      rectRef.current = buttonRef.current.getBoundingClientRect();
+    }
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (disabled || !buttonRef.current) return;
+    if (disabled || !rectRef.current) return;
     const { clientX, clientY } = e;
-    const { left, top, width, height } = buttonRef.current.getBoundingClientRect();
+    const { left, top, width, height } = rectRef.current;
     const centerX = left + width / 2;
     const centerY = top + height / 2;
 
@@ -30,7 +37,7 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
     const deltaY = (clientY - centerY) * strength;
 
     // Cap magnetic displacement so it remains refined and subtle
-    const maxOffset = 10;
+    const maxOffset = 8;
     const clampedX = Math.max(-maxOffset, Math.min(maxOffset, deltaX));
     const clampedY = Math.max(-maxOffset, Math.min(maxOffset, deltaY));
 
@@ -38,12 +45,14 @@ export const MagneticButton: React.FC<MagneticButtonProps> = ({
   };
 
   const handleMouseLeave = () => {
+    rectRef.current = null;
     setPosition({ x: 0, y: 0 });
   };
 
   return (
     <motion.div
       ref={buttonRef}
+      onMouseEnter={handleMouseEnter}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       onClick={onClick}

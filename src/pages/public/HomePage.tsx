@@ -102,11 +102,10 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
   const connectTarget = (siteSettings?.fiveMConnectUrl ? siteSettings.fiveMConnectUrl.replace(/^fivem:\/\/connect\//, '').replace(/^connect\s+/, '').trim() : '') ||
     ((telemetry?.ip && telemetry?.port) ? `${telemetry.ip}:${telemetry.port}` : 'cfx.re/join/7o5gxr');
 
-  // ================= HIGH-PERFORMANCE 60FPS MOUSE PARALLAX =================
+  // ================= ULTRA HIGH-PERFORMANCE IDLE-AWARE PARALLAX =================
   const heroSectionRef = useRef<HTMLElement | null>(null);
   const heroBgRef = useRef<HTMLDivElement | null>(null);
   const heroFgRef = useRef<HTMLDivElement | null>(null);
-  const heroSpotlightRef = useRef<HTMLDivElement | null>(null);
   const rawMousePos = useRef({ x: 0, y: 0, clientX: 0, clientY: 0 });
   const smoothMousePos = useRef({ x: 0, y: 0, clientX: 0, clientY: 0 });
 
@@ -115,16 +114,45 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
     const isTouchDevice = 'ontouchstart' in window || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
     if (prefersReducedMotion || isTouchDevice) return;
 
-    let animId: number;
-    let isMouseActive = false;
+    let animId: number | null = null;
+    let isRunning = false;
+
+    const lerpLoop = () => {
+      if (window.scrollY > window.innerHeight) {
+        isRunning = false;
+        return;
+      }
+
+      const ease = 0.08;
+      smoothMousePos.current.x += (rawMousePos.current.x - smoothMousePos.current.x) * ease;
+      smoothMousePos.current.y += (rawMousePos.current.y - smoothMousePos.current.y) * ease;
+
+      const diff = Math.abs(rawMousePos.current.x - smoothMousePos.current.x) + Math.abs(rawMousePos.current.y - smoothMousePos.current.y);
+
+      if (heroBgRef.current) {
+        const bgX = (smoothMousePos.current.x * -10).toFixed(1);
+        const bgY = (smoothMousePos.current.y * -7).toFixed(1);
+        heroBgRef.current.style.transform = `translate3d(${bgX}px, ${bgY}px, 0)`;
+      }
+
+      if (heroFgRef.current) {
+        const fgX = (smoothMousePos.current.x * 6).toFixed(1);
+        const fgY = (smoothMousePos.current.y * 4).toFixed(1);
+        heroFgRef.current.style.transform = `translate3d(${fgX}px, ${fgY}px, 0)`;
+      }
+
+      // If motion delta has converged, sleep the loop to save 100% CPU/GPU
+      if (diff > 0.001) {
+        animId = requestAnimationFrame(lerpLoop);
+      } else {
+        isRunning = false;
+      }
+    };
 
     const onMouseMove = (e: MouseEvent) => {
-      const heroEl = heroSectionRef.current;
-      if (!heroEl) return;
-      if (window.scrollY > window.innerHeight) return; // Scrolled past hero
-
-      const normX = (e.clientX / window.innerWidth) * 2 - 1; // -1 to +1
-      const normY = (e.clientY / window.innerHeight) * 2 - 1; // -1 to +1
+      if (window.scrollY > window.innerHeight) return;
+      const normX = (e.clientX / window.innerWidth) * 2 - 1;
+      const normY = (e.clientY / window.innerHeight) * 2 - 1;
 
       rawMousePos.current = {
         x: normX,
@@ -132,46 +160,14 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
         clientX: e.clientX,
         clientY: e.clientY
       };
-      isMouseActive = true;
+
+      if (!isRunning) {
+        isRunning = true;
+        animId = requestAnimationFrame(lerpLoop);
+      }
     };
 
     window.addEventListener('mousemove', onMouseMove, { passive: true });
-
-    // Smooth RAF lerp for silky parallax without re-rendering React components
-    const lerpLoop = () => {
-      if (isMouseActive && window.scrollY <= window.innerHeight) {
-        const ease = 0.08;
-        smoothMousePos.current.x += (rawMousePos.current.x - smoothMousePos.current.x) * ease;
-        smoothMousePos.current.y += (rawMousePos.current.y - smoothMousePos.current.y) * ease;
-        smoothMousePos.current.clientX += (rawMousePos.current.clientX - smoothMousePos.current.clientX) * ease;
-        smoothMousePos.current.clientY += (rawMousePos.current.clientY - smoothMousePos.current.clientY) * ease;
-
-        // Background layer subtle inverse drift
-        if (heroBgRef.current) {
-          const bgX = (smoothMousePos.current.x * -14).toFixed(2);
-          const bgY = (smoothMousePos.current.y * -10).toFixed(2);
-          heroBgRef.current.style.transform = `translate3d(${bgX}px, ${bgY}px, 0)`;
-        }
-
-        // Foreground content opposing drift
-        if (heroFgRef.current) {
-          const fgX = (smoothMousePos.current.x * 8).toFixed(2);
-          const fgY = (smoothMousePos.current.y * 6).toFixed(2);
-          heroFgRef.current.style.transform = `translate3d(${fgX}px, ${fgY}px, 0)`;
-        }
-
-        // Copper mouse-follow spotlight (hardware-accelerated, zero blur recalculation)
-        if (heroSpotlightRef.current) {
-          const spotX = smoothMousePos.current.clientX.toFixed(1);
-          const spotY = smoothMousePos.current.clientY.toFixed(1);
-          heroSpotlightRef.current.style.transform = `translate3d(${spotX}px, ${spotY}px, 0)`;
-        }
-      }
-
-      animId = requestAnimationFrame(lerpLoop);
-    };
-
-    animId = requestAnimationFrame(lerpLoop);
 
     return () => {
       window.removeEventListener('mousemove', onMouseMove);
@@ -254,16 +250,7 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             />
           </div>
 
-          {/* 2. Mouse-Follow Spotlight (Hardware-Accelerated Radial Aurora) */}
-          <div
-            ref={heroSpotlightRef}
-            className="fixed top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-[550px] h-[550px] rounded-full pointer-events-none hidden md:block"
-            style={{
-              background: 'radial-gradient(circle, rgba(200, 135, 75, 0.16) 0%, rgba(200, 135, 75, 0.04) 45%, transparent 70%)'
-            }}
-          />
-
-          {/* 3. Drifting Atmospheric Fog / Haze Overlay */}
+          {/* 2. Drifting Atmospheric Fog / Haze Overlay */}
           <div 
             className="absolute inset-0 pointer-events-none"
             style={{
@@ -272,19 +259,17 @@ export const HomePage: React.FC<HomePageProps> = ({ setCurrentTab, setSelectedNe
             }}
           />
 
-          {/* 4. Floating Ambient Copper Embers & Dust Motes */}
+          {/* 3. Ambient Copper Embers & Dust Motes */}
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             {HERO_AMBIENT_PARTICLES.map((particle) => (
               <span
                 key={particle.id}
-                className="absolute rounded-full bg-[#df9f64] pointer-events-none animate-particle-float opacity-60"
+                className="absolute rounded-full bg-[#df9f64] pointer-events-none opacity-40"
                 style={{
                   left: particle.left,
                   bottom: particle.bottom,
                   width: particle.size,
-                  height: particle.size,
-                  animationDuration: particle.duration,
-                  animationDelay: particle.delay
+                  height: particle.size
                 }}
               />
             ))}
