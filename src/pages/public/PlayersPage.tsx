@@ -11,10 +11,7 @@ import {
   RefreshCw, 
   Server, 
   Gamepad2, 
-  Copy, 
-  Check, 
   Radio,
-  Terminal,
   Zap,
   Cpu,
   Globe2,
@@ -35,8 +32,6 @@ export const PlayersPage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
-  const [copiedConnect, setCopiedConnect] = useState<boolean>(false);
-  const [copiedF8, setCopiedF8] = useState<boolean>(false);
 
   const loadData = async () => {
     try {
@@ -63,20 +58,6 @@ export const PlayersPage: React.FC = () => {
   const handleRefresh = () => {
     setIsRefreshing(true);
     loadData();
-  };
-
-  const handleCopyConnect = () => {
-    if (!telemetry?.ip || !telemetry?.port) return;
-    navigator.clipboard.writeText(`connect ${telemetry.ip}:${telemetry.port}`);
-    setCopiedConnect(true);
-    setTimeout(() => setCopiedConnect(false), 2500);
-  };
-
-  const handleCopyF8 = () => {
-    if (!telemetry?.ip || !telemetry?.port) return;
-    navigator.clipboard.writeText(`connect ${telemetry.ip}:${telemetry.port}`);
-    setCopiedF8(true);
-    setTimeout(() => setCopiedF8(false), 2500);
   };
 
   const filteredPlayers = players.filter((p) => {
@@ -148,7 +129,7 @@ export const PlayersPage: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-[#7a8091] font-mono mt-1">
-                {isConfigured ? `${telemetry?.ip}:${telemetry?.port}` : (language === 'ar' ? 'بانتظار إعداد FIVEM_SERVER_IP و PORT' : 'Awaiting Host Config')}
+                {language === 'ar' ? 'خادم لوس سانتوس الرسمي المعتمد' : 'Official Los Santos Node • cfx.re verified'}
               </p>
             </div>
           </div>
@@ -184,16 +165,6 @@ export const PlayersPage: React.FC = () => {
               </span>
             </div>
 
-            {/* Direct Connect Quick Action */}
-            <button
-              onClick={handleCopyConnect}
-              disabled={!isConfigured}
-              className="px-4 py-2.5 rounded-xl bg-[#131620] hover:bg-[#1a1e2d] text-white border border-white/[0.08] hover:border-[#c8874b]/50 transition-all flex items-center gap-2 text-xs font-bold uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-            >
-              {copiedConnect ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4 text-[#c8874b]" />}
-              <span>{copiedConnect ? (language === 'ar' ? 'تم النسخ' : 'Copied') : (language === 'ar' ? 'أمر الاتصال' : 'Connect Cmd')}</span>
-            </button>
-
             {/* Direct Launch Button */}
             {isConfigured && (
               <a
@@ -214,21 +185,6 @@ export const PlayersPage: React.FC = () => {
               <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#c8874b]' : ''}`} />
             </button>
           </div>
-        </div>
-
-        {/* Console Helper Pill */}
-        <div className="mb-8 p-3 rounded-xl bg-[#0d0f16] border border-white/[0.06] flex items-center justify-between gap-3 text-xs text-[#969cad] font-mono">
-          <div className="flex items-center gap-2">
-            <Terminal className="w-4 h-4 text-[#c8874b] shrink-0" />
-            <span>F8 Console: <span className="text-white select-all">{isConfigured ? `connect ${telemetry?.ip}:${telemetry?.port}` : 'connect server.primerp.gg'}</span></span>
-          </div>
-          <button
-            onClick={handleCopyF8}
-            className="text-[#df9f64] hover:underline cursor-pointer flex items-center gap-1 text-[11px] font-sans font-bold"
-          >
-            {copiedF8 ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-            <span>{copiedF8 ? (language === 'ar' ? 'تم' : 'Done') : (language === 'ar' ? 'نسخ' : 'Copy')}</span>
-          </button>
         </div>
 
         {/* Search Bar */}

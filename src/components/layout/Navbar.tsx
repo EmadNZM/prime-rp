@@ -44,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
 
   // Helper to determine if a page should be shown
   const isPageVisible = (id: string): boolean => {
-    if (id === 'home' || id === 'about') return true;
+    if (id === 'home') return true;
     if (!settings?.pageVisibility) return true;
     return (settings.pageVisibility as any)[id] !== false;
   };
@@ -96,7 +96,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
 
   const allNavLinks = [
     { id: 'home', label: t('nav.home') },
-    { id: 'about', label: language === 'ar' ? 'من نحن' : 'About' },
     { id: 'store', label: t('nav.store') },
     { id: 'rules', label: t('nav.rules') },
     { id: 'jobs', label: t('nav.jobs') },
@@ -111,18 +110,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
   const handleNavClick = (id: string) => {
     setMobileMenuOpen(false);
     setUserDropdownOpen(false);
-
-    if (id === 'about') {
-      if (currentTab === 'home') {
-        const el = document.getElementById('about');
-        if (el) {
-          el.scrollIntoView({ behavior: 'smooth' });
-          return;
-        }
-      }
-      setCurrentTab('about');
-      return;
-    }
 
     setCurrentTab(id);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -148,7 +135,6 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, setIs
   const primaryNavLinks = allPrimaryNavLinks.filter((link) => isPageVisible(link.id));
 
   const allSecondaryNavLinks = [
-    { id: 'about', label: language === 'ar' ? 'من نحن' : 'About' },
     { id: 'news', label: t('nav.news') },
     { id: 'faq', label: t('nav.faq') },
     { id: 'support', label: t('nav.support') },

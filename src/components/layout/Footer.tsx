@@ -1,35 +1,20 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useSettings } from '../../context/SettingsContext';
 import { PrimeLogo } from '../common/PrimeLogo';
-import { MessageSquare, Copy, Check, Terminal } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 
 interface FooterProps {
   setCurrentTab: (tab: string) => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { settings } = useSettings();
-  const [copiedIp, setCopiedIp] = useState<boolean>(false);
-
-  const [connectNotice, setConnectNotice] = useState<string | null>(null);
 
   const handleNav = (tab: string) => {
     setCurrentTab(tab);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const handleCopyIp = () => {
-    const connectTarget = settings?.fiveMConnectUrl;
-    if (!connectTarget) {
-      setConnectNotice(language === 'ar' ? 'غير مهيأ' : 'Not Configured');
-      setTimeout(() => setConnectNotice(null), 2500);
-      return;
-    }
-    navigator.clipboard.writeText(connectTarget.startsWith('connect ') ? connectTarget : `connect ${connectTarget}`);
-    setCopiedIp(true);
-    setTimeout(() => setCopiedIp(false), 2000);
   };
 
   const isPageVisible = (id: string): boolean => {
@@ -67,16 +52,6 @@ export const Footer: React.FC<FooterProps> = ({ setCurrentTab }) => {
                 <MessageSquare className="w-3.5 h-3.5 text-[#5865F2]" />
                 <span>Discord Community</span>
               </a>
-
-              <button
-                onClick={handleCopyIp}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0d0f16] border border-white/[0.08] hover:border-[#c8874b]/60 text-xs font-bold text-[#f1f3f7] transition-all cursor-pointer shadow-sm"
-                title={language === 'ar' ? 'نسخ أمر الاتصال بالسيرفر' : 'Copy Server Direct Connect'}
-              >
-                <Terminal className="w-3.5 h-3.5 text-[#c8874b]" />
-                <span>{connectNotice ? connectNotice : 'F8 Connect'}</span>
-                {copiedIp ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-[#777]" />}
-              </button>
             </div>
           </div>
 
